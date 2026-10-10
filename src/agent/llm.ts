@@ -46,6 +46,8 @@ export interface ChatResult {
   content: string
   seconds: number
   completionTokens: number
+  /** 'stop' for a finished answer, 'length' when max_tokens ran out first. */
+  finishReason?: string
 }
 
 export interface ChatOptions {
@@ -88,11 +90,12 @@ export async function chat(endpoint: ModelEndpoint, options: ChatOptions): Promi
     return request()
   })
   if (!response.ok) throw new Error(`${endpoint.name} returned ${response.status}: ${(await response.text()).slice(0, 400)}`)
-  const body = (await response.json()) as { choices: Array<{ message: { content: string | null } }>; usage?: { completion_tokens?: number } }
+  const body = (await response.json()) as { choices: Array<{ message: { content: string | null }; finish_reason?: string }>; usage?: { completion_tokens?: number } }
   return {
     content: body.choices[0]?.message.content ?? '',
     seconds: (Date.now() - started) / 1000,
     completionTokens: body.usage?.completion_tokens ?? 0,
+    finishReason: body.choices[0]?.finish_reason ?? undefined,
   }
 }
 
@@ -105,6 +108,15 @@ export interface JsonAttempt<T> {
   completionTokens: number
   /** Problems found on each rejected attempt, in order. Empty when the first answer was accepted. */
   rejected: string[][]
+  /** finish_reason of the last reply. */
+  finishReason?: string
+}
+
+/** Every attempt came back without usable JSON. Carries the last reply's accounting so callers can say why. */
+export class JsonReplyError extends Error {
+  constructor(message: string, readonly seconds: number, readonly completionTokens: number, readonly finishReason: string | undefined) {
+    super(message)
+  }
 }
 
 /**
@@ -136,11 +148,12 @@ export async function chatJson<T>(
     } catch (error) {
       problems = [`reply was not valid JSON: ${(error as Error).message.slice(0, 160)}`]
     }
-    if (problems.length === 0) return { value: value!, unresolved: [], attempts: attempt, seconds, completionTokens, rejected }
+    const finishReason = result.finishReason
+    if (problems.length === 0) return { value: value!, unresolved: [], attempts: attempt, seconds, completionTokens, rejected, finishReason }
     rejected.push(problems)
     if (attempt === maxAttempts) {
-      if (value !== undefined) return { value, unresolved: problems, attempts: attempt, seconds, completionTokens, rejected }
-      throw new Error(`${endpoint.name} did not return usable JSON after ${maxAttempts} attempts: ${problems.join('; ')}`)
+      if (value !== undefined) return { value, unresolved: problems, attempts: attempt, seconds, completionTokens, rejected, finishReason }
+      throw new JsonReplyError(`${endpoint.name} did not return usable JSON after ${maxAttempts} attempts: ${problems.join('; ')}`, seconds, completionTokens, finishReason)
     }
     // Send the rejected answer back with the problems, so the model edits it instead of starting over
     // (a fresh rewrite drifted: fewer shots, new mistakes).

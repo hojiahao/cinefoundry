@@ -1,0 +1,387 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "影织如何驱动 ComfyUI：四个工作流与阶段切换",
+    "output": "docs/architecture/comfyui-pipeline.html",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:hojiahao/cineloom.git",
+      "link_mode": "local-only",
+      "revision": "88829427c7bde0ce3c287a8b34104be8b05813b7"
+    }
+  },
+  "components": [
+    {
+      "id": "harness",
+      "type": "backend",
+      "label": "影织 Harness",
+      "sublabel": "按阶段顺序调用",
+      "pos": [
+        40,
+        260
+      ],
+      "size": [
+        150,
+        80
+      ],
+      "sources": [
+        {
+          "path": "src/agent/harness.ts",
+          "line": 229,
+          "end_line": 239,
+          "label": "主图阶段"
+        },
+        {
+          "path": "src/agent/harness.ts",
+          "line": 258,
+          "end_line": 264,
+          "label": "分镜帧阶段"
+        },
+        {
+          "path": "src/agent/harness.ts",
+          "line": 313,
+          "end_line": 320,
+          "label": "视频阶段"
+        }
+      ]
+    },
+    {
+      "id": "media",
+      "type": "backend",
+      "label": "media.ts · audio.ts",
+      "sublabel": "模板填入提示词/尺寸/种子",
+      "pos": [
+        300,
+        260
+      ],
+      "size": [
+        170,
+        80
+      ],
+      "sources": [
+        {
+          "path": "src/lib/media.ts",
+          "line": 61,
+          "end_line": 84,
+          "label": "generateImage"
+        },
+        {
+          "path": "src/lib/media.ts",
+          "line": 104,
+          "end_line": 154,
+          "label": "generateVideo"
+        },
+        {
+          "path": "src/lib/audio.ts",
+          "line": 94,
+          "end_line": 100,
+          "label": "generateMusic"
+        }
+      ]
+    },
+    {
+      "id": "client",
+      "type": "backend",
+      "label": "ComfyClient",
+      "sublabel": "/upload/image · /prompt · /history",
+      "pos": [
+        625,
+        260
+      ],
+      "size": [
+        215,
+        80
+      ],
+      "sources": [
+        {
+          "path": "src/comfy/client.ts",
+          "line": 31,
+          "end_line": 59,
+          "label": "上传、排队、轮询"
+        },
+        {
+          "path": "src/comfy/client.ts",
+          "line": 61,
+          "end_line": 73,
+          "label": "下载与 /free"
+        }
+      ]
+    },
+    {
+      "id": "comfy",
+      "type": "cloud",
+      "label": "ComfyUI",
+      "sublabel": "127.0.0.1:8188 · 本机容器",
+      "pos": [
+        900,
+        260
+      ],
+      "size": [
+        170,
+        80
+      ],
+      "sources": [
+        {
+          "path": "deploy/spark/compose.yaml",
+          "line": 84,
+          "end_line": 98,
+          "label": "comfyui 服务"
+        }
+      ]
+    },
+    {
+      "id": "wf-hero",
+      "type": "frontend",
+      "label": "① 产品主图",
+      "sublabel": "qwen_image_lightning · 8 步 · 1328²",
+      "pos": [
+        870,
+        80
+      ],
+      "size": [
+        230,
+        80
+      ],
+      "sources": [
+        {
+          "path": "workflows/qwen_image_lightning.json",
+          "label": "Qwen-Image 文生图"
+        }
+      ]
+    },
+    {
+      "id": "wf-frames",
+      "type": "frontend",
+      "label": "② 分镜帧 ×3",
+      "sublabel": "qwen_image_edit_lightning · 主图作参考",
+      "pos": [
+        1170,
+        170
+      ],
+      "size": [
+        240,
+        80
+      ],
+      "sources": [
+        {
+          "path": "workflows/qwen_image_edit_lightning.json",
+          "label": "Qwen-Image-Edit 2509"
+        }
+      ]
+    },
+    {
+      "id": "wf-clips",
+      "type": "frontend",
+      "label": "③ 视频 ×3",
+      "sublabel": "wan22_i2v_14b_4step · 两专家各 2 步",
+      "pos": [
+        1170,
+        350
+      ],
+      "size": [
+        240,
+        80
+      ],
+      "sources": [
+        {
+          "path": "workflows/wan22_i2v_14b_4step.json",
+          "label": "Wan2.2 14B 图生视频"
+        }
+      ]
+    },
+    {
+      "id": "wf-music",
+      "type": "frontend",
+      "label": "④ 配乐",
+      "sublabel": "ace_step_instrumental · 50 步",
+      "pos": [
+        870,
+        470
+      ],
+      "size": [
+        230,
+        80
+      ],
+      "sources": [
+        {
+          "path": "workflows/ace_step_instrumental.json",
+          "label": "ACE-Step 3.5B"
+        },
+        {
+          "path": "src/agent/finish.ts",
+          "line": 87,
+          "end_line": 95,
+          "label": "成片阶段调用"
+        }
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "projects/<id>/",
+      "sublabel": "refs · frames · clips · audio",
+      "pos": [
+        647.5,
+        440
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/lib/media.ts",
+          "line": 84,
+          "end_line": 96,
+          "label": "下载并写入文件"
+        }
+      ]
+    },
+    {
+      "id": "vlm",
+      "type": "external",
+      "label": "Step3-VL 质检",
+      "sublabel": "vLLM :8002 · 不经过 ComfyUI",
+      "pos": [
+        30,
+        450
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/agent/gate.ts",
+          "line": 26,
+          "end_line": 33,
+          "label": "qualityGate"
+        },
+        {
+          "path": "src/agent/llm.ts",
+          "line": 25,
+          "end_line": 31,
+          "label": "reviewer 端点"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "cineloom-comfyui-1 容器",
+      "wraps": [
+        "comfy",
+        "wf-hero",
+        "wf-frames",
+        "wf-clips",
+        "wf-music"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "harness-media",
+      "from": "harness",
+      "to": "media",
+      "label": "生成请求",
+      "variant": "emphasis"
+    },
+    {
+      "id": "media-client",
+      "from": "media",
+      "to": "client",
+      "label": "工作流 JSON + 参考图",
+      "variant": "emphasis"
+    },
+    {
+      "id": "client-comfy",
+      "from": "client",
+      "to": "comfy",
+      "label": "HTTP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "comfy-hero",
+      "from": "comfy",
+      "to": "wf-hero",
+      "label": "执行"
+    },
+    {
+      "id": "comfy-frames",
+      "from": "comfy",
+      "to": "wf-frames",
+      "label": "执行"
+    },
+    {
+      "id": "comfy-clips",
+      "from": "comfy",
+      "to": "wf-clips",
+      "label": "执行"
+    },
+    {
+      "id": "comfy-music",
+      "from": "comfy",
+      "to": "wf-music",
+      "label": "执行"
+    },
+    {
+      "id": "client-store",
+      "from": "client",
+      "to": "store",
+      "label": "/view 下载",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "harness-free",
+      "from": "harness",
+      "to": "client",
+      "label": "阶段切换时 /free 卸载模型",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "top"
+    },
+    {
+      "id": "harness-vlm",
+      "from": "harness",
+      "to": "vlm",
+      "label": "审主图和分镜帧",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "阶段顺序",
+      "items": [
+        "① 主图 → ② 分镜帧 → ③ 视频 → ④ 配乐，依次执行",
+        "每次进入新阶段前先调用 /free，内存里同一时间只放一个扩散模型家族",
+        "② 的三个参考图槽位都放产品主图，每一帧都以它为基准"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "调用方式",
+      "items": [
+        "不用网页界面：上传图片 → /prompt 排队 → 轮询 /history → /view 下载",
+        "仓库里的模板带 {{占位符}}，运行时填入实际值后提交",
+        "生成的 png / mp4 里嵌着完整工作流，拖进 ComfyUI 画布即可查看"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "不经过 ComfyUI 的部分",
+      "items": [
+        "Nemotron 写文案（vLLM :8001）",
+        "Step3-VL 质检（vLLM :8002）",
+        "Qwen3-TTS 配音、ffmpeg 剪辑合成",
+        "备用：wan22_ti2v_5b_*，仅在 --video-model wan22-5b 时使用"
+      ]
+    }
+  ]
+}

@@ -260,6 +260,7 @@ async function harnessCommand(args: ParsedArgs): Promise<number> {
     silent: flag(args, 'silent') === 'true',
     candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
     bestOf: flag(args, 'best-of') === 'true',
+    frameScheduling: flag(args, 'frame-scheduling') as never,
   })
   print(result)
   return 0

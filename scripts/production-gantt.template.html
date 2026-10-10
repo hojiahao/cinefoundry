@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CineLoom 制作甘特图</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --surface-0: #f4f3f0;
+  --surface-1: #fcfcfb;
+  --border: #e3e2dd;
+  --grid: #ecebe7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #7a7974;
+  --p-copy: #2a78d6;
+  --p-hero: #eb6834;
+  --p-frames: #1baf7a;
+  --p-clips: #eda100;
+  --p-cut: #e87ba4;
+  --p-swap: #b9b8b2;
+  --hatch: rgba(0,0,0,.45);
+  --focus: #0b0b0b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --surface-0: #111110;
+    --surface-1: #1a1a19;
+    --border: #33332f;
+    --grid: #2a2a27;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8e8d86;
+    --p-copy: #3987e5;
+    --p-hero: #d95926;
+    --p-frames: #199e70;
+    --p-clips: #c98500;
+    --p-cut: #d55181;
+    --p-swap: #5a5954;
+    --hatch: rgba(0,0,0,.55);
+    --focus: #ffffff;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --surface-0: #111110;
+  --surface-1: #1a1a19;
+  --border: #33332f;
+  --grid: #2a2a27;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8e8d86;
+  --p-copy: #3987e5;
+  --p-hero: #d95926;
+  --p-frames: #199e70;
+  --p-clips: #c98500;
+  --p-cut: #d55181;
+  --p-swap: #5a5954;
+  --hatch: rgba(0,0,0,.55);
+  --focus: #ffffff;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root {
+  min-height: 100vh; background: var(--surface-0); color: var(--text-primary);
+  font: 14px/1.5 system-ui, -apple-system, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  padding: 28px clamp(16px, 4vw, 48px) 48px;
+}
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+h1 { font-size: 22px; margin: 0 0 4px; font-weight: 650; }
+h2 { font-size: 16px; margin: 0 0 2px; font-weight: 600; }
+.sub { color: var(--text-secondary); margin: 0; max-width: 72ch; }
+.muted { color: var(--text-muted); font-size: 12px; }
+button, select {
+  font: inherit; color: var(--text-primary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer;
+}
+button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+button:focus-visible, select:focus-visible, rect:focus-visible, g:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 22px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.tile .k { color: var(--text-secondary); font-size: 12px; }
+.tile .v { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.tile .n { color: var(--text-muted); font-size: 12px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 16px; }
+.bar-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; margin-bottom: 12px; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--text-secondary); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--text-secondary); font-size: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { flex: none; }
+.chart { width: 100%; overflow-x: auto; }
+svg text { fill: var(--text-secondary); font-size: 12px; }
+svg .axis text { fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+svg .grid line { stroke: var(--grid); }
+svg .row-hit { fill: transparent; cursor: pointer; }
+svg .row-hit:hover, svg .row-hit.sel { fill: var(--grid); }
+svg .row-label { fill: var(--text-primary); }
+svg .row-label.sel { font-weight: 650; }
+svg .bar-label { fill: #0b0b0b; font-size: 11px; pointer-events: none; }
+svg .bar-label.on-dark { fill: #ffffff; }
+.tip {
+  position: fixed; pointer-events: none; z-index: 10; max-width: 380px;
+  background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 24px rgba(0,0,0,.18); font-size: 12px; display: none;
+}
+.tip b { font-size: 13px; }
+.tip .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.tip dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; margin: 6px 0 0; }
+.tip dt { color: var(--text-muted); }
+.tip dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-word; }
+.tip .ev { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+.share { display: flex; height: 14px; gap: 2px; margin: 10px 0 6px; }
+.share div { border-radius: 3px; min-width: 2px; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+.note { color: var(--text-muted); font-size: 12px; margin-top: 14px; }
+.hidden { display: none; }
+.run-head { font-size: 14px; margin: 16px 0 2px; }
+.run-head .muted { font-weight: 400; margin-left: 8px; }
+.delta-good { color: var(--text-primary); font-weight: 650; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <header>
+    <div>
+      <h1>CineLoom：一条广告片的制作甘特图</h1>
+      <p class="sub">数据来自 <code>projects/*/reports/run.jsonl</code>，只统计每个项目的第一次完整运行，没有任何估算。串行运行的每根条是两条日志事件之间的墙钟时间；并行队列运行按记录的出图开始时间和质检耗时，把各镜头分行画出（summer-cool-soda-queue 早于这两个字段，按队列的派发规则从时间戳还原）。</p>
+    </div>
+    <button id="theme" type="button" aria-label="切换明暗主题">◐ 主题</button>
+  </header>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="card" id="compareCard" hidden>
+    <div class="bar-row">
+      <div>
+        <h2 id="compareTitle"></h2>
+        <div class="muted" id="compareSub"></div>
+      </div>
+    </div>
+    <div class="legend" id="legendCompare"></div>
+    <h2 class="run-head" id="oldHead"></h2>
+    <div class="chart" id="oldChart"></div>
+    <h2 class="run-head" id="newHead"></h2>
+    <div class="chart" id="newChart"></div>
+    <h2 style="font-size:14px;margin-top:18px">各阶段用时对比</h2>
+    <div id="deltaTable"></div>
+    <p class="note" id="compareNote"></p>
+  </section>
+
+  <section class="card" id="overviewCard">
+    <div class="bar-row">
+      <div>
+        <h2>全部运行</h2>
+        <div class="muted">点击某一行，在下方查看这次运行的分镜头甘特图。横轴是从开工算起的分钟数。</div>
+      </div>
+      <div class="controls">
+        <label for="sort">排序</label>
+        <select id="sort">
+          <option value="start">开工时间</option>
+          <option value="wall">总时长</option>
+          <option value="frames">帧 + 质检用时</option>
+        </select>
+        <button type="button" id="viewChart" aria-pressed="true">图</button>
+        <button type="button" id="viewTable" aria-pressed="false">表</button>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="chart" id="overview"></div>
+    <div class="chart hidden" id="overviewTable"></div>
+  </section>
+
+  <section class="card" id="detailCard">
+    <div class="bar-row">
+      <div>
+        <h2 id="detailTitle"></h2>
+        <div class="muted" id="detailSub"></div>
+      </div>
+    </div>
+    <div class="split">
+      <div class="chart" id="detail"></div>
+      <div>
+        <h2 style="font-size:14px">各阶段用时</h2>
+        <div class="share" id="share"></div>
+        <div id="phaseTable"></div>
+      </div>
+    </div>
+    <p class="note">质检“无评分”表示日志里 score 为 −1，即视觉模型没有给出有效分数。“调度”条是扩散模型家族之间释放和加载显存的时间：规则要求同一时间内存里只放一个扩散模型家族。配音事件里的 seconds 字段按日志原样显示，鼠标悬停可以看到。</p>
+  </section>
+  <div class="tip" id="tip" role="tooltip"></div>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+
+const PHASES = [
+  { key: "copy",   name: "文案（LLM）" },
+  { key: "swap",   name: "模型调度" },
+  { key: "hero",   name: "产品主图" },
+  { key: "frames", name: "分镜帧 + 质检" },
+  { key: "clips",  name: "视频（Wan2.2）" },
+  { key: "cut",    name: "成片" },
+];
+const PNAME = Object.fromEntries(PHASES.map(p => [p.key, p.name]));
+const color = k => `var(--p-${k})`;
+const isDark = () => {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+};
+const NS = "http://www.w3.org/2000/svg";
+const fmt = s => { const r = Math.round(s); return r >= 60 ? `${Math.floor(r / 60)} 分 ${r % 60} 秒` : `${s.toFixed(s < 10 ? 1 : 0)} 秒`; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function el(tag, attrs = {}, parent) {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function phaseTotals(run) {
+  // Wall time covered by each phase; overlapping bars (shots rendered in parallel) count once.
+  const t = Object.fromEntries(PHASES.map(p => [p.key, 0]));
+  for (const p of PHASES) {
+    let end = -Infinity;
+    for (const b of run.bars.filter(b => b.phase === p.key).sort((a, b) => a.s - b.s)) {
+      if (b.e > end) { t[p.key] += b.e - Math.max(b.s, end); end = b.e; }
+    }
+  }
+  return t;
+}
+function defs(svg) {
+  const d = el("defs", {}, svg);
+  const p = el("pattern", { id: "hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, d);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: "var(--hatch)", "stroke-width": 2 }, p);
+}
+
+// ---------- tooltip ----------
+const tip = document.getElementById("tip");
+function showTip(evt, html) {
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  const r = tip.getBoundingClientRect();
+  let x = evt.clientX + 14, y = evt.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = evt.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = Math.max(8, evt.clientY - r.height - 14);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+function focusTip(node, html) {
+  const r = node.getBoundingClientRect();
+  showTip({ clientX: r.left + r.width / 2, clientY: r.bottom }, html);
+}
+
+const FIELD_SKIP = new Set(["ts", "stage", "agent", "rejected", "notes", "memoryAtEnd", "rejectedAttempts"]);
+function eventHtml(e) {
+  const rows = [];
+  rows.push(["事件", `${e.stage} · ${e.agent || ""}`]);
+  rows.push(["记录时间", new Date(e.ts).toLocaleTimeString("zh-CN", { hour12: false })]);
+  for (const [k, v] of Object.entries(e)) {
+    if (FIELD_SKIP.has(k) || v === "" || (Array.isArray(v) && !v.length)) continue;
+    let val = v;
+    if (Array.isArray(v)) val = v.map(x => typeof x === "object" ? (x.issue || x.line || JSON.stringify(x)) : x).join("；");
+    else if (typeof v === "object") val = JSON.stringify(v);
+    else if (typeof v === "number" && /seconds|Seconds/.test(k)) val = `${v.toFixed(1)} s`;
+    else if (k === "score" && v < 0) val = "无评分（−1）";
+    rows.push([k, val]);
+  }
+  return `<div class="ev"><dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`;
+}
+function barHtml(run, b) {
+  return `<b><span class="sw" style="background:${color(b.phase)}"></span>${esc(b.label)}</b>${b.fail ? " ✕" : ""}
+    <dl><dt>阶段</dt><dd>${PNAME[b.phase]}</dd>
+    <dt>区间</dt><dd>${fmt(b.s)} → ${fmt(b.e)}</dd>
+    <dt>墙钟用时</dt><dd>${fmt(b.e - b.s)}</dd></dl>
+    ${b.events.map(eventHtml).join("")}`;
+}
+
+// ---------- legend & tiles ----------
+function swatch(k, hatch) {
+  const s = el("svg", { width: 14, height: 14, "aria-hidden": "true" });
+  if (hatch) defs(s);
+  el("rect", { width: 14, height: 14, rx: 3, fill: color(k) }, s);
+  if (hatch) el("rect", { width: 14, height: 14, rx: 3, fill: "url(#hatch)" }, s);
+  return s;
+}
+function renderLegend(id = "legend") {
+  const L = document.getElementById(id);
+  for (const p of PHASES) {
+    const s = document.createElement("span");
+    s.append(swatch(p.key), p.name);
+    L.append(s);
+  }
+  const s = document.createElement("span");
+  s.append(swatch("frames", true), "✕ 未通过质检（斜纹）");
+  L.append(s);
+  const r = document.createElement("span");
+  const rs = swatch("frames");
+  rs.querySelector("rect").setAttribute("fill-opacity", 0.4);
+  r.append(rs, "出图（含排队），其后实色为质检");
+  L.append(r);
+}
+function renderTiles() {
+  const S = D.summary;
+  const framesShare = D.runs.map(r => { const t = phaseTotals(r); return (t.hero + t.frames) / r.wall; }).sort((a, b) => a - b);
+  const mid = framesShare.length / 2;
+  const med = framesShare.length % 2 ? framesShare[Math.floor(mid)] : (framesShare[mid - 1] + framesShare[mid]) / 2;
+  const tiles = [
+    ["完整运行", `${S.runs}`, "每次 3 个镜头，第一次完整运行"],
+    ["总时长中位数", fmt(S.wallMedian), `最短 ${fmt(Math.min(...D.runs.map(r => r.wall)))} · 最长 ${fmt(Math.max(...D.runs.map(r => r.wall)))}`],
+    ["主图 + 帧 + 质检占比", `${Math.round(med * 100)}%`, "各次运行占比的中位数"],
+    ["帧质检通过率", `${Math.round(S.gatesPassed / S.gates * 100)}%`, `${S.gatesPassed} / ${S.gates} 次质检`],
+    ["单段视频中位数", fmt(S.clipMedian), `共 ${S.clips} 段 Wan2.2 视频`],
+  ];
+  document.getElementById("tiles").innerHTML = tiles.map(([k, v, n]) =>
+    `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join("");
+}
+
+// ---------- overview ----------
+// docs/production-gantt.html#<project-id> opens that run; otherwise the most recent one.
+let selected = D.runs.find(r => r.id === decodeURIComponent(location.hash.slice(1))) || D.runs[D.runs.length - 1];
+let sortKey = "start";
+
+function sortedRuns() {
+  const rs = [...D.runs];
+  if (sortKey === "wall") rs.sort((a, b) => b.wall - a.wall);
+  if (sortKey === "frames") rs.sort((a, b) => { const A = phaseTotals(a), B = phaseTotals(b); return (B.hero + B.frames) - (A.hero + A.frames); });
+  return rs;
+}
+function axis(svg, x0, x1, top, bottom, maxS, step) {
+  const g = el("g", { class: "grid" }, svg), a = el("g", { class: "axis" }, svg);
+  for (let s = 0; s <= maxS; s += step) {
+    const x = x0 + (x1 - x0) * s / maxS;
+    el("line", { x1: x, x2: x, y1: top, y2: bottom }, g);
+    const t = el("text", { x, y: top - 8, "text-anchor": "middle" }, a);
+    t.textContent = `${Math.round(s / 60)}′`;
+  }
+}
+function drawBar(g, x, y, w, h, b, run) {
+  const gap = w > 4 ? 1 : 0;
+  const r = el("rect", { x: x + gap, y, width: Math.max(1, w - 2 * gap), height: h, rx: Math.min(3, h / 3), fill: color(b.phase), "fill-opacity": b.kind === "render" ? 0.4 : 1,
+    tabindex: 0, role: "img", "aria-label": `${b.label}，${PNAME[b.phase]}，${fmt(b.e - b.s)}${b.fail ? "，未通过质检" : ""}` }, g);
+  if (b.fail) el("rect", { x: x + gap, y, width: Math.max(1, w - 2 * gap), height: h, rx: Math.min(3, h / 3), fill: "url(#hatch)", "pointer-events": "none" }, g);
+  const html = () => barHtml(run, b);
+  r.addEventListener("mousemove", e => showTip(e, html()));
+  r.addEventListener("mouseleave", hideTip);
+  r.addEventListener("focus", () => focusTip(r, html()));
+  r.addEventListener("blur", hideTip);
+  return r;
+}
+function renderOverview() {
+  const host = document.getElementById("overview");
+  host.innerHTML = "";
+  const runs = sortedRuns();
+  const W = Math.max(760, host.clientWidth), labelW = 250, rowH = 26, top = 30;
+  const maxS = Math.ceil(Math.max(...runs.map(r => r.wall)) / 600) * 600;
+  const H = top + runs.length * rowH + 8;
+  const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "group", "aria-label": "全部运行的甘特图" }, host);
+  defs(svg);
+  const x0 = labelW, x1 = W - 12, sx = s => x0 + (x1 - x0) * s / maxS;
+  axis(svg, x0, x1, top, H - 8, maxS, 600);
+  runs.forEach((run, i) => {
+    const y = top + i * rowH;
+    const row = el("g", {}, svg);
+    const hit = el("rect", { class: "row-hit" + (run === selected ? " sel" : ""), x: 0, y, width: W, height: rowH, rx: 6,
+      tabindex: 0, role: "button", "aria-label": `查看 ${run.id} 的详情` }, row);
+    const pick = () => { selected = run; history.replaceState(null, "", `#${run.id}`); renderOverview(); renderDetail(); };
+    hit.addEventListener("click", pick);
+    hit.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+    const lab = el("text", { class: "row-label" + (run === selected ? " sel" : ""), x: 8, y: y + rowH / 2 + 4 }, row);
+    lab.textContent = run.id;
+    const wl = el("text", { x: labelW - 10, y: y + rowH / 2 + 4, "text-anchor": "end" }, row);
+    wl.textContent = fmt(run.wall);
+    const g = el("g", {}, row);
+    const shots = [...new Set(run.bars.filter(b => b.lane != null).map(b => b.lane))].sort((a, b) => a - b);
+    const subH = (rowH - 10 - (shots.length - 1)) / Math.max(1, shots.length);
+    for (const b of run.bars) {
+      const lane = b.lane != null ? shots.indexOf(b.lane) : -1;
+      const r = lane < 0
+        ? drawBar(g, sx(b.s), y + 5, sx(b.e) - sx(b.s), rowH - 10, b, run)
+        : drawBar(g, sx(b.s), y + 5 + lane * (subH + 1), sx(b.e) - sx(b.s), subH, b, run);
+      r.addEventListener("click", pick);
+      r.style.cursor = "pointer";
+    }
+  });
+}
+function renderOverviewTable() {
+  const rows = sortedRuns().map(r => {
+    const t = phaseTotals(r);
+    return `<tr><td>${esc(r.id)}</td>${PHASES.map(p => `<td>${Math.round(t[p.key])}</td>`).join("")}
+      <td><b>${Math.round(r.wall)}</b></td><td>${r.gatesPassed}/${r.gates}</td></tr>`;
+  }).join("");
+  document.getElementById("overviewTable").innerHTML =
+    `<table><thead><tr><th>项目</th>${PHASES.map(p => `<th>${p.name}（秒）</th>`).join("")}<th>总计（秒）</th><th>质检通过</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ---------- detail ----------
+function renderDetail() {
+  const run = selected;
+  document.getElementById("detailTitle").textContent = `${run.id} · 分镜头甘特图`;
+  const mem = run.memoryAtEnd ? ` · 结束时可用内存 ${run.memoryAtEnd.availableGb} / ${run.memoryAtEnd.totalGb} GB` : "";
+  document.getElementById("detailSub").textContent =
+    `开工 ${new Date(run.startedAt).toLocaleString("zh-CN", { hour12: false })} · 总计 ${fmt(run.wall)} · 质检通过 ${run.gatesPassed}/${run.gates} · 重生成 ${run.regen ?? "—"} 次 · 分镜帧调度 ${run.frameScheduling === "queue" ? "并行队列" : "串行"}${mem}`;
+
+  drawRunChart(run, document.getElementById("detail"));
+  renderPhaseShare(run);
+}
+
+/** One run as a lane chart; `maxS` lets two runs share an axis. */
+function drawRunChart(run, host, maxS) {
+  host.innerHTML = "";
+  const W = Math.max(640, host.clientWidth), labelW = 120, laneH = 46, top = 30;
+  const shots = [...new Set(run.bars.filter(b => b.lane != null).map(b => b.lane))].sort((a, b) => a - b);
+  const lanes = PHASES.flatMap(p => p.key === "frames"
+    ? shots.map(n => ({ key: p.key, name: `镜头 ${n}`, test: b => b.lane === n }))
+    : [{ key: p.key, name: p.name, test: b => b.phase === p.key && b.lane == null }]);
+  const H = top + lanes.length * laneH + 8;
+  const span = maxS ?? run.wall;
+  const step = span > 3000 ? 600 : 300;
+  maxS = Math.ceil(span / step) * step;
+  const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "group", "aria-label": `${run.id} 的分镜头甘特图` }, host);
+  defs(svg);
+  const x0 = labelW, x1 = W - 12, sx = s => x0 + (x1 - x0) * s / maxS;
+  axis(svg, x0, x1, top, H - 8, maxS, step);
+  lanes.forEach((p, i) => {
+    const y = top + i * laneH;
+    const t = el("text", { class: "row-label", x: 4, y: y + laneH / 2 + 4 }, svg);
+    t.textContent = p.name;
+    const g = el("g", {}, svg);
+    for (const b of run.bars.filter(p.test)) {
+      const x = sx(b.s), w = sx(b.e) - sx(b.s);
+      drawBar(g, x, y + 8, w, laneH - 16, b, run);
+      const short = b.lane != null
+        ? (b.kind === "render" ? "出图" : b.kind === "gate" ? "质检" : "") + (b.fail ? " ✕" : "")
+        : b.label.split(" / ")[0].replace(/ 候选.*| · .*/, "") + (b.fail ? " ✕" : "");
+      if (w > short.length * 7.5 + 10) {
+        const lt = el("text", { class: "bar-label" + (p.key === "copy" || p.key === "swap" && isDark() ? " on-dark" : ""),
+          x: x + 6, y: y + laneH / 2 + 4 }, g);
+        lt.textContent = short;
+      }
+    }
+  });
+}
+
+function renderPhaseShare(run) {
+  const t = phaseTotals(run);
+  document.getElementById("share").innerHTML = PHASES.filter(p => t[p.key] > 0).map(p =>
+    `<div style="flex:${t[p.key]};background:${color(p.key)}" title="${p.name} ${fmt(t[p.key])}"></div>`).join("");
+  document.getElementById("phaseTable").innerHTML = `<table><thead><tr><th>阶段</th><th>用时</th><th>占比</th></tr></thead><tbody>${
+    PHASES.map(p => `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:${color(p.key)}"></span>${p.name}</td>
+      <td>${fmt(t[p.key])}</td><td>${(t[p.key] / run.wall * 100).toFixed(1)}%</td></tr>`).join("")
+  }<tr><td><b>总计</b></td><td><b>${fmt(run.wall)}</b></td><td></td></tr></tbody></table>`;
+}
+
+// ---------- compare mode ----------
+function renderCompare() {
+  const { old: a, new: b } = D.compare;
+  const ta = phaseTotals(a), tb = phaseTotals(b);
+  const pct = (x, y) => `${y < x ? "−" : "+"}${Math.abs((y - x) / x * 100).toFixed(0)}%`;
+  const delta = (x, y) => `${y < x ? "−" : "+"}${fmt(Math.abs(y - x))}`;
+  const head = (r, label) => `${label}<span class="muted">${esc(r.id)} · 总计 ${fmt(r.wall)} · 质检 ${r.gatesPassed}/${r.gates} 通过 · 重生成 ${r.regen ?? "—"} 次</span>`;
+  document.getElementById("compareTitle").textContent = "同一条 brief：旧版本与新版本的甘特图对比";
+  document.getElementById("compareSub").textContent = "两张图共用同一条时间轴（开工后的分钟数），右端越短越快。悬停任意一条可以看到原始日志字段。";
+  document.getElementById("oldHead").innerHTML = head(a, "旧版本 · 分镜帧逐镜头串行");
+  document.getElementById("newHead").innerHTML = head(b, "新版本 · 分镜帧并行队列");
+  const maxS = Math.max(a.wall, b.wall);
+  drawRunChart(a, document.getElementById("oldChart"), maxS);
+  drawRunChart(b, document.getElementById("newChart"), maxS);
+  document.getElementById("tiles").innerHTML = [
+    ["总时长", `${fmt(a.wall)} → ${fmt(b.wall)}`, `${delta(a.wall, b.wall)}（${pct(a.wall, b.wall)}）`],
+    ["分镜帧 + 质检（唯一改动的环节）", `${fmt(ta.frames)} → ${fmt(tb.frames)}`, `${delta(ta.frames, tb.frames)}（${pct(ta.frames, tb.frames)}）`],
+    ["视频（Wan2.2）", `${fmt(ta.clips)} → ${fmt(tb.clips)}`, `${delta(ta.clips, tb.clips)}（${pct(ta.clips, tb.clips)}）`],
+    ["帧质检次数", `${a.gates} → ${b.gates}`, `通过 ${a.gatesPassed} → ${b.gatesPassed}`],
+  ].map(([k, v, n]) => `<div class="tile"><div class="k">${k}</div><div class="v" style="font-size:20px">${v}</div><div class="n">${n}</div></div>`).join("");
+  document.getElementById("deltaTable").innerHTML = `<table><thead><tr><th>阶段</th><th>旧版本</th><th>新版本</th><th>变化</th></tr></thead><tbody>${
+    PHASES.map(p => `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:${color(p.key)}"></span>${p.name}</td>
+      <td>${fmt(ta[p.key])}</td><td>${fmt(tb[p.key])}</td><td>${ta[p.key] ? delta(ta[p.key], tb[p.key]) : "—"}</td></tr>`).join("")
+  }<tr><td><b>总计</b></td><td><b>${fmt(a.wall)}</b></td><td><b>${fmt(b.wall)}</b></td><td class="delta-good">${delta(a.wall, b.wall)}（${pct(a.wall, b.wall)}）</td></tr></tbody></table>`;
+  document.getElementById("compareNote").textContent = D.compare.note || "";
+}
+
+// ---------- wiring ----------
+const COMPARE = Boolean(D.compare);
+if (COMPARE) {
+  for (const id of ["overviewCard", "detailCard"]) document.getElementById(id).hidden = true;
+  document.getElementById("compareCard").hidden = false;
+  document.querySelector("h1").textContent = "CineLoom：新旧版本生成一支广告片的甘特图对比";
+}
+document.getElementById("sort").addEventListener("change", e => { sortKey = e.target.value; renderOverview(); renderOverviewTable(); });
+const vc = document.getElementById("viewChart"), vt = document.getElementById("viewTable");
+function setView(table) {
+  vc.setAttribute("aria-pressed", !table); vt.setAttribute("aria-pressed", table);
+  document.getElementById("overview").classList.toggle("hidden", table);
+  document.getElementById("overviewTable").classList.toggle("hidden", !table);
+}
+vc.addEventListener("click", () => setView(false));
+vt.addEventListener("click", () => setView(true));
+document.getElementById("theme").addEventListener("click", () => {
+  document.documentElement.dataset.theme = isDark() ? "light" : "dark";
+  COMPARE ? renderCompare() : renderDetail();
+});
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { COMPARE ? renderCompare() : (renderOverview(), renderDetail()); }, 120); });
+
+if (COMPARE) { renderLegend("legendCompare"); renderCompare(); }
+else { renderLegend(); renderTiles(); renderOverview(); renderOverviewTable(); renderDetail(); }
+</script>
+</body>
+</html>

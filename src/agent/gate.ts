@@ -1,5 +1,5 @@
 import type { Industry, Shot } from './checks.js'
-import { chatJson, type ModelEndpoint } from './llm.js'
+import { chatJson, JsonReplyError, type ModelEndpoint } from './llm.js'
 import { exec } from '../lib/exec.js'
 
 /** The reviewer sees a 1024 px JPEG, not the full still: the verdict does not change, the prefill does. */
@@ -14,6 +14,26 @@ export interface QaVerdict {
   /** 0-100, or -1 when the reviewer could not answer and the frame went ahead unverified. */
   score: number
   issues: string[]
+  /** Only on score -1: why the reviewer did not conclude, so the time it costs can be attributed. */
+  inconclusive?: GateFailure
+}
+
+export interface GateFailure {
+  /** budget: max_tokens ran out (finish_reason "length"); unparsable: it finished without JSON; malformed: JSON without pass/score; transport: HTTP or connection error. */
+  cause: 'budget' | 'unparsable' | 'malformed' | 'transport'
+  detail: string
+  seconds?: number
+  completionTokens?: number
+  finishReason?: string
+}
+
+/** Sort a failed gate call into a cause. */
+export function gateFailure(error: unknown): GateFailure {
+  const detail = (error as Error).message?.slice(0, 200) ?? String(error)
+  if (error instanceof JsonReplyError) {
+    return { cause: error.finishReason === 'length' ? 'budget' : 'unparsable', detail, seconds: error.seconds, completionTokens: error.completionTokens, finishReason: error.finishReason }
+  }
+  return { cause: 'transport', detail }
 }
 
 /**
@@ -27,8 +47,9 @@ export async function qualityGate(reviewer: ModelEndpoint, frame: string, shot: 
   const [frameCopy, referenceCopy] = await Promise.all([reviewCopy(frame), productReference ? reviewCopy(productReference) : undefined])
   try {
     return await runGate(reviewer, frameCopy, shot, referenceCopy, 3000, industry)
-  } catch {
-    return { pass: false, score: -1, issues: ['reviewer inconclusive within its budget'] }
+  } catch (error) {
+    const inconclusive = gateFailure(error)
+    return { pass: false, score: -1, issues: [`reviewer inconclusive (${inconclusive.cause})`], inconclusive }
   }
 }
 
@@ -56,6 +77,9 @@ Decide quickly; do not deliberate at length. Reply with JSON only: {"pass": bool
     (verdict) => (typeof verdict.pass === 'boolean' && typeof verdict.score === 'number' ? [] : ['need boolean "pass" and numeric "score"']),
     1,
   )
+  if (run.unresolved.length) {
+    return { pass: false, score: -1, issues: ['reviewer inconclusive (malformed)'], inconclusive: { cause: 'malformed', detail: run.unresolved.join('; ').slice(0, 200), seconds: run.seconds, completionTokens: run.completionTokens, finishReason: run.finishReason } }
+  }
   const issues = Array.isArray(run.value.issues) ? run.value.issues : []
   return { pass: run.value.pass && run.value.score >= 80, score: run.value.score, issues }
 }

@@ -284,3 +284,13 @@ describe('the request decides what the product looks like', () => {
     expect(checkStoryboard({ style: 's', product: 'a silver aluminium can, label text "冷" in quotes', shots: [shot] }, script1, brief)).toHaveLength(1)
   })
 })
+
+describe('gateFailure', () => {
+  it('tells a spent token budget from an answer without JSON and from a transport error', async () => {
+    const { gateFailure } = await import('../src/agent/gate.js')
+    const { JsonReplyError } = await import('../src/agent/llm.js')
+    expect(gateFailure(new JsonReplyError('no JSON', 170, 3000, 'length'))).toMatchObject({ cause: 'budget', completionTokens: 3000, seconds: 170 })
+    expect(gateFailure(new JsonReplyError('no JSON', 40, 800, 'stop'))).toMatchObject({ cause: 'unparsable', finishReason: 'stop' })
+    expect(gateFailure(new Error('step3-vl returned 500: oops'))).toMatchObject({ cause: 'transport' })
+  })
+})

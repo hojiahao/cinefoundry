@@ -35,8 +35,10 @@ export interface HarnessOptions {
   candidates?: number
   /** Generate every candidate even after one passed, and keep the best score. Default: stop at the first pass. */
   bestOf?: boolean
-  /** Render the next shot's first candidate while the current one is judged (default true). */
+  /** Serial scheduling only: render the next shot's first candidate while the current one is judged (default true). */
   prefetch?: boolean
+  /** 'queue' (default): every shot's gate loop runs at once. 'serial': one shot after another, as before. */
+  frameScheduling?: 'queue' | 'serial'
   log?: (line: string) => void
 }
 
@@ -261,29 +263,29 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
   const framePath = (shot: Shot, suffix: string) => join(dir, 'frames', `shot_${String(shot.shot).padStart(3, '0')}${suffix}.png`)
   const render = (shot: Shot, prompt: string, suffix: string) => {
     const path = framePath(shot, suffix)
-    return generateImage(comfy, { prompt, size: frameSizeFor, output: path, references: [hero!.path] }).then((image) => ({ path, image }))
+    // imageSeconds counts from the request, so it includes any wait in ComfyUI's queue.
+    const renderStartedAt = new Date().toISOString()
+    return generateImage(comfy, { prompt, size: frameSizeFor, output: path, references: [hero!.path] }).then((image) => ({ path, image, renderStartedAt }))
   }
-  // The image model and the reviewer are different processes: while the reviewer judges this
-  // shot's first candidate, the next shot's first candidate is already rendering.
-  let prefetched: { shot: number; rendering: Promise<{ path: string; image: { seconds: number } }> } | undefined
-  for (const [index, shot] of storyboard.shots.entries()) {
+  type Rendered = { path: string; image: { seconds: number }; renderStartedAt: string }
+  /** One shot's whole gate loop: first candidate, further seeds, then prompt repairs. */
+  const makeFrame = async (shot: Shot, first: Promise<Rendered>, onFirstJudging?: () => void) => {
     let prompt = composeImagePrompt(shot, storyboard, true, industryOf(brief.product))
     let best: { path: string; verdict: QaVerdict } | undefined
     const consider = (path: string, verdict: QaVerdict) => {
       if (!best || (verdict.pass && !best.verdict.pass) || (verdict.pass === best.verdict.pass && verdict.score > best.verdict.score)) best = { path, verdict }
     }
-    const judge = async (rendered: { path: string; image: { seconds: number } }, suffix: string, attempt: number) => {
+    const judge = async (rendered: Rendered, suffix: string, attempt: number) => {
+      const gateStarted = Date.now()
       const verdict = await qualityGate(reviewer, rendered.path, shot, hero!.path, industryOf(brief.product))
+      const gateSeconds = (Date.now() - gateStarted) / 1000
       log(`▸ frame ${shot.shot}${suffix.padEnd(5)} ${rendered.image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
-      await record('qa', 'quality-gate', reviewer, { shot: shot.shot, attempt, candidate: suffix || '_a', imageSeconds: rendered.image.seconds, ...verdict })
+      await record('qa', 'quality-gate', reviewer, { shot: shot.shot, attempt, candidate: suffix || '_a', renderStartedAt: rendered.renderStartedAt, imageSeconds: rendered.image.seconds, gateSeconds, ...verdict })
       consider(rendered.path, verdict)
     }
     const shoot = async (suffix: string, attempt: number) => judge(await render(shot, prompt, suffix), suffix, attempt)
-    const first = prefetched?.shot === shot.shot ? await prefetched.rendering : await render(shot, prompt, '')
-    prefetched = undefined
-    const judging = judge(first, '', 0)
-    const next = storyboard.shots[index + 1]
-    if (next && options.prefetch !== false) prefetched = { shot: next.shot, rendering: render(next, composeImagePrompt(next, storyboard, true, industryOf(brief.product)), '') }
+    const judging = judge(await first, '', 0)
+    onFirstJudging?.()
     await judging
     // Best of N: the same prompt with different seeds. A diffusion model's spread between
     // seeds is often larger than what a prompt edit buys, and the gate can rank the results.
@@ -304,6 +306,25 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
       id: `frame-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(dir.length + 1), shot: shot.shot,
       execution: 'local-dgx-spark', model: 'qwen_image_edit_lightning', note: best!.verdict.score < 0 ? 'unverified: the reviewer never concluded' : `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}`,
     })
+  }
+  const firstRender = (shot: Shot) => render(shot, composeImagePrompt(shot, storyboard, true, industryOf(brief.product)), '')
+  if ((options.frameScheduling ?? 'queue') === 'queue') {
+    // Every shot runs its own gate loop at once. ComfyUI renders its queue in order and the
+    // reviewer judges whatever is ready, so a shot that keeps failing no longer holds the image
+    // model idle while the others wait their turn. Same prompts, gate, seeds rule and limits.
+    await Promise.all(storyboard.shots.map((shot) => makeFrame(shot, firstRender(shot))))
+  } else {
+    // Serial: while the reviewer judges this shot's first candidate, the next shot's first
+    // candidate is already rendering.
+    let prefetched: Promise<Rendered> | undefined
+    for (const [index, shot] of storyboard.shots.entries()) {
+      const next = storyboard.shots[index + 1]
+      const first = prefetched ?? firstRender(shot)
+      prefetched = undefined
+      await makeFrame(shot, first, () => {
+        if (next && options.prefetch !== false) prefetched = firstRender(next)
+      })
+    }
   }
   await setStage(brief.id, 'frames', 'done')
   await setStage(brief.id, 'qa', 'done', `${result.qaRegenerations} regenerations`)
@@ -336,7 +357,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
   // The language models were woken while the film was being finished; make sure both are back before we return.
   await waking
   result.wallSeconds = (Date.now() - started) / 1000
-  await record('run', 'director', undefined, { wallSeconds: result.wallSeconds, qaRegenerations: result.qaRegenerations, rejectedAttempts, memoryAtEnd: await memoryStatus() })
+  await record('run', 'director', undefined, { wallSeconds: result.wallSeconds, frameScheduling: options.frameScheduling ?? 'queue', qaRegenerations: result.qaRegenerations, rejectedAttempts, memoryAtEnd: await memoryStatus() })
   // The report written inside finishFilm predates this final record; write it again so it carries the total.
   await writeDeliveryReport(dir, brief, script, storyboard, finalCut)
   log(`▸ cut          ${finalCut}`)
