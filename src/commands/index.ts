@@ -216,7 +216,7 @@ async function cut(args: ParsedArgs): Promise<number> {
 async function doctor(): Promise<number> {
   const info = await new ComfyClient().objectInfo()
   const problems: string[] = []
-  for (const name of ['qwen_image_lightning', 'qwen_image_edit_lightning', 'wan22_ti2v_5b_t2v', 'wan22_ti2v_5b_i2v', 'wan22_i2v_14b_4step', 'ace_step_instrumental']) {
+  for (const name of ['qwen_image_lightning', 'qwen_image_edit_lightning', 'wan22_ti2v_5b_t2v', 'wan22_ti2v_5b_i2v', 'wan22_i2v_14b_4step', 'ltx25_fast_i2v', 'ace_step_instrumental']) {
     const graph = (await loadWorkflow(name)) as Record<string, { class_type: string; inputs: Record<string, unknown> }>
     for (const [nodeId, node] of Object.entries(graph)) {
       if (nodeId.startsWith('_')) continue
@@ -228,7 +228,7 @@ async function doctor(): Promise<number> {
       const declared = { ...spec.input.required, ...spec.input.optional }
       for (const [input, value] of Object.entries(node.inputs)) {
         if (!(input in declared)) problems.push(`${name} node ${nodeId}: ${node.class_type} has no input "${input}"`)
-        else if (/_name$/.test(input) && Array.isArray(declared[input]?.[0]) && !(declared[input]![0] as unknown[]).includes(value)) {
+        else if (/_name$/.test(input) && !String(value).includes('{{') && Array.isArray(declared[input]?.[0]) && !(declared[input]![0] as unknown[]).includes(value)) {
           problems.push(`${name} node ${nodeId}: model file not installed: ${String(value)}`)
         }
       }

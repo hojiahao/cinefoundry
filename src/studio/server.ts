@@ -81,7 +81,7 @@ export async function startStudio(port: number, host: string): Promise<void> {
           brief,
           ratio: ['9:16', '16:9', '1:1'].includes(String(body.ratio)) ? String(body.ratio) : undefined,
           durationSeconds: [5, 10, 15, 20, 30].includes(duration) ? duration : undefined,
-          videoModel: ['wan22-5b', 'wan22-14b', 'seedance'].includes(String(body.videoModel)) ? String(body.videoModel) : undefined,
+          videoModel: ['wan22-5b', 'wan22-14b', 'ltx25-fast', 'ltx25-fast-nvfp4', 'seedance'].includes(String(body.videoModel)) ? String(body.videoModel) : undefined,
         }))
       }
 

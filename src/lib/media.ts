@@ -8,11 +8,16 @@ import { concatCopy, extractLastFrame, scaleImage } from './ffmpeg.js'
 export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.CINELOOM_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
 export const VIDEO_FPS = 24
 
-export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'seedance'
-/** The 14B image-to-video model runs at its native 16 fps and needs a first frame. */
-const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: string; t2v?: string }> = {
+export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'ltx25-fast' | 'ltx25-fast-nvfp4' | 'seedance'
+/**
+ * The 14B image-to-video model runs at its native 16 fps and needs a first frame.
+ * LTX-2.5 Fast is image-to-video here too, at 24 fps; its frame count must be 8n+1 (5 s = 121).
+ */
+const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: string; t2v?: string; values?: Record<string, unknown> }> = {
   'wan22-5b': { fps: 24, i2v: 'wan22_ti2v_5b_i2v', t2v: 'wan22_ti2v_5b_t2v' },
   'wan22-14b': { fps: 16, i2v: 'wan22_i2v_14b_4step' },
+  'ltx25-fast': { fps: 24, i2v: 'ltx25_fast_i2v', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors' } },
+  'ltx25-fast-nvfp4': { fps: 24, i2v: 'ltx25_fast_i2v', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-nvfp4.safetensors' } },
 }
 export const VIDEO_SEGMENT_SECONDS = 5
 /** What the video models drift into on their own; industry anchors extend it (src/agent/checks.ts). */
@@ -117,7 +122,7 @@ export async function generateVideo(
     return { path: request.output, workflow: `cloud:${config.model}`, seconds: cloud.seconds, width, height, detail: { model: 'seedance', execution: 'cloud', taskId: cloud.taskId, durationSeconds: request.durationSeconds } }
   }
   const model = VIDEO_MODELS[modelName as Exclude<VideoModel, 'seedance'>]
-  if (!model) throw new Error(`Unknown video model ${modelName}; use wan22-5b or wan22-14b.`)
+  if (!model) throw new Error(`Unknown video model ${modelName}; use ${Object.keys(VIDEO_MODELS).join(', ')} or seedance.`)
   if (!model.t2v && !request.firstFrame) throw new Error(`${modelName} is image-to-video only; pass a first frame.`)
   const [width, height] = videoSize(request.resolution, request.ratio)
   const segmentCount = Math.max(1, Math.ceil(request.durationSeconds / VIDEO_SEGMENT_SECONDS))
@@ -128,9 +133,13 @@ export async function generateVideo(
   for (let index = 0; index < segmentCount; index++) {
     const workflow = startFrame ? model.i2v : model.t2v!
     const values: Record<string, unknown> = {
+      ...model.values,
       prompt: request.prompt,
       width,
       height,
+      // LTX samples at half size, then upscales the latent x2.
+      half_width: width / 2,
+      half_height: height / 2,
       // Wan expects 4n+1 frames.
       length: VIDEO_SEGMENT_SECONDS * model.fps + 1,
       negative: request.negative ?? VIDEO_NEGATIVE,

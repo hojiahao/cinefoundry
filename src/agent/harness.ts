@@ -374,13 +374,15 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
 
   // ---- clips -----------------------------------------------------------------------------
   await setStage(brief.id, 'clips', 'running')
-  await rest('clips (Wan2.2)', [planner, reviewer])
-  await enterPhase(comfy, 'clips (Wan2.2)', record)
+  const videoModel = options.videoModel ?? 'wan22-14b'
+  const clipsPhase = `clips (${videoModel.startsWith('ltx25') ? 'LTX-2.5 Fast' : videoModel === 'seedance' ? 'Seedance' : 'Wan2.2'})`
+  await rest(clipsPhase, [planner, reviewer])
+  await enterPhase(comfy, clipsPhase, record)
   for (const [index, shot] of storyboard.shots.entries()) {
     const output = join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}.mp4`)
     const clip = await generateVideo(comfy, {
       prompt: composeVideoPrompt(shot, industryOf(brief.product)), negative: composeVideoNegative(VIDEO_NEGATIVE, industryOf(brief.product)), output, resolution: options.resolution ?? '720p', ratio: brief.ratio, durationSeconds: shot.seconds || 5,
-      firstFrame: frames.get(shot.shot), freeAfter: index === storyboard.shots.length - 1, model: options.videoModel ?? 'wan22-14b',
+      firstFrame: frames.get(shot.shot), freeAfter: index === storyboard.shots.length - 1, model: videoModel,
     })
     log(`▸ clip ${shot.shot}       ${clip.seconds.toFixed(1)}s`)
     await record('clips', 'video', undefined, { shot: shot.shot, seconds: clip.seconds })
