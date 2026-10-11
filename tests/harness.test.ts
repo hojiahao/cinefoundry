@@ -13,6 +13,8 @@ import { startFakeComfy } from './fake-comfy.js'
  */
 
 const STYLE = 'cool backlit morning light, pastel teal and coral, fine film grain'
+/** Shot 1's gate prompt carries this, so the fake gate can reject shot 1 whatever order the queued frames reach it in. */
+const SHOT_1_MUST_SHOW = 'the can upright on crushed ice with its label readable'
 const replies = {
   brief: { id: 'model-chose-this', title: '冷·气泡水', product: 'sugar-free sparkling water', category: 'food', audience: '大学生', message: '清爽一夏', ratio: '9:16', durationSeconds: 10, tone: 'fresh, cinematic', brandText: '冷', industry: 'drink' },
   badScript: { structure: 'sensory -> reveal', beats: [{ beat: 1, job: 'hook', see: 'ice', vo: '全网第一的气泡水来了', text: '第一' }, { beat: 2, job: 'payoff', see: 'can', vo: '冷', text: '冷' }] },
@@ -20,7 +22,7 @@ const replies = {
   review: { approve: true, issues: [] },
   storyboard: {
     style: STYLE, product: 'a slim silver aluminium can with a teal band that reads "冷"',
-    shots: [1, 2].map((shot) => ({ shot, seconds: 5, framing: shot === 1 ? 'macro' : 'medium', camera: 'slow push-in', image_prompt: `Shot ${shot}: the product on crushed ice, backlit mist`, video_prompt: 'Slow push-in. Mist drifts. No people and no hands enter the frame.', on_screen_text: '', must_show: 'the can upright with its label readable' })),
+    shots: [1, 2].map((shot) => ({ shot, seconds: 5, framing: shot === 1 ? 'macro' : 'medium', camera: 'slow push-in', image_prompt: `Shot ${shot}: the product on crushed ice, backlit mist`, video_prompt: 'Slow push-in. Mist drifts. No people and no hands enter the frame.', on_screen_text: '', must_show: shot === 1 ? SHOT_1_MUST_SHOW : 'the can upright with its label readable' })),
   },
 }
 
@@ -30,7 +32,7 @@ let comfy: Awaited<ReturnType<typeof startFakeComfy>>
 const seen: string[] = []
 const prompts: string[] = []
 let scriptCalls = 0
-let gateCalls = 0
+let shot1Rejected = false
 let storyboardBroken = false
 let photoLetteringReply = '冷'
 
@@ -55,9 +57,11 @@ beforeAll(async () => {
         reply = { description: `A slim silver aluminium can with a brushed finish and a teal band printed with "${photoLetteringReply}".` }
       } else if (hasImage) {
         seen.push('gate')
-        gateCalls++
-        // Reject the very first storyboard frame once, to exercise the regeneration loop.
-        reply = gateCalls === 2 ? { pass: false, score: 40, issues: ['a hand appears although the shot does not call for one'] } : { pass: true, score: 92, issues: [] }
+        // Reject shot 1's first frame once, to exercise the regeneration loop. Frames are gated as
+        // they finish (queued scheduling), so "the second gate call" was shot 1 or shot 2 by chance.
+        const rejectNow = !shot1Rejected && JSON.stringify(user).includes(SHOT_1_MUST_SHOW)
+        if (rejectNow) shot1Rejected = true
+        reply = rejectNow ? { pass: false, score: 40, issues: ['a hand appears although the shot does not call for one'] } : { pass: true, score: 92, issues: [] }
       } else if (system.includes('intake producer')) { seen.push('brief'); reply = replies.brief }
       else if (system.includes('compliance reviewer')) { seen.push('review'); reply = replies.review }
       else if (system.includes('copywriter')) { seen.push('script'); reply = ++scriptCalls === 1 ? replies.badScript : replies.script }
