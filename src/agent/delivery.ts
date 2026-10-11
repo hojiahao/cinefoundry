@@ -36,7 +36,7 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
 
 - 成片：\`${finalCut.slice(dir.length + 1)}\` · ${brief.ratio} · ${brief.durationSeconds} 秒正片 + 3 秒定版
 - 创意原话记录于 \`state.json\`；需求单 \`brief.json\`；脚本 \`script/script.json\`；分镜 \`storyboard/storyboard.json\`
-- 品类 ${brief.category} · 受众 ${brief.audience} · 核心信息「${brief.message}」
+- 品类 ${brief.category} · 拍摄行业 ${brief.industry ?? '未记录'} · 品牌字「${brief.brandText}」 · 受众 ${brief.audience} · 核心信息「${brief.message}」
 
 ## 逐镜头
 

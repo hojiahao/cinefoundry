@@ -6,8 +6,8 @@ import { normalizeImage, probeDuration } from '../lib/ffmpeg.js'
 import { generateImage, generateVideo, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
 import { sleepService, wakeService } from '../lib/rest.js'
 import { memoryStatus } from '../lib/memory.js'
-import { addAsset, createProject, projectDir, setStage, type Stage } from '../lib/project.js'
-import { checkBrief, checkProductPhoto, checkScript, checkStoryboard, composeImagePrompt, composeProductPrompt, composeVideoNegative, composeVideoPrompt, industryOf, type Brief, type ProductPhoto, type Script, type Shot, type Storyboard } from './checks.js'
+import { addAsset, createProject, projectDir, setStage as saveStage, type Stage } from '../lib/project.js'
+import { checkBrief, checkProductPhoto, checkScript, checkStoryboard, composeImagePrompt, composeProductPrompt, composeVideoNegative, composeVideoPrompt, briefIndustry, photoLettering, type Brief, type ProductPhoto, type Script, type Shot, type Storyboard } from './checks.js'
 import { writeDeliveryReport } from './delivery.js'
 import { enterPhase, finishFilm } from './finish.js'
 import { qualityGate, type QaVerdict } from './gate.js'
@@ -63,6 +63,26 @@ const MAX_QA_REGENERATIONS = 2
  * the acceptance checks; models own the judgement.
  */
 export async function runHarness(options: HarnessOptions): Promise<HarnessResult> {
+  // Any stage still marked running when the run throws is marked failed with the reason: the studio
+  // board reads this record, and a stage left running looks like a stalled job.
+  const running = new Map<string, Set<Stage>>()
+  const setStage: typeof saveStage = async (id, stage, status, note) => {
+    const stages = running.get(id) ?? new Set<Stage>()
+    if (status === 'running') stages.add(stage)
+    else stages.delete(stage)
+    running.set(id, stages)
+    return saveStage(id, stage, status, note)
+  }
+  try {
+    return await runStages(options, setStage)
+  } catch (error) {
+    const reason = (error instanceof Error ? error.message : String(error)).slice(0, 300)
+    for (const [id, stages] of running) for (const stage of stages) await saveStage(id, stage, 'failed', reason).catch(() => undefined)
+    throw error
+  }
+}
+
+async function runStages(options: HarnessOptions, setStage: typeof saveStage): Promise<HarnessResult> {
   const started = Date.now()
   const log = options.log ?? ((line: string) => console.error(line))
   const { planner, reviewer, editor } = endpoints()
@@ -89,7 +109,8 @@ ${options.ratio ? `The user fixed the aspect ratio: ${options.ratio}.` : ''}${op
 Return JSON only:
 {"id": "lowercase-dashed-project-id", "title": "short Chinese title", "product": "what is being advertised", "category": "general|food|health_food|cosmetics|medical",
  "audience": "...", "message": "the one thing the viewer should remember, in Chinese", "ratio": "9:16|16:9|1:1", "durationSeconds": 15,
- "tone": "tone and visual style in English", "brandText": "the brand name as it should appear on the product, at most 4 common characters",
+ "tone": "tone and visual style in English", "brandText": "the lettering actually printed on the product, copied exactly: at most 4 common Chinese characters or 12 Latin letters; never an abbreviation or model name that is not printed on it",
+ "industry": "electronics|drink|skincare|food|general: how this product is shot in commercials (a computer or keyboard is electronics)",
  "appearance": "the product's look copied word for word from the request (container, material, colours, label); empty if the request says nothing about it"}`,
     },
     checkBrief,
@@ -101,13 +122,28 @@ Return JSON only:
   rejectedAttempts.brief = briefRun.rejected.length
   await createProject({ id: brief.id, title: brief.title, brief: options.brief, ratio: brief.ratio, durationSeconds: brief.durationSeconds })
   const dir = projectDir(brief.id)
-  const jev = jevConfig()
+  let jev = jevConfig()
   let jevReview: Array<{ beat: number; line: string; issue: string; probability: number }> = []
   const record = async (stage: Stage | 'run', agent: string, endpoint: ModelEndpoint | undefined, detail: Record<string, unknown>) =>
     appendFile(
       join(dir, 'reports', 'run.jsonl'),
       `${JSON.stringify({ ts: new Date().toISOString(), stage, agent, model: endpoint?.model, execution: endpoint?.execution ?? 'local-dgx-spark', ...detail })}\n`,
     )
+  // The judge is an optional cloud service. When it cannot be reached (HTTP 451 "not available in
+  // your region" once spent all six script attempts) it is switched off for this run and the local
+  // checks and the reviewer agent carry on; an outage is not a reason to rewrite the copy.
+  const judgeWith = async <T>(judge: (config: NonNullable<typeof jev>) => Promise<T>, stage: Stage): Promise<T | undefined> => {
+    if (!jev) return undefined
+    try {
+      return await judge(jev)
+    } catch (error) {
+      jev = undefined
+      const reason = (error instanceof Error ? error.message : String(error)).slice(0, 200)
+      log(`  jev unavailable, continuing without it: ${reason}`)
+      await record(stage, 'jev', undefined, { execution: 'cloud', unavailable: reason })
+      return undefined
+    }
+  }
   await record('brief', 'intake', planner, { seconds: briefRun.seconds, attempts: briefRun.attempts, skills: !options.withoutSkills })
   // With a product photo the photo is the product's look; without one the hero still is generated from text.
   // The photo is read before anyone writes: the copywriter and the storyboard artist only see text, and a
@@ -132,9 +168,20 @@ Return JSON only: {"description": "one to three English sentences: overall shape
     )
     // An unusable reading leaves the writers on the request's words; the frames still use the photo itself.
     if (reading.unresolved.length === 0) brief.photo = { description: reading.value.description.trim() }
+    // The photo shows what is printed on the product. The intake agent once wrote "DGX" for a
+    // device whose only lettering is "NVIDIA", and the gate then failed the real photo for it.
+    const printed = brief.photo ? photoLettering(brief.photo.description) : []
+    if (printed.length && !printed.some((text) => text.toLowerCase() === brief.brandText.trim().toLowerCase())) {
+      await record('brief', 'photo-reader', reviewer, { brandText: { from: brief.brandText, to: printed[0], printed } })
+      log(`▸ photo        brand lettering "${brief.brandText}" -> "${printed[0]}", as printed on the product`)
+      brief.brandText = printed[0]!
+    }
     await record('brief', 'photo-reader', reviewer, { seconds: reading.seconds, attempts: reading.attempts, unresolved: reading.unresolved, ...brief.photo })
     log(brief.photo ? `▸ photo        ${brief.photo.description.slice(0, 140)}` : `▸ photo        reading unusable (${reading.unresolved[0]}); writers use the request's words`)
   }
+  // One industry for the whole run, written into the brief so a wrong read is visible.
+  const industry = briefIndustry(brief)
+  brief.industry = industry
   await writeFile(join(dir, 'brief.json'), JSON.stringify(brief, null, 2))
 
   // ---- script ----------------------------------------------------------------------------
@@ -154,8 +201,8 @@ Return JSON only: {"description": "one to three English sentences: overall shape
       const problems = checkScript(script, brief)
       // Structured judge (optional, cloud): semantic problems the regex scan cannot see, at a
       // calibrated threshold. Certain findings go straight back to the copywriter as rewrite reasons.
-      if (problems.length === 0 && jev) {
-        const judged = await judgeCopy(jev, brief, script)
+      const judged = problems.length === 0 ? await judgeWith((config) => judgeCopy(config, brief, script), 'script') : undefined
+      if (judged) {
         await record('script', 'jev', undefined, { execution: 'cloud', model: judged.model, seconds: judged.seconds, inputTokens: judged.inputTokens, findings: judged.findings })
         problems.push(...judged.findings.filter((f) => f.severity === 'block').map((f) => `beat ${f.beat} "${f.line}": ${f.issue} (p=${f.probability.toFixed(2)})`))
         jevReview = judged.findings.filter((f) => f.severity === 'review')
@@ -223,8 +270,8 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
     { system: await agentPrompt('storyboard artist', 'storyboard-design'), thinking: false, maxTokens: 5000, temperature: 0.4, user: storyboardUserPrompt },
     async (storyboard) => {
       const problems = checkStoryboard(storyboard, script, brief)
-      if (problems.length === 0 && jev) {
-        const judged = await judgeStoryboard(jev, storyboard)
+      const judged = problems.length === 0 ? await judgeWith((config) => judgeStoryboard(config, storyboard), 'storyboard') : undefined
+      if (judged) {
         await record('storyboard', 'jev', undefined, { execution: 'cloud', model: judged.model, seconds: judged.seconds, inputTokens: judged.inputTokens, problems: judged.problems, notes: judged.notes })
         for (const note of judged.notes) log(`  note: ${note}`)
         problems.push(...judged.problems)
@@ -266,12 +313,12 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
   await mkdir(join(dir, 'refs'), { recursive: true })
   const heroShot: Shot = { shot: 0, seconds: 0, framing: 'product', camera: 'static', image_prompt: '', video_prompt: '', on_screen_text: '', must_show: `exactly one ${brief.product}, fully visible and centred, matching this description: ${storyboard.product}. Its brand lettering reads "${brief.brandText}" clearly and correctly. Finish, proportions and size are not judged here` }
   let hero: { path: string; verdict: QaVerdict } | undefined
-  let heroPrompt = composeProductPrompt(storyboard, industryOf(brief.product), brief.brandText)
+  let heroPrompt = composeProductPrompt(storyboard, industry, brief.brandText)
   if (options.productImage) {
     // The user's photo is the ground truth for the product: the gate is run and recorded, but a
     // reject (a brand name that is not printed on the real product, say) does not replace the photo.
     const path = photoPath
-    const verdict = await qualityGate(reviewer, path, heroShot, undefined, industryOf(brief.product))
+    const verdict = await qualityGate(reviewer, path, heroShot, undefined, industry)
     log(`▸ product hero user photo · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
     await record('frames', 'product-hero', reviewer, { source: 'user photo', input: options.productImage, ...verdict })
     hero = { path, verdict: { ...verdict, pass: true } }
@@ -279,7 +326,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
   for (let attempt = 0; !options.productImage && attempt <= MAX_QA_REGENERATIONS; attempt++) {
     const path = join(dir, 'refs', `product${attempt ? `_r${attempt}` : ''}.png`)
     const image = await generateImage(comfy, { prompt: heroPrompt, size: '1328x1328', output: path })
-    const verdict = await qualityGate(reviewer, path, heroShot, undefined, industryOf(brief.product))
+    const verdict = await qualityGate(reviewer, path, heroShot, undefined, industry)
     log(`▸ product hero ${image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
     await record('frames', 'product-hero', reviewer, { attempt, imageSeconds: image.seconds, ...verdict })
     if (!hero || verdict.score > hero.verdict.score) hero = { path, verdict }
@@ -310,7 +357,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
   type Rendered = { path: string; image: { seconds: number }; renderStartedAt: string }
   /** One shot's whole gate loop: first candidate, further seeds, then prompt repairs. */
   const makeFrame = async (shot: Shot, first: Promise<Rendered>, onFirstJudging?: () => void) => {
-    let prompt = composeImagePrompt(shot, storyboard, true, industryOf(brief.product))
+    let prompt = composeImagePrompt(shot, storyboard, true, industry)
     let best: { path: string; verdict: QaVerdict; attempt: number } | undefined
     // On a tied score the later repair wins: it was written against the gate's issues, and the
     // gate's coarse scores (most rejects land on 30) used to keep the untouched first frame.
@@ -320,7 +367,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
     }
     const judge = async (rendered: Rendered, suffix: string, attempt: number) => {
       const gateStarted = Date.now()
-      const verdict = await qualityGate(reviewer, rendered.path, shot, hero!.path, industryOf(brief.product))
+      const verdict = await qualityGate(reviewer, rendered.path, shot, hero!.path, industry)
       const gateSeconds = (Date.now() - gateStarted) / 1000
       log(`▸ frame ${shot.shot}${suffix.padEnd(5)} ${rendered.image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
       await record('qa', 'quality-gate', reviewer, { shot: shot.shot, attempt, candidate: suffix || '_a', renderStartedAt: rendered.renderStartedAt, imageSeconds: rendered.image.seconds, gateSeconds, ...verdict })
@@ -350,7 +397,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
       execution: 'local-dgx-spark', model: 'qwen_image_edit_lightning', note: best!.verdict.score < 0 ? 'unverified: the reviewer never concluded' : `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}`,
     })
   }
-  const firstRender = (shot: Shot) => render(shot, composeImagePrompt(shot, storyboard, true, industryOf(brief.product)), '')
+  const firstRender = (shot: Shot) => render(shot, composeImagePrompt(shot, storyboard, true, industry), '')
   if ((options.frameScheduling ?? 'queue') === 'queue') {
     // Every shot runs its own gate loop at once. ComfyUI renders its queue in order and the
     // reviewer judges whatever is ready, so a shot that keeps failing no longer holds the image
@@ -381,7 +428,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
   for (const [index, shot] of storyboard.shots.entries()) {
     const output = join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}.mp4`)
     const clip = await generateVideo(comfy, {
-      prompt: composeVideoPrompt(shot, industryOf(brief.product)), negative: composeVideoNegative(VIDEO_NEGATIVE, industryOf(brief.product)), output, resolution: options.resolution ?? '720p', ratio: brief.ratio, durationSeconds: shot.seconds || 5,
+      prompt: composeVideoPrompt(shot, industry), negative: composeVideoNegative(VIDEO_NEGATIVE, industry), output, resolution: options.resolution ?? '720p', ratio: brief.ratio, durationSeconds: shot.seconds || 5,
       firstFrame: frames.get(shot.shot), freeAfter: index === storyboard.shots.length - 1, model: videoModel,
     })
     log(`▸ clip ${shot.shot}       ${clip.seconds.toFixed(1)}s`)

@@ -213,7 +213,7 @@ describe('title matches the product form', () => {
   })
 })
 
-import { industryOf } from '../src/agent/checks.js'
+import { checkBrief, industryOf, photoLettering } from '../src/agent/checks.js'
 
 describe('category playbooks in the storyboard check', () => {
   const script3 = { structure: 's', beats: [1, 2, 3].map((beat) => ({ beat, job: 'hook', see: 'x', vo: '键帽回弹，指尖有数', text: '青轴' })) }
@@ -224,6 +224,27 @@ describe('category playbooks in the storyboard check', () => {
     expect(industryOf('mechanical keyboard')).toBe('electronics')
     expect(industryOf('挂耳咖啡')).toBe('drink')
     expect(industryOf('保湿面霜')).toBe('skincare')
+    // 面 (noodles) used to match 桌面 (desktop): a desktop supercomputer was shot as food.
+    expect(industryOf('NVIDIA DGX Spark 桌面AI超级计算机')).toBe('electronics')
+    expect(industryOf('桌面音箱')).toBe('electronics')
+    expect(industryOf('a desktop workstation with one GPU')).toBe('electronics')
+    expect(industryOf('方便面')).toBe('food')
+    expect(industryOf('乌龙茶')).toBe('drink')
+    expect(industryOf('米色保温杯')).toBe('general')
+    expect(industryOf('实木茶几')).toBe('general')
+    expect(industryOf('steam iron')).toBe('general')
+  })
+  it('checks the brief\'s industry and brand lettering', () => {
+    const brief = { id: 'x-1', title: 't', product: 'p', category: 'general', audience: 'a', message: 'm', ratio: '16:9', durationSeconds: 15, tone: 't', brandText: 'NVIDIA', industry: 'electronics' } as const
+    expect(checkBrief({ ...brief })).toEqual([])
+    expect(checkBrief({ ...brief, industry: undefined })).toEqual([expect.stringMatching(/^industry must be one of/)])
+    expect(checkBrief({ ...brief, brandText: '冷泉气泡水' })).toEqual([expect.stringMatching(/too long/)])
+    expect(checkBrief({ ...brief, brandText: 'ABCDEFGHIJKLM' })).toEqual([expect.stringMatching(/too long/)])
+  })
+  it('reads the quoted lettering off a photo description', () => {
+    expect(photoLettering('a bronze box; the "NVIDIA" text and the NVIDIA eye logo sit on the side')).toEqual(['NVIDIA'])
+    expect(photoLettering('a silver can with a teal band printed with “冷” and "冷"')).toEqual(['冷'])
+    expect(photoLettering('no lettering is visible')).toEqual([])
   })
   it('accepts a varied electronics storyboard', () => {
     expect(checkStoryboard(board([shot(1), shot(2), shot(3)]), script3, keyboard)).toEqual([])

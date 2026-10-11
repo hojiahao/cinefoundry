@@ -16,6 +16,8 @@ export interface Brief {
   durationSeconds: number
   tone: string
   brandText: string
+  /** How the product is shot (category playbooks). Chosen by the intake agent; `industryOf` reads the product name when it is missing. */
+  industry?: Industry
   /** The product's look in the user's own words (container, material, colours, label), verbatim from the request. */
   appearance?: string
   /** What the vision model read off the user's product photo; with a photo, the photo is the product's look. */
@@ -95,6 +97,10 @@ export function checkBrief(brief: Brief): string[] {
   if (!Number.isInteger(brief.durationSeconds) || brief.durationSeconds % 5 !== 0 || brief.durationSeconds < 5 || brief.durationSeconds > 30)
     problems.push('durationSeconds must be a multiple of 5 between 5 and 30, because clips are generated in 5-second segments')
   if (!['general', 'food', 'health_food', 'cosmetics', 'medical'].includes(brief.category)) problems.push('category must be general, food, health_food, cosmetics or medical')
+  if (!INDUSTRIES.includes(brief.industry as Industry)) problems.push(`industry must be one of ${INDUSTRIES.join(', ')}: how the product is shot, not its legal category`)
+  const brand = brief.brandText?.trim() ?? ''
+  if (!brand) problems.push('brandText is empty: copy the lettering printed on the product')
+  else if (CJK.test(brand) ? [...brand].length > 4 : brand.length > 12) problems.push(`brandText "${brand}" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product`)
   for (const field of ['title', 'product', 'audience', 'message', 'tone'] as const) if (!brief[field]?.trim()) problems.push(`${field} is empty`)
   return problems
 }
@@ -117,7 +123,7 @@ export function checkScript(script: Script, brief: Brief): string[] {
     }
     problems.push(...captionProblems(`${label} voiceover`, beat.vo ?? '', false), ...captionProblems(`${label} on-screen text`, beat.text ?? '', true))
     // "一口咬下" for a sparkling water: a drink is sipped, not bitten.
-    if (industryOf(brief.product) === 'drink' && /咬|嚼/.test(beat.vo ?? '')) problems.push(`${label}: a drink is not bitten or chewed ("${beat.vo}"); write 喝 / 入口 / 一口`)
+    if (briefIndustry(brief) === 'drink' && /咬|嚼/.test(beat.vo ?? '')) problems.push(`${label}: a drink is not bitten or chewed ("${beat.vo}"); write 喝 / 入口 / 一口`)
     if (spokenLength(beat.text ?? '') > TEXT_MAX_CHARS) problems.push(`${label}: on-screen text has ${spokenLength(beat.text)} characters; at most ${TEXT_MAX_CHARS}`)
     // "开罐" on a drip-bag coffee: the title of the skill's example was copied onto a product that has no can.
     const productText = `${brief.product} ${brief.message} ${brief.title}`
@@ -137,6 +143,12 @@ export function checkProductPhoto(photo: ProductPhoto): string[] {
   if (text.length > 700) problems.push('description is too long: at most three sentences')
   if (CJK.test(text.replace(/"[^"]*"/g, ''))) problems.push('description must be in English; only quoted lettering may be Chinese')
   return problems
+}
+
+/** The lettering the photo reader quoted, in order, keeping only what fits a brandText. */
+export function photoLettering(description: string): string[] {
+  const quoted = [...description.matchAll(/["“]([^"”]{1,40})["”]/g)].map((match) => match[1]!.trim())
+  return [...new Set(quoted.filter((text) => text && (CJK.test(text) ? [...text].length <= 4 : text.length <= 12)))]
 }
 
 // Finish words in the style line are painted onto the product too ("smooth texture" erased a foam front).
@@ -160,7 +172,7 @@ export function styleConflicts(style: string, photo: ProductPhoto | undefined): 
   return problems
 }
 
-export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: Pick<Brief, 'brandText' | 'product' | 'appearance' | 'photo'>): string[] {
+export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: Pick<Brief, 'brandText' | 'product' | 'appearance' | 'photo' | 'industry'>): string[] {
   const problems: string[] = []
   const shots = Array.isArray(storyboard.shots) ? storyboard.shots : []
   // Every frame is edited from the user's photo; a style that repaints the product makes each shot drift its own way.
@@ -216,7 +228,7 @@ export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: 
   for (const shot of withHands) if (/no people|no hands|hands-free/i.test(shot.image_prompt)) problems.push(`shot ${shot.shot}: asks for a finger or hand and also says "no people/no hands"; decide one`)
   if (shots.length >= 3 && new Set(shots.map((shot) => shot.framing?.trim().toLowerCase())).size === 1) problems.push(`all ${shots.length} shots use the same framing (${shots[0]!.framing}); a film needs at least two framings`)
   // Electronics playbook, the rules the keyboard film broke.
-  if (brief && industryOf(brief.product) === 'electronics') {
+  if (brief && briefIndustry(brief) === 'electronics') {
     const briefText = `${brief.product}`
     for (const shot of shots) {
       const label = `shot ${shot.shot}`
@@ -234,15 +246,23 @@ export const sanitizeStyle = (style: string) =>
   style.replace(/\b\d+(\.\d+)?\s?mm\b/gi, '').replace(/\bf\/?\d+(\.\d+)?\b/gi, '').replace(/\b\d+k\b/gi, '').replace(/\s*,\s*(?=,|$)/g, '').replace(/^\s*,\s*/, '').replace(/\s{2,}/g, ' ').trim()
 
 export type Industry = 'electronics' | 'drink' | 'skincare' | 'food' | 'general'
+export const INDUSTRIES: Industry[] = ['electronics', 'drink', 'skincare', 'food', 'general']
 
-/** A rough industry read of the brief's product, used for category playbooks in checks and prompts. */
+/**
+ * A rough industry read of the product's name, the fallback when the brief carries no `industry`.
+ * Whole words only: a single 面 (noodles) once matched 桌面 (desktop) and shot a computer as food.
+ */
 export function industryOf(text: string): Industry {
-  if (/keyboard|mouse|headphone|earbud|earphone|phone|laptop|tablet|camera|smartwatch|watch|speaker|charger|monitor|console|键盘|鼠标|耳机|手机|笔记本|平板|相机|手表|音箱|充电|显示器|电脑/i.test(text)) return 'electronics'
-  if (/\bcans?\b|bottle|soda|drink|beverage|water|beer|cola|tea|coffee|juice|milk|饮|汽水|气泡|啤酒|可乐|茶|咖啡|果汁|奶/i.test(text)) return 'drink'
-  if (/cream|serum|lotion|skincare|cosmetic|lipstick|面霜|精华|乳液|护肤|口红|化妆/i.test(text)) return 'skincare'
-  if (/snack|chocolate|biscuit|cake|noodle|rice|sauce|零食|巧克力|饼干|蛋糕|面|米|酱/i.test(text)) return 'food'
+  if (/\b(keyboards?|mouse|mice|headphones?|earbuds?|earphones?|phones?|smartphones?|laptops?|tablets?|cameras?|smartwatch(es)?|watch(es)?|speakers?|chargers?|monitors?|consoles?|computers?|PCs?|workstations?|servers?|supercomputers?|GPUs?|routers?|drones?|projectors?)\b|键盘|鼠标|耳机|手机|笔记本|平板|相机|手表|音箱|充电|显示器|电脑|计算机|主机|服务器|工作站|显卡|路由器|无人机|投影仪/i.test(text)) return 'electronics'
+  if (/\b(cans?|bottles?|soda|drinks?|beverages?|water|beer|cola|tea|coffee|juice|milk)\b|饮料|饮品|汽水|气泡水|矿泉水|啤酒|可乐|茶(?!几|具|台|杯)|咖啡|果汁|牛奶|酸奶/i.test(text)) return 'drink'
+  if (/\b(creams?|serums?|lotions?|skincare|cosmetics?|lipsticks?)\b|面霜|精华|乳液|护肤|口红|化妆品/i.test(text)) return 'skincare'
+  if (/\b(snacks?|chocolates?|biscuits?|cakes?|noodles?|rice|sauces?)\b|零食|巧克力|饼干|蛋糕|面条|方便面|拉面|意面|挂面|面包|米饭|大米|米粉|酱料|辣酱/i.test(text)) return 'food'
   return 'general'
 }
+
+/** The industry the whole run shoots with: the brief's own when valid, else read from the product name. */
+export const briefIndustry = (brief: Pick<Brief, 'industry' | 'product'>): Industry =>
+  brief.industry && INDUSTRIES.includes(brief.industry) ? brief.industry : industryOf(brief.product)
 
 /**
  * Category anchors appended to every frame prompt. They encode how each kind of product is shot

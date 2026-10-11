@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { checkBrief, checkScript, checkStoryboard, type Brief, type Script, type Storyboard } from './checks.js'
+import { checkBrief, checkScript, checkStoryboard, industryOf, type Brief, type Script, type Storyboard } from './checks.js'
 import { chatJson, endpoints } from './llm.js'
 import { agentSystem, scriptUser, storyboardUser } from './prompts.js'
 import { loadRules, loadSkill } from './skills.js'
@@ -25,7 +25,7 @@ const FIXED_BRIEF = (request: string, index: number): Brief => {
   return {
     id: `eval-${index + 1}`, title: request.slice(0, 12), product: request, category: /面霜/.test(request) ? 'cosmetics' : /水|咖啡|茶|榨汁/.test(request) ? 'food' : 'general',
     audience: 'see request', message: 'see request', ratio: /横版/.test(request) ? '16:9' : '9:16', durationSeconds: duration, tone: 'see request',
-    brandText: /[“"]([^”"]{1,4})[”"]/.exec(request)?.[1] ?? '牌',
+    brandText: /[“"]([^”"]{1,4})[”"]/.exec(request)?.[1] ?? '牌', industry: industryOf(request),
   }
 }
 
