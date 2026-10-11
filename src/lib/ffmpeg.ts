@@ -10,6 +10,12 @@ export async function scaleImage(input: string, output: string, width: number, h
   await exec('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', input, '-vf', `scale=${width}:${height}:flags=lanczos`, output])
 }
 
+/** Re-encode any still ffmpeg can read as PNG, the longest side capped at `maxSide` (never upscaled). */
+export async function normalizeImage(input: string, output: string, maxSide: number): Promise<void> {
+  const scale = `scale='if(gt(iw,ih),min(${maxSide},iw),-2)':'if(gt(iw,ih),-2,min(${maxSide},ih))':flags=lanczos`
+  await exec('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', input, '-frames:v', '1', '-vf', scale, output])
+}
+
 export async function extractFrame(video: string, seconds: number, output: string): Promise<void> {
   await exec('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', seconds.toFixed(3), '-i', video, '-frames:v', '1', '-q:v', '2', output])
 }

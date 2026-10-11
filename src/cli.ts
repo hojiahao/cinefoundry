@@ -7,7 +7,7 @@ const HELP = `CineLoom - agentic ad-film studio for a single DGX Spark
 
   CineLoom Harness: one brief in, one finished film out
 
-  cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--plan-only] [--video-model wan22-14b|wan22-5b|seedance]
+  cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--plan-only] [--video-model wan22-14b|wan22-5b|seedance]
 
   Individual tools, as the skills call them
   cineloom eval [--briefs eval/briefs.json] [--repeats 2]      with/without-skill comparison

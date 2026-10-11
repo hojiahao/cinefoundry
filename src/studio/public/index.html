@@ -78,7 +78,7 @@ function assetCard(project, asset) {
   const media = asset.kind === 'video' && !RECORD ? `<video src="${url}" controls preload="metadata"></video>`
     : asset.kind === 'video' ? (still ? `<img src="${fileUrl(project.id, still.path)}" alt="">` : '<img alt="">')
     : `<img src="${url}" ${RECORD ? '' : 'loading="lazy"'} alt="">`
-  const where = asset.execution === 'cloud' ? '<span class="tag cloud">云端</span>' : '<span class="tag">Spark 本地</span>'
+  const where = asset.execution === 'cloud' ? '<span class="tag cloud">云端</span>' : asset.execution === 'user-supplied' ? '<span class="tag">用户提供</span>' : '<span class="tag">Spark 本地</span>'
   const time = asset.seconds ? ` · ${asset.seconds.toFixed(1)}s` : ''
   return `<figure>${media}<figcaption><b>${asset.shot ? '镜头 ' + asset.shot : esc(asset.id)}</b> ${where}<br>${esc(asset.model ?? '')}${time}</figcaption></figure>`
 }

@@ -16,6 +16,7 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const cloud = rows.filter((row) => row.execution === 'cloud')
   const director = rows.find((row) => row.agent === 'director')
   const unverified = gates.filter((row) => row.score === -1)
+  const userPhoto = rows.find((row) => row.agent === 'product-hero' && row.source === 'user photo')
   const keptAfterFail = storyboard.shots.filter((shot) => {
     const attempts = gates.filter((row) => row.shot === shot.shot)
     return attempts.length > 0 && !attempts.some((row) => row.pass)
@@ -48,7 +49,7 @@ ${shotRows}
 | 阶段 | 记录 |
 |---|---|
 | 需求 → 分镜（模型调用） | ${(stageSeconds('brief') + stageSeconds('script') + stageSeconds('compliance') + stageSeconds('storyboard')).toFixed(1)} s |
-| 定妆图 | ${gates.filter((row) => row.agent === 'product-hero').length} 次生成与质检 |
+| 定妆图 | ${userPhoto ? `用户提供的产品照片，质检 ${userPhoto.pass ? 'pass' : 'reject'} ${userPhoto.score}` : `${gates.filter((row) => row.agent === 'product-hero').length} 次生成与质检`} |
 | 首帧与质检 | ${gates.filter((row) => row.agent === 'quality-gate').length} 次质检，${director?.qaRegenerations ?? new Set(gates.filter((row) => row.agent === 'quality-gate' && (row.attempt as number) > 0).map((row) => `${row.shot}/${row.attempt}`)).size} 次重生成 |
 | 视频 | ${clips.map((row) => `${(row.seconds as number).toFixed(0)} s`).join(' / ')} |
 | 配音 · 音乐 | ${audio.map((row) => `${row.agent} ${seconds(row.seconds)}${row.model ? ` (${row.model})` : ''}`).join(' · ') || '无声'} |
@@ -69,8 +70,9 @@ ${memory || '| - | - | - |'}
 
 ${[
   ...keptAfterFail.map((shot) => `- 镜头 ${shot.shot} 在质检未通过的情况下保留了最高分候选（${gates.filter((row) => row.shot === shot.shot).slice(-1)[0]?.issues ? (gates.filter((row) => row.shot === shot.shot).slice(-1)[0]!.issues as string[])[0] : ''}）`),
+  ...(userPhoto && !userPhoto.pass ? [`- 定妆图使用用户提供的产品照片；质检未通过（${(userPhoto.issues as string[] | undefined)?.[0] ?? ''}），照片仍作为全片产品依据`] : []),
   ...unverified.map((row) => `- 镜头 ${row.shot ?? '定妆图'} 的一次质检未能得到判定，该帧按未验证处理`),
-  '- 本片的画面、配音与音乐均为 AI 生成；对外发布时须按平台规范标注',
+  userPhoto ? '- 本片的画面由 AI 依据用户提供的产品照片生成，配音与音乐为 AI 生成；对外发布时须按平台规范标注' : '- 本片的画面、配音与音乐均为 AI 生成；对外发布时须按平台规范标注',
 ].join('\n')}
 `
   const path = join(dir, 'reports', 'delivery.md')

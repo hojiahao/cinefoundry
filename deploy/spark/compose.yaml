@@ -90,6 +90,12 @@ services:
         BASE_IMAGE: vllm/vllm-openai:${VLLM_TAG:-v0.27.1}
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
     image: cineloom/comfyui:local
+    # Cap host RAM so a runaway job gets this container OOM-killed instead of thrashing the whole
+    # box (2026-10-10: swap filled, tailscaled hung, hard reboot). GPU allocations are not charged
+    # to the cgroup and are invisible to the kernel OOM score, so also make this the first victim.
+    mem_limit: ${COMFYUI_MEM_LIMIT:-48g}
+    memswap_limit: ${COMFYUI_MEM_LIMIT:-48g}
+    oom_score_adj: 1000
     volumes:
       - ${SPARK_MODEL_DIR:-${HOME}/models}/comfyui:/opt/ComfyUI/models
       - ../../runtime-data/comfyui/output:/opt/ComfyUI/output

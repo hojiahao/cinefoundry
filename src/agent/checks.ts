@@ -18,6 +18,14 @@ export interface Brief {
   brandText: string
   /** The product's look in the user's own words (container, material, colours, label), verbatim from the request. */
   appearance?: string
+  /** What the vision model read off the user's product photo; with a photo, the photo is the product's look. */
+  photo?: ProductPhoto
+}
+
+/** The vision model's reading of a user-supplied product photo: the product's look only, never its placement, light or background. */
+export interface ProductPhoto {
+  /** English: shape and proportions, colours, materials and surface texture, visible lettering and where it sits. */
+  description: string
 }
 
 export interface Beat {
@@ -122,9 +130,41 @@ export function checkScript(script: Script, brief: Brief): string[] {
   return problems
 }
 
-export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: Pick<Brief, 'brandText' | 'product' | 'appearance'>): string[] {
+export function checkProductPhoto(photo: ProductPhoto): string[] {
+  const problems: string[] = []
+  const text = photo.description?.trim() ?? ''
+  if (text.length < 40) problems.push('description is missing or too short: give shape, colours, materials, surface texture and visible lettering')
+  if (text.length > 700) problems.push('description is too long: at most three sentences')
+  if (CJK.test(text.replace(/"[^"]*"/g, ''))) problems.push('description must be in English; only quoted lettering may be Chinese')
+  return problems
+}
+
+// Finish words in the style line are painted onto the product too ("smooth texture" erased a foam front).
+const FINISH = /\b(smooth|glossy|gloss|matte|brushed|polished|mirror[- ]finish|chrome|satin|textured|foam|mesh|frosted|transparent|translucent)\b/gi
+const PRODUCT_COLOUR = /\b(gold(en)?|silver|gr[ae]y|black|white|blue|red|green|pink|purple|bronze|copper|champagne|cool[- ]toned|warm[- ]toned)\s+(metal|body|chassis|casing|case|finish|surface|shell|housing|product|device|unit)\b/gi
+
+/**
+ * The style line is appended to every frame prompt, so with a product photo it may set light,
+ * background and mood but not the product's colour or finish: that comes from the photo only.
+ */
+export function styleConflicts(style: string, photo: ProductPhoto | undefined): string[] {
+  if (!photo || !style) return []
+  const problems: string[] = []
+  const seen = photo.description.toLowerCase()
+  for (const word of new Set((style.match(FINISH) ?? []).map((w) => w.toLowerCase()))) {
+    if (!seen.includes(word)) problems.push(`style names a "${word}" finish the product photo does not show; style sets light, background and mood only, never the product's finish`)
+  }
+  for (const match of new Set((style.match(PRODUCT_COLOUR) ?? []).map((w) => w.toLowerCase()))) {
+    problems.push(`style gives the product a colour ("${match}"); its look comes from the product photo only`)
+  }
+  return problems
+}
+
+export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: Pick<Brief, 'brandText' | 'product' | 'appearance' | 'photo'>): string[] {
   const problems: string[] = []
   const shots = Array.isArray(storyboard.shots) ? storyboard.shots : []
+  // Every frame is edited from the user's photo; a style that repaints the product makes each shot drift its own way.
+  problems.push(...styleConflicts(storyboard.style ?? '', brief?.photo))
   if (!storyboard.style?.trim()) problems.push('style line is missing')
   if (!storyboard.product?.trim()) problems.push('product description is missing: describe container type, material, colours and label once')
   // The hero still is generated from this sentence. A copied example (a soda can for a face cream) went unnoticed once.
@@ -257,7 +297,7 @@ export function composeVideoPrompt(shot: Shot, industry: Industry = 'general'): 
 export function composeImagePrompt(shot: Shot, storyboard: Storyboard, withReference = false, industry: Industry = 'general'): string {
   const scene = shot.image_prompt.trim().replace(/[.。]$/, '')
   const product = withReference
-    ? 'Image 1 is the product: keep its shape, proportions, colours, material and label exactly as in image 1'
+    ? 'Image 1 shows the product: reproduce only the product itself, with its shape, proportions, colours, material, surface texture and label exactly as in image 1. Do not copy image 1\'s background, surface, props or lighting; place and light the product as this prompt describes'
     : `The product: ${storyboard.product.trim().replace(/[.。]$/, '')}`
   return `${scene}. ${product}. ${NO_TEXT}. ${INDUSTRY_ANCHOR[industry]}. ${sanitizeStyle(storyboard.style)}`
 }

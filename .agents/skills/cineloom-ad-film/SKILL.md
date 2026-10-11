@@ -32,8 +32,12 @@ skill, and checks every result before the next stage starts.
 3. Run, from the repository root:
 
    ```bash
-   node dist/cli.js harness "<the brief, verbatim>" [--id <project-id>] [--ratio 9:16|16:9|1:1] [--duration 10|15|20]
+   node dist/cli.js harness "<the brief, verbatim>" [--id <project-id>] [--ratio 9:16|16:9|1:1] [--duration 10|15|20] [--product-image <photo>]
    ```
+
+   If the user gives a photo of the real product, pass it as `--product-image`. It replaces the
+   generated hero still, so every shot shows the real shape and logo instead of the image model's
+   guess. Only use a photo the user took or has rights to.
 
    A 15-second film takes about 30 to 40 minutes on one DGX Spark (three 5-second clips at ~340 s each dominate). Run it in the background and report progress from the `▸` lines it prints, or point the user at the Studio (`node dist/cli.js studio`, port 3090) where the same run is visible.
 4. Use `--plan-only` when the user wants the script and storyboard to approve before any GPU time is spent.

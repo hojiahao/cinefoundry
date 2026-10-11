@@ -1,4 +1,5 @@
 import { createServer, type Server } from 'node:http'
+import { execFileSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -27,6 +28,7 @@ let llm: Server
 let llmUrl = ''
 let comfy: Awaited<ReturnType<typeof startFakeComfy>>
 const seen: string[] = []
+const prompts: string[] = []
 let scriptCalls = 0
 let gateCalls = 0
 
@@ -39,9 +41,13 @@ beforeAll(async () => {
       const body = JSON.parse(Buffer.concat(chunks).toString())
       const system: string = body.messages[0].content
       const user = body.messages[1].content
+      prompts.push(typeof user === 'string' ? user : JSON.stringify(user))
       const hasImage = Array.isArray(user)
       let reply: unknown
-      if (hasImage) {
+      if (hasImage && system.includes('describe product photos')) {
+        seen.push('photo')
+        reply = { description: 'A slim silver aluminium can with a brushed finish and a teal band printed with "冷".' }
+      } else if (hasImage) {
         seen.push('gate')
         gateCalls++
         // Reject the very first storyboard frame once, to exercise the regeneration loop.
@@ -100,5 +106,45 @@ describe('CineLoom Harness', () => {
     expect(delivery).toContain('# 交付报告')
     expect(delivery).toMatch(/\| 1 \| macro · slow push-in \| 2 \| pass 92/)
     expect(state.assets.map((asset: any) => asset.id).sort()).toEqual(['clip-1', 'clip-2', 'final-cut', 'frame-1', 'frame-2', 'product-hero'])
+  })
+
+  it('uses a supplied product photo as the hero still instead of generating one', async () => {
+    const projects = mkdtempSync(join(tmpdir(), 'cineloom-photo-'))
+    Object.assign(process.env, { CINELOOM_PROJECTS: projects })
+    const photo = join(projects, 'photo.jpg')
+    execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gold:s=2000x1500', '-frames:v', '1', photo])
+    const { runHarness } = await import('../src/agent/harness.js')
+    const before = comfy.graphs.length
+    const log: string[] = []
+    await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'photo-test', silent: true, candidates: 1, productImage: photo, log: (line) => log.push(line) })
+
+    // No text-to-image graph: the first picture job is already an edit anchored to the photo.
+    const graphs = comfy.graphs.slice(before)
+    const pictures = graphs.filter((graph) => !Object.values(graph).some((node: any) => node.class_type === 'WanImageToVideo'))
+    expect(pictures.length).toBeGreaterThan(0)
+    expect(pictures.every((graph) => graph['6'].class_type === 'TextEncodeQwenImageEditPlus')).toBe(true)
+    expect(graphs[0]!['6'].class_type).toBe('TextEncodeQwenImageEditPlus')
+    expect(log.some((line) => line.includes('product hero user photo'))).toBe(true)
+    // The photo is read before the writers start, and what it shows reaches them.
+    expect(seen.slice(seen.indexOf('photo'))).toEqual(expect.arrayContaining(['photo', 'script', 'storyboard']))
+    expect(seen.indexOf('photo')).toBeLessThan(seen.lastIndexOf('script'))
+    const brief = JSON.parse(readFileSync(join(projects, 'photo-test', 'brief.json'), 'utf8'))
+    expect(brief.photo.description).toContain('brushed finish')
+    // The look is the photo's, not the storyboard artist's paraphrase.
+    expect(JSON.parse(readFileSync(join(projects, 'photo-test', 'storyboard', 'storyboard.json'), 'utf8')).product).toBe(brief.photo.description)
+    expect(prompts.some((prompt) => prompt.includes('brushed finish and a teal band') && prompt.includes('Approved script'))).toBe(true)
+    // Normalised to PNG, longest side capped at 1328 px.
+    const hero = join(projects, 'photo-test', 'refs', 'product.png')
+    expect(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', hero]).toString().trim()).toBe('1328,996')
+    const state = JSON.parse(readFileSync(join(projects, 'photo-test', 'state.json'), 'utf8'))
+    expect(state.assets.find((asset: any) => asset.id === 'product-hero')).toMatchObject({ path: 'refs/product.png', execution: 'user-supplied' })
+    expect(readFileSync(join(projects, 'photo-test', 'reports', 'delivery.md'), 'utf8')).toContain('用户提供的产品照片')
+  })
+
+  it('stops before any model call when the product photo does not exist', async () => {
+    const { runHarness } = await import('../src/agent/harness.js')
+    const calls = seen.length
+    await expect(runHarness({ brief: '给“冷”气泡水做一条广告', productImage: '/nonexistent/photo.jpg', log: () => {} })).rejects.toThrow('Product image not found')
+    expect(seen.length).toBe(calls)
   })
 })

@@ -188,10 +188,11 @@ https://github.com/user-attachments/assets/e726d094-b557-4999-8dcc-1f0d6348ff77
 ```bash
 git clone https://github.com/hojiahao/cineloom.git && cd cineloom
 npm install && npm run build
-npm test                      # 47 个测试：校验器、工具链与 CineLoom Harness 全流程
+npm test                      # 50 个测试：校验器、工具链与 CineLoom Harness 全流程
 
 node dist/cli.js studio       # 本机打开 http://127.0.0.1:3090 ，输入创意，点“开拍”
 node dist/cli.js harness "给一款叫“冷”的无糖气泡水做一条 15 秒竖版广告，面向大学生"   # 或使用命令行
+node dist/cli.js harness "<创意>" --product-image 产品照.jpg   # 用产品实拍图代替生成的定妆图，外形与 logo 以照片为准
 ```
 
 无需 GPU 即可体验的两个命令：

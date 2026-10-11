@@ -6,6 +6,7 @@ import { nativeSize, videoSize } from '../src/lib/media.js'
 import { parseMeminfo, planMemory } from '../src/lib/memory.js'
 import { buildShots } from '../src/lib/shots.js'
 import { extractJson } from '../src/lib/vision.js'
+import { checkStoryboard, styleConflicts } from '../src/agent/checks.js'
 
 describe('compliance scan', () => {
   it('blocks absolute terms and guarantees, and does not double count "100%"', () => {
@@ -292,5 +293,27 @@ describe('gateFailure', () => {
     expect(gateFailure(new JsonReplyError('no JSON', 170, 3000, 'length'))).toMatchObject({ cause: 'budget', completionTokens: 3000, seconds: 170 })
     expect(gateFailure(new JsonReplyError('no JSON', 40, 800, 'stop'))).toMatchObject({ cause: 'unparsable', finishReason: 'stop' })
     expect(gateFailure(new Error('step3-vl returned 500: oops'))).toMatchObject({ cause: 'transport' })
+  })
+})
+
+describe('product photo conflicts', () => {
+  const photo = { description: 'A low flat box with a gold metal-foam front and a small "NVIDIA" badge.' }
+
+  it('flags a style line that repaints the product', () => {
+    const style = styleConflicts('professional cool rim light on cool-toned metal, pale palette, smooth texture', photo)
+    expect(style.some((problem) => problem.includes('"smooth"'))).toBe(true)
+    expect(style.some((problem) => problem.includes('cool-toned metal'))).toBe(true)
+  })
+
+  it('leaves light, background, placement and finishes the photo shows to the storyboard', () => {
+    expect(styleConflicts('cool rim light, dark studio, foam texture catching the light', photo)).toEqual([])
+    expect(styleConflicts('smooth gradients', undefined)).toEqual([])
+    const script = { structure: 's', beats: [{ beat: 1, job: 'hook', see: 'the box standing upright on a desk', vo: '桌上千亿参数', text: '桌上' }] }
+    const storyboard = {
+      style: 'cool rim light, dark studio', product: 'a flat gold box with a foam front and an "NVIDIA" badge',
+      shots: [{ shot: 1, seconds: 5, framing: 'wide', camera: 'slow push-in', image_prompt: 'the unit standing upright on a desk', video_prompt: 'Slow push-in.', on_screen_text: '', must_show: 'the unit on a desk' }],
+    }
+    expect(checkStoryboard(storyboard, script, { brandText: 'NVIDIA', product: 'DGX Spark', photo }).filter((problem) => problem.includes('photo'))).toEqual([])
+    expect(checkStoryboard({ ...storyboard, style: 'cool rim light, smooth texture' }, script, { brandText: 'NVIDIA', product: 'DGX Spark', photo }).filter((problem) => problem.includes('photo'))).toHaveLength(1)
   })
 })

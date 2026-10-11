@@ -246,7 +246,7 @@ async function studio(args: ParsedArgs): Promise<number> {
 /** Brief in, finished film out: CineLoom Harness runs every stage with its agents and skills. */
 async function harnessCommand(args: ParsedArgs): Promise<number> {
   const brief = args.positionals.join(' ').trim()
-  if (!brief) throw new UsageError('usage: cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--plan-only] [--without-skills]')
+  if (!brief) throw new UsageError('usage: cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--plan-only] [--without-skills]')
   const result = await runHarness({
     brief,
     id: flag(args, 'id'),
@@ -258,6 +258,7 @@ async function harnessCommand(args: ParsedArgs): Promise<number> {
     videoModel: flag(args, 'video-model') as never,
     audio: flag(args, 'audio'),
     silent: flag(args, 'silent') === 'true',
+    productImage: flag(args, 'product-image'),
     candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
     bestOf: flag(args, 'best-of') === 'true',
     frameScheduling: flag(args, 'frame-scheduling') as never,

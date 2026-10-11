@@ -13,7 +13,7 @@ export interface Asset {
   path: string
   shot?: number
   /** Where the asset was produced. Shown in the studio so local and cloud work stay distinguishable. */
-  execution: 'local-dgx-spark' | 'cloud'
+  execution: 'local-dgx-spark' | 'cloud' | 'user-supplied'
   model?: string
   seconds?: number
   note?: string
