@@ -1,0 +1,1839 @@
+{
+ "date": "2026-10-11T23:11:47.690Z",
+ "model": {
+  "text": "nemotron-3.5-lightning",
+  "vision": "step3-vl-10b"
+ },
+ "repeats": 4,
+ "method": "one attempt, thinking off, both arms get the same prompt and CLI reference; the with-skill arm also carries SKILL.md; scored by code against the skill rules",
+ "tasks": {
+  "cut": {
+   "skill": "final-cut-assembly",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 64,
+    "clean": 0,
+    "meanViolations": 8.64
+   },
+   "withSkill": {
+    "runs": 64,
+    "clean": 59,
+    "meanViolations": 0.08
+   },
+   "topWithout": [
+    [
+     "voiceover not 0.45 s after the beat starts",
+     192
+    ],
+    [
+     "end card is not 3 s",
+     63
+    ],
+    [
+     "music not generated locally",
+     63
+    ],
+    [
+     "total is not the brief + 3 s end card",
+     63
+    ],
+    [
+     "crossfade is not 0.4 s",
+     61
+    ]
+   ],
+   "topWith": [
+    [
+     "music not generated locally",
+     4
+    ],
+    [
+     "size is not 1920x1080",
+     1
+    ]
+   ],
+   "minutes": 1.6,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.206,
+     "tokens": 260
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.572,
+     "tokens": 271
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.264,
+     "tokens": 269
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.574,
+     "tokens": 287
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.747,
+     "tokens": 287
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.907,
+     "tokens": 277
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.201,
+     "tokens": 290
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.203,
+     "tokens": 279
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.935,
+     "tokens": 270
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.469,
+     "tokens": 260
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.635,
+     "tokens": 264
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.297,
+     "tokens": 254
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.667,
+     "tokens": 250
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.884,
+     "tokens": 260
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.513,
+     "tokens": 256
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.64,
+     "tokens": 267
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.311,
+     "tokens": 267
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.378,
+     "tokens": 271
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.489,
+     "tokens": 272
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "music not generated locally"
+     ],
+     "seconds": 6.486,
+     "tokens": 270
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.719,
+     "tokens": 273
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.719,
+     "tokens": 273
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.835,
+     "tokens": 254
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.301,
+     "tokens": 265
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.384,
+     "tokens": 267
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.08,
+     "tokens": 262
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.126,
+     "tokens": 258
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.246,
+     "tokens": 260
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.893,
+     "tokens": 256
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.927,
+     "tokens": 261
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.764,
+     "tokens": 261
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.531,
+     "tokens": 260
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.992,
+     "tokens": 271
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.395,
+     "tokens": 265
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.191,
+     "tokens": 284
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.496,
+     "tokens": 282
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.372,
+     "tokens": 280
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.201,
+     "tokens": 264
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.159,
+     "tokens": 289
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.015,
+     "tokens": 279
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.796,
+     "tokens": 272
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.908,
+     "tokens": 259
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.546,
+     "tokens": 260
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.132,
+     "tokens": 261
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.761,
+     "tokens": 257
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.221,
+     "tokens": 263
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.141,
+     "tokens": 260
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.198,
+     "tokens": 256
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.382,
+     "tokens": 267
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.521,
+     "tokens": 273
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.519,
+     "tokens": 272
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.537,
+     "tokens": 272
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.655,
+     "tokens": 273
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.802,
+     "tokens": 273
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.813,
+     "tokens": 254
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.24,
+     "tokens": 265
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.458,
+     "tokens": 267
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.21,
+     "tokens": 262
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.225,
+     "tokens": 258
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "music not generated locally"
+     ],
+     "seconds": 5.851,
+     "tokens": 256
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.969,
+     "tokens": 256
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.199,
+     "tokens": 261
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.853,
+     "tokens": 261
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.746,
+     "tokens": 260
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally"
+     ],
+     "seconds": 5.716,
+     "tokens": 263
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.709,
+     "tokens": 267
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.401,
+     "tokens": 291
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.538,
+     "tokens": 286
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.334,
+     "tokens": 264
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.293,
+     "tokens": 264
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.131,
+     "tokens": 290
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.905,
+     "tokens": 271
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.898,
+     "tokens": 274
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.37,
+     "tokens": 260
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.488,
+     "tokens": 260
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.173,
+     "tokens": 263
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.801,
+     "tokens": 257
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.801,
+     "tokens": 261
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.117,
+     "tokens": 260
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 3,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.655,
+     "tokens": 267
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.47,
+     "tokens": 267
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.824,
+     "tokens": 273
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.246,
+     "tokens": 254
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [
+      "music not generated locally"
+     ],
+     "seconds": 6.555,
+     "tokens": 270
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.839,
+     "tokens": 273
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.688,
+     "tokens": 273
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.934,
+     "tokens": 254
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.468,
+     "tokens": 265
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.431,
+     "tokens": 267
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.249,
+     "tokens": 262
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.089,
+     "tokens": 258
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.888,
+     "tokens": 258
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.767,
+     "tokens": 254
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [
+      "size is not 1920x1080"
+     ],
+     "seconds": 5.407,
+     "tokens": 236
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.055,
+     "tokens": 261
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 3,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.591,
+     "tokens": 260
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.984,
+     "tokens": 266
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.543,
+     "tokens": 267
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.99,
+     "tokens": 275
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.306,
+     "tokens": 287
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.706,
+     "tokens": 289
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.022,
+     "tokens": 279
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.131,
+     "tokens": 291
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.111,
+     "tokens": 278
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.566,
+     "tokens": 264
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.309,
+     "tokens": 256
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.809,
+     "tokens": 260
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.823,
+     "tokens": 255
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.157,
+     "tokens": 259
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 7.054,
+     "tokens": 280
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.977,
+     "tokens": 260
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 4,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.319,
+     "tokens": 263
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.509,
+     "tokens": 265
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.794,
+     "tokens": 273
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.655,
+     "tokens": 270
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.656,
+     "tokens": 272
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.658,
+     "tokens": 273
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.433,
+     "tokens": 273
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.389,
+     "tokens": 254
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.733,
+     "tokens": 265
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.58,
+     "tokens": 267
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.247,
+     "tokens": 262
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.995,
+     "tokens": 258
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.615,
+     "tokens": 258
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [
+      "music not generated locally"
+     ],
+     "seconds": 5.318,
+     "tokens": 254
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.373,
+     "tokens": 261
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.818,
+     "tokens": 261
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 4,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.489,
+     "tokens": 260
+    }
+   ]
+  }
+ }
+}

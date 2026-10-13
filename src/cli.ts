@@ -7,7 +7,7 @@ const HELP = `CineLoom - agentic ad-film studio for a single DGX Spark
 
   CineLoom Harness: one brief in, one finished film out
 
-  cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--plan-only] [--video-model wan22-14b|wan22-5b|ltx25-fast|ltx25-fast-nvfp4|seedance]
+  cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--proof "facts"] [--plan-only] [--video-model ltx25-fast|ltx25-fast-nvfp4|wan22-14b|wan22-5b|seedance]
 
   Individual tools, as the skills call them
   cineloom eval [--briefs eval/briefs.json] [--repeats 2]      with/without-skill comparison
@@ -19,7 +19,7 @@ const HELP = `CineLoom - agentic ad-film studio for a single DGX Spark
   cineloom image --prompt <text> [--size 1328x1328] [--ref img ...] [--project id --shot n | --out file]
   cineloom video --prompt <text> [--first-frame img] [--duration 5] [--ratio 9:16] [--resolution 720p] [--project id --shot n | --out file]
   cineloom qa --frame <img> [--ref img ...] [--expect text] [--project id --shot n]
-  cineloom cut --project <id> [--audio file] [--silent]            re-run end card, titles, sound and grade
+  cineloom cut --project <id> [--audio file] [--silent] [--end-still img] re-run end card, titles, sound and grade
   cineloom mem <status|plan|free> [--need name=GB ...]
   cineloom doctor
   cineloom studio [--port 3090] [--host 127.0.0.1]

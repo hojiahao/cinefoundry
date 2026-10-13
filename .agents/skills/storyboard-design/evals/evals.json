@@ -22,7 +22,7 @@
   },
   {
     "question": "镜头 1 想要缓慢推进，带一点手持呼吸感。",
-    "ground_truth": "camera reads as one move with qualifiers, e.g. “slow push-in with a subtle handheld float”, not “push-in then pan” or “push-in, pan”. The validator counts move verbs and rejects two.",
+    "ground_truth": "camera reads as one move with qualifiers, e.g. “slow push-in”, not “slow push-in with a subtle handheld float” (handheld is a second move), “push-in then pan” or “push-in, pan”. The validator counts move verbs and rejects two.",
     "id": "storyboard-design-eval-004-one-camera-move-wording",
     "expected_skill": "storyboard-design",
     "expected_script": null

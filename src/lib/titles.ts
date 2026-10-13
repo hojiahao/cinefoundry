@@ -17,6 +17,9 @@ const assTime = (seconds: number) => {
 
 const clean = (text: string) => text.replace(/[{}\\]/g, '').replace(/\r?\n/g, ' ').trim()
 
+/** Width of a line in font-size units, letter spacing (0.22 em) included: CJK and full-width marks are 1 em, Latin about 0.6. */
+const lineEms = (text: string) => [...text].reduce((sum, char) => sum + (/[\u3000-\u9fff\uff00-\uffef]/.test(char) ? 1 : 0.6) + 0.22, 0)
+
 export function buildAss(cues: TitleCue[], width: number, height: number, font = 'Noto Sans CJK SC'): string {
   const portrait = height > width
   const titleSize = Math.round(height * (portrait ? 0.058 : 0.085))
@@ -34,7 +37,12 @@ export function buildAss(cues: TitleCue[], width: number, height: number, font =
   ]
   for (const cue of cues) {
     if (cue.title?.trim()) lines.push(`Dialogue: 1,${assTime(cue.start + 0.5)},${assTime(cue.end - 0.4)},Title,,0,0,0,,{\\fad(450,350)\\blur0.6}${clean(cue.title)}`)
-    if (cue.closing?.trim()) lines.push(`Dialogue: 1,${assTime(cue.start + 0.6)},${assTime(cue.end - 0.1)},Closing,,0,0,0,,{\\fad(500,300)\\blur0.5}${clean(cue.closing)}`)
+    if (cue.closing?.trim()) {
+      // WrapStyle 2 never wraps, so a long client line on a portrait end card would run off both edges: shrink it to fit.
+      const size = Math.min(closingSize, Math.floor((width - 160) / lineEms(clean(cue.closing))))
+      const fit = size < closingSize ? `\\fs${size}\\fsp${Math.round(size * 0.22)}` : ''
+      lines.push(`Dialogue: 1,${assTime(cue.start + 0.6)},${assTime(cue.end - 0.1)},Closing,,0,0,0,,{\\fad(500,300)\\blur0.5${fit}}${clean(cue.closing)}`)
+    }
     if (cue.subtitle?.trim()) lines.push(`Dialogue: 0,${assTime(cue.start + 0.25)},${assTime(cue.end - 0.15)},Sub,,0,0,0,,{\\fad(200,200)}${clean(cue.subtitle)}`)
   }
   return `${lines.join('\n')}\n`

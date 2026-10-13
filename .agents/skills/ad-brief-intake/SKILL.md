@@ -41,6 +41,7 @@ then open the project so every later stage has one source of truth.
 {"id": "summer-soda", "title": "夏日气泡水", "product": "...", "category": "food", "audience": "...",
  "message": "the one thing the viewer should remember, in Chinese", "ratio": "9:16", "durationSeconds": 15,
  "tone": "tone and visual style, in English", "brandText": "the brand as printed on the product, at most 4 common characters",
+ "tagline": "the closing line the request quotes (字幕：“…”, 口号, 广告语), copied character for character; empty if none",
  "proofPoints": ["claims the user can substantiate"], "references": ["refs/can_front.png"], "delivery": "local only | cloud allowed for <step>"}
 ```
 

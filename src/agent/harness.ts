@@ -1,4 +1,4 @@
-import { access, appendFile, mkdir, writeFile } from 'node:fs/promises'
+import { access, appendFile, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ComfyClient } from '../comfy/client.js'
 import { scanCopy } from '../lib/compliance.js'
@@ -6,13 +6,13 @@ import { normalizeImage, probeDuration } from '../lib/ffmpeg.js'
 import { generateImage, generateVideo, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
 import { sleepService, wakeService } from '../lib/rest.js'
 import { memoryStatus } from '../lib/memory.js'
-import { addAsset, createProject, projectDir, setStage as saveStage, type Stage } from '../lib/project.js'
-import { checkBrief, checkProductPhoto, checkScript, checkStoryboard, composeImagePrompt, composeProductPrompt, composeVideoNegative, composeVideoPrompt, briefIndustry, photoLettering, type Brief, type ProductPhoto, type Script, type Shot, type Storyboard } from './checks.js'
+import { addAsset, createProject, projectDir, projectsRoot, setStage as saveStage, type Stage } from '../lib/project.js'
+import { captionProblems, checkBrief, checkProductPhoto, checkRepairedPrompt, checkScript, checkStoryboard, composeImagePrompt, composeProductPrompt, composeVideoNegative, composeVideoPrompt, briefIndustry, photoLettering, type Brief, type ProductPhoto, type Script, type Shot, type Storyboard } from './checks.js'
 import { writeDeliveryReport } from './delivery.js'
 import { enterPhase, finishFilm } from './finish.js'
 import { qualityGate, type QaVerdict } from './gate.js'
 import { jevConfig, judgeCopy, judgeStoryboard } from './jev.js'
-import { chatJson, endpoints, type ModelEndpoint } from './llm.js'
+import { chatJson, endpoints, JsonReplyError, type ModelEndpoint } from './llm.js'
 import { agentSystem, scriptUser, storyboardUser } from './prompts.js'
 import { loadRules, loadSkill } from './skills.js'
 
@@ -33,6 +33,8 @@ export interface HarnessOptions {
   silent?: boolean
   /** A photo of the real product, used as the hero still instead of generating one from text. Only a photo the user has rights to. */
   productImage?: string
+  /** Facts the client can substantiate (specs, figures, sources). The copy may claim these and nothing stronger. */
+  proof?: string
   /** Frames generated per shot before the gate picks one. */
   candidates?: number
   /** Generate every candidate even after one passed, and keep the best score. Default: stop at the first pass. */
@@ -63,6 +65,43 @@ const MAX_QA_REGENERATIONS = 2
  * the acceptance checks; models own the judgement.
  */
 export async function runHarness(options: HarnessOptions): Promise<HarnessResult> {
+  const release = await takeRunLock(options.brief)
+  try {
+    return await runHarnessUnlocked(options)
+  } finally {
+    await release()
+  }
+}
+
+/**
+ * One GPU, one film at a time, enforced here rather than left to whoever starts the run: a second run
+ * makes both slow and can fail a model load, and agents asked to check first with pgrep skipped it
+ * (eval/skill-bench, cineloom-ad-film: 32 of 32 plans). A lock whose process is gone is stale and is taken over.
+ */
+async function takeRunLock(brief: string): Promise<() => Promise<void>> {
+  const lock = join(projectsRoot(), '.harness.lock')
+  const held = await readFile(lock, 'utf8').then((text) => JSON.parse(text) as { pid: number; startedAt: string; brief: string }).catch(() => undefined)
+  if (held && held.pid !== process.pid && alive(held.pid)) {
+    throw new Error(`Another film is generating (pid ${held.pid}, started ${held.startedAt}: "${held.brief.slice(0, 60)}"). One film at a time on this GPU: wait for it to finish, or stop it first.`)
+  }
+  await mkdir(projectsRoot(), { recursive: true })
+  await writeFile(lock, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString(), brief }))
+  return async () => {
+    const now = await readFile(lock, 'utf8').then((text) => JSON.parse(text) as { pid: number }).catch(() => undefined)
+    if (now?.pid === process.pid) await rm(lock, { force: true })
+  }
+}
+
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === 'EPERM'
+  }
+}
+
+async function runHarnessUnlocked(options: HarnessOptions): Promise<HarnessResult> {
   // Any stage still marked running when the run throws is marked failed with the reason: the studio
   // board reads this record, and a stage left running looks like a stalled job.
   const running = new Map<string, Set<Stage>>()
@@ -110,7 +149,8 @@ Return JSON only:
 {"id": "lowercase-dashed-project-id", "title": "short Chinese title", "product": "what is being advertised", "category": "general|food|health_food|cosmetics|medical",
  "audience": "...", "message": "the one thing the viewer should remember, in Chinese", "ratio": "9:16|16:9|1:1", "durationSeconds": 15,
  "tone": "tone and visual style in English", "brandText": "the lettering actually printed on the product, copied exactly: at most 4 common Chinese characters or 12 Latin letters; never an abbreviation or model name that is not printed on it",
- "industry": "electronics|drink|skincare|food|general: how this product is shot in commercials (a computer or keyboard is electronics)",
+ "industry": "computing|electronics|drink|skincare|food|general: how this product is shot and sold (a computer, workstation, server or GPU is computing; a keyboard, earphones or a phone is electronics)",
+ "tagline": "the closing line the request quotes for the end card (after 字幕/口号/广告语/slogan), copied character for character in the request's language; empty if the request quotes none",
  "appearance": "the product's look copied word for word from the request (container, material, colours, label); empty if the request says nothing about it"}`,
     },
     checkBrief,
@@ -119,6 +159,17 @@ Return JSON only:
   // 横版 and the intake agent still chose 9:16. Explicit user words win over the agent's choice.
   const stated = statedFormat(options.brief)
   const brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ...(options.ratio ? { ratio: options.ratio as Brief['ratio'] } : stated.ratio ? { ratio: stated.ratio } : {}), ...(options.durationSeconds ? { durationSeconds: options.durationSeconds } : stated.durationSeconds ? { durationSeconds: stated.durationSeconds } : {}) }
+  // A closing line the client quoted is theirs, word for word: the copywriter never saw the request, so
+  // "DGX Spark，把 AI 超算放上你的桌面" became "AI supercomputing on your desk". The model's copy counts only if it is in the request.
+  const modelTagline = briefRun.value.tagline?.trim()
+  const tagline = statedTagline(options.brief) ?? (modelTagline && options.brief.includes(modelTagline) ? closingLine(modelTagline) : undefined)
+  delete brief.tagline
+  if (tagline) {
+    const problems = captionProblems('tagline', tagline, true)
+    if (problems.length) log(`  tagline "${tagline}" cannot be typeset (${problems[0]}); the end card shows the message instead`)
+    else brief.tagline = tagline
+  }
+  if (options.proof?.trim()) brief.proof = options.proof.trim()
   rejectedAttempts.brief = briefRun.rejected.length
   await createProject({ id: brief.id, title: brief.title, brief: options.brief, ratio: brief.ratio, durationSeconds: brief.durationSeconds })
   const dir = projectDir(brief.id)
@@ -151,7 +202,9 @@ Return JSON only:
   const photoPath = join(dir, 'refs', 'product.png')
   if (options.productImage) {
     await mkdir(join(dir, 'refs'), { recursive: true })
-    await normalizeImage(options.productImage, photoPath, 1328)
+    // Written beside and renamed over: an agent once passed refs/product.png itself (read-only), and ffmpeg cannot overwrite its own input.
+    await normalizeImage(options.productImage, `${photoPath}.tmp.png`, 1328)
+    await rename(`${photoPath}.tmp.png`, photoPath)
     log('▸ photo        reader · step3-vl')
     const reading = await chatJson<ProductPhoto>(
       reviewer,
@@ -195,7 +248,7 @@ Return JSON only: {"description": "one to three English sentences: overall shape
       thinking: false,
       maxTokens: 3000,
       temperature: 0.8,
-      user: scriptUser(brief),
+      user: scriptUser(brief, options.brief),
     },
     async (script) => {
       const problems = checkScript(script, brief)
@@ -228,7 +281,7 @@ Return JSON only: {"description": "one to three English sentences: overall shape
       thinking: false,
       maxTokens: 2000,
       temperature: 0.2,
-      user: `Product category: ${brief.category}. Proof points the brand can substantiate: none supplied.
+      user: `Product category: ${brief.category}. Proof points the brand can substantiate: ${brief.proof ?? 'none supplied'}.${brief.proof ? ' A line that states one of these facts is substantiated; anything stronger is not.' : ''}
 Script copy:\n${script.beats.map((beat) => `Beat ${beat.beat} VO: ${beat.vo}\nBeat ${beat.beat} text: ${beat.text}`).join('\n')}
 
 ${jevReview.length ? `A structured judge flagged these lines as uncertain; decide each one:\n${jevReview.map((f) => `- beat ${f.beat} "${f.line}": ${f.issue} (p=${f.probability.toFixed(2)})`).join('\n')}\n\n` : ''}Judge two things only, briefly: (1) wording a keyword scan would miss - implied superlatives, implied comparison with competitors, effects nobody could prove; (2) Chinese that sounds unnatural when read aloud.
@@ -279,8 +332,14 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
       return problems
     },
     6,
-  )
-  failIfHardProblems('storyboard', checkStoryboard(storyboardRun.value, script, brief), storyboardRun.attempts)
+  ).catch(async (error: unknown) => {
+    // A storyboard that never came back usable: keep why each attempt was turned down.
+    if (error instanceof JsonReplyError) await record('storyboard', 'storyboard', planner, { seconds: error.seconds, failed: error.message, finishReason: error.finishReason, rejected: error.rejected })
+    throw error
+  })
+  const storyboardProblems = checkStoryboard(storyboardRun.value, script, brief)
+  if (storyboardProblems.length) await record('storyboard', 'storyboard', planner, { seconds: storyboardRun.seconds, attempts: storyboardRun.attempts, failed: 'hard problems left', rejected: storyboardRun.rejected })
+  failIfHardProblems('storyboard', storyboardProblems, storyboardRun.attempts)
   if (storyboardRun.unresolved.length) log(`  storyboard accepted with ${storyboardRun.unresolved.length} unresolved semantic finding(s) after ${storyboardRun.attempts} attempts`)
   // With a photo the product's look is the photo's, not the storyboard artist's paraphrase of it.
   const storyboard = brief.photo ? { ...storyboardRun.value, product: brief.photo.description } : storyboardRun.value
@@ -421,7 +480,7 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
 
   // ---- clips -----------------------------------------------------------------------------
   await setStage(brief.id, 'clips', 'running')
-  const videoModel = options.videoModel ?? 'wan22-14b'
+  const videoModel = options.videoModel ?? 'ltx25-fast'
   const clipsPhase = `clips (${videoModel.startsWith('ltx25') ? 'LTX-2.5 Fast' : videoModel === 'seedance' ? 'Seedance' : 'Wan2.2'})`
   await rest(clipsPhase, [planner, reviewer])
   await enterPhase(comfy, clipsPhase, record)
@@ -457,20 +516,33 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
 }
 
 async function repairPrompt(planner: ModelEndpoint, system: string, shot: Shot, prompt: string, issues: string[]): Promise<string> {
-  const run = await chatJson<{ image_prompt: string }>(
+  // The model writes only the scene; the fixed product sentences are re-attached here, so they cannot drift.
+  // It names the fix and the phrases it deletes first: asked for a "simpler scene" alone, it described the product again
+  // and resubmitted the old scene with a word moved (eval/skill-bench, repair group).
+  const anchor = /Image 1 is the product|The product:/.exec(prompt)
+  const scene = (anchor ? prompt.slice(0, anchor.index) : prompt).trim()
+  const assemble = (value: { scene: string }) => (anchor ? `${value.scene.trim()} ${prompt.slice(anchor.index)}` : value.scene.trim())
+  const words = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const run = await chatJson<{ fixes?: Array<{ issue: string; change: string }>; delete?: string[]; scene: string }>(
     planner,
     {
       system,
       thinking: false,
       temperature: 0.4,
-      user: `The quality gate rejected shot ${shot.shot}.\nIssues: ${issues.join('; ') || 'required content missing'}\nMust show: ${shot.must_show}\nCurrent prompt: ${prompt}
-Change the prompt according to the issue type; do not resubmit it unchanged. Rewrite only the scene description at the start. Keep every sentence from "Image 1 is the product" or "The product:" onward exactly as it is. Keep it in English.
-Return JSON only: {"image_prompt": "..."}`,
+      user: `The quality gate rejected shot ${shot.shot}.\nIssues: ${issues.join('; ') || 'required content missing'}\nMust show: ${shot.must_show}\nCurrent scene description: ${scene}
+${anchor ? 'The product sentences that follow the scene are fixed and will be re-attached unchanged; do not write them.\n' : ''}For each issue, first say in one short sentence what you change in the scene to fix it. Then list the exact phrases of the current scene you delete, and write the new scene: the current scene without those phrases, plus only what the fixes add. The new scene must differ from the current one; resubmitting it unchanged, or with a word or two moved, would produce the same rejected frame again. Keep it in English.
+Keep the framing (wide, close-up, macro...) and copy the quoted label text character for character. The product always stays in the picture: if something is missing next to it, place that object beside, behind or in front of the product, never around or inside it, and never replace the product with it.
+Return JSON only: {"fixes": [{"issue": "...", "change": "..."}], "delete": ["phrase copied from the current scene", "..."], "scene": "..."}`,
     },
-    (value) => (value.image_prompt?.trim() ? [] : ['image_prompt is empty']),
-    2,
+    (value) => {
+      if (!value.scene?.trim()) return ['scene is empty']
+      if (words(value.scene) === words(scene)) return ['the new scene is the current one again; delete the phrases that caused the issues']
+      return checkRepairedPrompt(prompt, assemble(value))
+    },
+    3,
   )
-  return run.value.image_prompt
+  // A repair that broke the label, the framing or the fixed sentences is worse than another seed on the old prompt.
+  return run.unresolved.length ? prompt : assemble(run.value)
 }
 
 /** A hard validator problem that survived every attempt would break the film (wrong beat count, restricted wording, Chinese in an image prompt): stop here, truthfully. */
@@ -479,6 +551,17 @@ function failIfHardProblems(stage: string, problems: string[], attempts: number)
 }
 
 /** Aspect ratio and duration stated in plain words in the request itself. */
+/** The closing line a request quotes after 字幕/口号/广告语/slogan, without its closing punctuation. */
+export function statedTagline(request: string): string | undefined {
+  const quoted = /(?:定版字幕|字幕|口号|广告语|标语|slogan|tagline|subtitle|caption)[^“"「『\n]{0,8}[“"「『]([^”"」』\n]{2,40})[”"」』]/i.exec(request)?.[1]
+  if (quoted) return closingLine(quoted)
+  // An agent passing the request through a shell dropped the quotes: "字幕：DGX Spark，把 AI 超算放上你的桌面。"
+  // Another dropped only the closing one: 字幕："DGX Spark，把 AI 超算放上你的桌面。
+  const bare = /(?:定版字幕|字幕|口号|广告语|标语|slogan|tagline)\s*[：:]\s*["“「『]?([^。！？\n“”"「」『』]{2,40})/i.exec(request)?.[1]
+  return bare ? closingLine(bare) : undefined
+}
+const closingLine = (text: string) => text.trim().replace(/[。！？.!?，,]+$/, '')
+
 export function statedFormat(request: string): { ratio?: Brief['ratio']; durationSeconds?: number } {
   const ratio = /横版|横屏|16:9|16：9/.test(request) ? '16:9' : /竖版|竖屏|9:16|9：16/.test(request) ? '9:16' : /方形|方版|1:1|1：1/.test(request) ? '1:1' : undefined
   const seconds = /(\d+)\s*秒/.exec(request)?.[1]

@@ -1,0 +1,748 @@
+{
+ "date": "2026-10-11T22:47:39.495Z",
+ "model": {
+  "text": "nemotron-3.5-lightning",
+  "vision": "step3-vl-10b"
+ },
+ "repeats": 2,
+ "method": "one attempt, thinking off, both arms get the same prompt and CLI reference; the with-skill arm also carries SKILL.md; scored by code against the skill rules",
+ "tasks": {
+  "repair": {
+   "skill": "shot-quality-gate",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 32,
+    "clean": 8,
+    "meanViolations": 0.97
+   },
+   "withSkill": {
+    "runs": 32,
+    "clean": 6,
+    "meanViolations": 0.91
+   },
+   "topWithout": [
+    [
+     "product mismatch: scene not simplified",
+     19
+    ],
+    [
+     "unwanted hands: not reframed as product-only",
+     7
+    ],
+    [
+     "resubmitted unchanged",
+     3
+    ],
+    [
+     "unwanted hands: people still described",
+     2
+    ]
+   ],
+   "topWith": [
+    [
+     "product mismatch: scene not simplified",
+     16
+    ],
+    [
+     "unwanted hands: not reframed as product-only",
+     8
+    ],
+    [
+     "no usable reply: Unexpected non-whitespace character after JSON at position 627 (line 1 column 628)",
+     1
+    ],
+    [
+     "no usable reply: Unexpected non-whitespace character after JSON at position 752 (line 1 column 753)",
+     1
+    ],
+    [
+     "unwanted hands: people still described",
+     1
+    ]
+   ],
+   "minutes": 0.6,
+   "rows": [
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.023,
+     "tokens": 136
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.263,
+     "tokens": 252
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.274,
+     "tokens": 101
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: people still described",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 2.645,
+     "tokens": 79
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.64,
+     "tokens": 90
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.828,
+     "tokens": 145
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.831,
+     "tokens": 131
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.707,
+     "tokens": 193
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.731,
+     "tokens": 111
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 2.868,
+     "tokens": 91
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.528,
+     "tokens": 148
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.037,
+     "tokens": 143
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 6.526,
+     "tokens": 217
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.2,
+     "tokens": 169
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.666,
+     "tokens": 158
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.689,
+     "tokens": 133
+    },
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.241,
+     "tokens": 136
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 8.176,
+     "tokens": 231
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.5,
+     "tokens": 93
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 4.106,
+     "tokens": 124
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.035,
+     "tokens": 91
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 7.14,
+     "tokens": 192
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 4.882,
+     "tokens": 140
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.997,
+     "tokens": 196
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.166,
+     "tokens": 109
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 2.469,
+     "tokens": 72
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.805,
+     "tokens": 174
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no usable reply: Unexpected non-whitespace character after JSON at position 627 (line 1 column 628)"
+     ]
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.539,
+     "tokens": 135
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.02,
+     "tokens": 180
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no usable reply: Unexpected non-whitespace character after JSON at position 752 (line 1 column 753)"
+     ]
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 2.827,
+     "tokens": 93
+    },
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.423,
+     "tokens": 123
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.189,
+     "tokens": 203
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.051,
+     "tokens": 105
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: people still described",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.147,
+     "tokens": 108
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.525,
+     "tokens": 94
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.669,
+     "tokens": 179
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.987,
+     "tokens": 144
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 6.6,
+     "tokens": 211
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.616,
+     "tokens": 121
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.522,
+     "tokens": 92
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.349,
+     "tokens": 149
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.441,
+     "tokens": 86
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.242,
+     "tokens": 125
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.803,
+     "tokens": 176
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 7.772,
+     "tokens": 203
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.128,
+     "tokens": 158
+    },
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.254,
+     "tokens": 136
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 7.017,
+     "tokens": 194
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.658,
+     "tokens": 126
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: people still described",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 2.961,
+     "tokens": 85
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 2.967,
+     "tokens": 80
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no usable reply: Unexpected non-whitespace character after JSON at position 589 (line 1 column 590)"
+     ]
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 4.806,
+     "tokens": 135
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 5.325,
+     "tokens": 184
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 4.047,
+     "tokens": 130
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 2.534,
+     "tokens": 77
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.986,
+     "tokens": 174
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.867,
+     "tokens": 124
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.95,
+     "tokens": 131
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.765,
+     "tokens": 172
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.202,
+     "tokens": 90
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.582,
+     "tokens": 113
+    }
+   ]
+  }
+ }
+}

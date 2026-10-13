@@ -1,0 +1,7153 @@
+{
+ "date": "2026-10-11T22:16:02.165Z",
+ "model": {
+  "text": "nemotron-3.5-lightning",
+  "vision": "step3-vl-10b"
+ },
+ "repeats": 2,
+ "method": "one attempt, thinking off, both arms get the same prompt and CLI reference; the with-skill arm also carries SKILL.md; scored by code against the skill rules",
+ "tasks": {
+  "brief": {
+   "skill": "ad-brief-intake",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 32,
+    "clean": 12,
+    "meanViolations": 0.72
+   },
+   "withSkill": {
+    "runs": 32,
+    "clean": 18,
+    "meanViolations": 0.47
+   },
+   "topWithout": [
+    [
+     "category must be general, food, health_food, cosmetics or medical",
+     9
+    ],
+    [
+     "brandText \"\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product",
+     7
+    ],
+    [
+     "duration 15 overrides the stated 10",
+     4
+    ],
+    [
+     "id must be lowercase letters, digits and dashes",
+     2
+    ],
+    [
+     "brandText is empty: copy the lettering printed on the product",
+     1
+    ]
+   ],
+   "topWith": [
+    [
+     "brandText \"\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product",
+     5
+    ],
+    [
+     "ratio 9:16 overrides the stated 16:9",
+     5
+    ],
+    [
+     "category must be general, food, health_food, cosmetics or medical",
+     3
+    ],
+    [
+     "industry must be one of electronics, drink, skincare, food, general: how the product is shot, not its legal category",
+     2
+    ]
+   ],
+   "minutes": 0.7,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 4.614,
+     "tokens": 191
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical",
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 6.394,
+     "tokens": 223
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical",
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 5.716,
+     "tokens": 180
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 4.378,
+     "tokens": 171
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.766,
+     "tokens": 189
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 7.9,
+     "tokens": 228
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "duration 15 overrides the stated 10"
+     ],
+     "seconds": 4.447,
+     "tokens": 166
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "id must be lowercase letters, digits and dashes"
+     ],
+     "seconds": 4.615,
+     "tokens": 161
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 5.315,
+     "tokens": 160
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.96,
+     "tokens": 193
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.528,
+     "tokens": 212
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.976,
+     "tokens": 215
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.472,
+     "tokens": 180
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 5.807,
+     "tokens": 169
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "duration 15 overrides the stated 10"
+     ],
+     "seconds": 3.815,
+     "tokens": 141
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "id must be lowercase letters, digits and dashes"
+     ],
+     "seconds": 7.443,
+     "tokens": 198
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.556,
+     "tokens": 162
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 4.809,
+     "tokens": 180
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 4.359,
+     "tokens": 156
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.855,
+     "tokens": 174
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 5.769,
+     "tokens": 191
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 4.341,
+     "tokens": 149
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.388,
+     "tokens": 169
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.213,
+     "tokens": 134
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.426,
+     "tokens": 151
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.696,
+     "tokens": 144
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.389,
+     "tokens": 181
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.549,
+     "tokens": 173
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "ratio 9:16 overrides the stated 16:9"
+     ],
+     "seconds": 5.591,
+     "tokens": 188
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.459,
+     "tokens": 137
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "ratio 9:16 overrides the stated 16:9"
+     ],
+     "seconds": 5.359,
+     "tokens": 160
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "industry must be one of electronics, drink, skincare, food, general: how the product is shot, not its legal category"
+     ],
+     "seconds": 5.84,
+     "tokens": 180
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 4.559,
+     "tokens": 165
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 5.885,
+     "tokens": 210
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 6.543,
+     "tokens": 193
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical",
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 5.393,
+     "tokens": 175
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.405,
+     "tokens": 215
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 5.425,
+     "tokens": 175
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "duration 15 overrides the stated 10"
+     ],
+     "seconds": 4.013,
+     "tokens": 149
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.161,
+     "tokens": 183
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brandText is empty: copy the lettering printed on the product"
+     ],
+     "seconds": 3.971,
+     "tokens": 135
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 4.498,
+     "tokens": 162
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.275,
+     "tokens": 203
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.435,
+     "tokens": 196
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.735,
+     "tokens": 173
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.51,
+     "tokens": 162
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "duration 15 overrides the stated 10"
+     ],
+     "seconds": 3.828,
+     "tokens": 145
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.829,
+     "tokens": 192
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.351,
+     "tokens": 145
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.708,
+     "tokens": 192
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical",
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 5.288,
+     "tokens": 182
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.385,
+     "tokens": 167
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "category must be general, food, health_food, cosmetics or medical"
+     ],
+     "seconds": 5.841,
+     "tokens": 187
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brandText \"NVIDIA DGX Spark\" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product"
+     ],
+     "seconds": 4.329,
+     "tokens": 154
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.26,
+     "tokens": 162
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.847,
+     "tokens": 152
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.397,
+     "tokens": 156
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.581,
+     "tokens": 150
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "ratio 9:16 overrides the stated 16:9"
+     ],
+     "seconds": 4.456,
+     "tokens": 173
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "industry must be one of electronics, drink, skincare, food, general: how the product is shot, not its legal category"
+     ],
+     "seconds": 4.68,
+     "tokens": 179
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "ratio 9:16 overrides the stated 16:9"
+     ],
+     "seconds": 4.195,
+     "tokens": 201
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.47,
+     "tokens": 142
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "ratio 9:16 overrides the stated 16:9"
+     ],
+     "seconds": 3.462,
+     "tokens": 138
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.492,
+     "tokens": 181
+    }
+   ]
+  },
+  "compliance": {
+   "skill": "ad-compliance-review",
+   "cases": 45,
+   "withoutSkill": {
+    "runs": 90,
+    "clean": 28,
+    "meanViolations": 0.81
+   },
+   "withSkill": {
+    "runs": 90,
+    "clean": 45,
+    "meanViolations": 0.82
+   },
+   "topWithout": [
+    [
+     "clean historical copy rejected (false positive)",
+     20
+    ],
+    [
+     "rewrite keeps the restricted phrase",
+     19
+    ],
+    [
+     "block-level wording remains",
+     12
+    ],
+    [
+     "no usable reply: Expected ',' or ']' after array element in JSON at position 403 (line 1 column 404)",
+     2
+    ],
+    [
+     "no usable reply: Expected ',' or ']' after array element in JSON at position 252 (line 1 column 253)",
+     1
+    ]
+   ],
+   "topWith": [
+    [
+     "clean historical copy rejected (false positive)",
+     17
+    ],
+    [
+     "approved copy containing \"\"",
+     16
+    ],
+    [
+     "block-level wording remains",
+     13
+    ],
+    [
+     "rewrite keeps the restricted phrase",
+     11
+    ],
+    [
+     "beat 2 not rewritten",
+     7
+    ]
+   ],
+   "minutes": 2.4,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 7.36,
+     "tokens": 283
+    },
+    {
+     "case": 1,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 5.936,
+     "tokens": 202
+    },
+    {
+     "case": 2,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 4.76,
+     "tokens": 178
+    },
+    {
+     "case": 3,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 7.357,
+     "tokens": 302
+    },
+    {
+     "case": 4,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 9.327,
+     "tokens": 280
+    },
+    {
+     "case": 5,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 9.688,
+     "tokens": 368
+    },
+    {
+     "case": 6,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 6.211,
+     "tokens": 224
+    },
+    {
+     "case": 7,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.878,
+     "tokens": 217
+    },
+    {
+     "case": 8,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 7.188,
+     "tokens": 282
+    },
+    {
+     "case": 9,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.079,
+     "tokens": 329
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 7.925,
+     "tokens": 301
+    },
+    {
+     "case": 11,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 8.649,
+     "tokens": 323
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 6.437,
+     "tokens": 256
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 10.439,
+     "tokens": 391
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.864,
+     "tokens": 249
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 7.348,
+     "tokens": 278
+    },
+    {
+     "case": 16,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 7.503,
+     "tokens": 289
+    },
+    {
+     "case": 17,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 252 (line 1 column 253)"
+     ]
+    },
+    {
+     "case": 18,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 0.81,
+     "tokens": 21
+    },
+    {
+     "case": 19,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "block-level wording remains"
+     ],
+     "seconds": 6.344,
+     "tokens": 195
+    },
+    {
+     "case": 20,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 365 (line 1 column 366)"
+     ]
+    },
+    {
+     "case": 21,
+     "project": "dgx-spark-vs",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.992,
+     "tokens": 321
+    },
+    {
+     "case": 22,
+     "project": "dgx-spark-vs",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 7.257,
+     "tokens": 265
+    },
+    {
+     "case": 23,
+     "project": "dgx-spark-vs",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 309 (line 1 column 310)"
+     ]
+    },
+    {
+     "case": 24,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 0.734,
+     "tokens": 21
+    },
+    {
+     "case": 25,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 530 (line 1 column 531)"
+     ]
+    },
+    {
+     "case": 26,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 9.101,
+     "tokens": 294
+    },
+    {
+     "case": 27,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 0.69,
+     "tokens": 21
+    },
+    {
+     "case": 28,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 272 (line 1 column 273)"
+     ]
+    },
+    {
+     "case": 29,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.772,
+     "tokens": 247
+    },
+    {
+     "case": 30,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 301 (line 1 column 302)"
+     ]
+    },
+    {
+     "case": 31,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 5.961,
+     "tokens": 207
+    },
+    {
+     "case": 32,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 438 (line 1 column 439)"
+     ]
+    },
+    {
+     "case": 33,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 6.56,
+     "tokens": 230
+    },
+    {
+     "case": 34,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 7.212,
+     "tokens": 288
+    },
+    {
+     "case": 35,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.3,
+     "tokens": 299
+    },
+    {
+     "case": 36,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 6.661,
+     "tokens": 243
+    },
+    {
+     "case": 37,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 8.807,
+     "tokens": 313
+    },
+    {
+     "case": 38,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.168,
+     "tokens": 307
+    },
+    {
+     "case": 39,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 4.97,
+     "tokens": 146
+    },
+    {
+     "case": 40,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 216 (line 1 column 217)"
+     ]
+    },
+    {
+     "case": 41,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 686 (line 1 column 687)"
+     ]
+    },
+    {
+     "case": 42,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.176,
+     "tokens": 310
+    },
+    {
+     "case": 43,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.96,
+     "tokens": 304
+    },
+    {
+     "case": 44,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 11.205,
+     "tokens": 349
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.099,
+     "tokens": 297
+    },
+    {
+     "case": 1,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 5.022,
+     "tokens": 192
+    },
+    {
+     "case": 2,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.862,
+     "tokens": 151
+    },
+    {
+     "case": 3,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 10.126,
+     "tokens": 332
+    },
+    {
+     "case": 4,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 7.123,
+     "tokens": 215
+    },
+    {
+     "case": 5,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.564,
+     "tokens": 297
+    },
+    {
+     "case": 6,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.926,
+     "tokens": 279
+    },
+    {
+     "case": 7,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 15.658,
+     "tokens": 303
+    },
+    {
+     "case": 8,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 10.785,
+     "tokens": 298
+    },
+    {
+     "case": 9,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.721,
+     "tokens": 21
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 12.345,
+     "tokens": 322
+    },
+    {
+     "case": 11,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.68,
+     "tokens": 263
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.838,
+     "tokens": 21
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"全网第一\"",
+      "beat 1 not rewritten",
+      "block-level wording remains"
+     ],
+     "seconds": 0.985,
+     "tokens": 21
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 0.846,
+     "tokens": 21
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.97,
+     "tokens": 21
+    },
+    {
+     "case": 16,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.166,
+     "tokens": 157
+    },
+    {
+     "case": 17,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 3 not rewritten"
+     ],
+     "seconds": 0.849,
+     "tokens": 21
+    },
+    {
+     "case": 18,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 1.244,
+     "tokens": 21
+    },
+    {
+     "case": 19,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 11.236,
+     "tokens": 295
+    },
+    {
+     "case": 20,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 1.03,
+     "tokens": 21
+    },
+    {
+     "case": 21,
+     "project": "dgx-spark-vs",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 1.021,
+     "tokens": 21
+    },
+    {
+     "case": 22,
+     "project": "dgx-spark-vs",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"最好\"",
+      "beat 1 not rewritten",
+      "block-level wording remains"
+     ],
+     "seconds": 1.038,
+     "tokens": 21
+    },
+    {
+     "case": 23,
+     "project": "dgx-spark-vs",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 10.543,
+     "tokens": 351
+    },
+    {
+     "case": 24,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.877,
+     "tokens": 21
+    },
+    {
+     "case": 25,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.182,
+     "tokens": 181
+    },
+    {
+     "case": 26,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 0.981,
+     "tokens": 21
+    },
+    {
+     "case": 27,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 1.062,
+     "tokens": 21
+    },
+    {
+     "case": 28,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"最好\"",
+      "beat 3 not rewritten",
+      "block-level wording remains"
+     ],
+     "seconds": 0.956,
+     "tokens": 17
+    },
+    {
+     "case": 29,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.363,
+     "tokens": 215
+    },
+    {
+     "case": 30,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.287,
+     "tokens": 232
+    },
+    {
+     "case": 31,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 8.412,
+     "tokens": 243
+    },
+    {
+     "case": 32,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 6.798,
+     "tokens": 174
+    },
+    {
+     "case": 33,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.977,
+     "tokens": 332
+    },
+    {
+     "case": 34,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 5.641,
+     "tokens": 169
+    },
+    {
+     "case": 35,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 10.159,
+     "tokens": 308
+    },
+    {
+     "case": 36,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.989,
+     "tokens": 329
+    },
+    {
+     "case": 37,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 8.428,
+     "tokens": 284
+    },
+    {
+     "case": 38,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 7.542,
+     "tokens": 277
+    },
+    {
+     "case": 39,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 10.061,
+     "tokens": 337
+    },
+    {
+     "case": 40,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 7.274,
+     "tokens": 261
+    },
+    {
+     "case": 41,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.097,
+     "tokens": 195
+    },
+    {
+     "case": 42,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.739,
+     "tokens": 21
+    },
+    {
+     "case": 43,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.808,
+     "tokens": 145
+    },
+    {
+     "case": 44,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.522,
+     "tokens": 233
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.264,
+     "tokens": 127
+    },
+    {
+     "case": 1,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 403 (line 1 column 404)"
+     ]
+    },
+    {
+     "case": 2,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 7.142,
+     "tokens": 267
+    },
+    {
+     "case": 3,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 11.239,
+     "tokens": 421
+    },
+    {
+     "case": 4,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 6.536,
+     "tokens": 234
+    },
+    {
+     "case": 5,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 10.031,
+     "tokens": 371
+    },
+    {
+     "case": 6,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 225 (line 1 column 226)"
+     ]
+    },
+    {
+     "case": 7,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 9.506,
+     "tokens": 343
+    },
+    {
+     "case": 8,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 6.983,
+     "tokens": 277
+    },
+    {
+     "case": 9,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.202,
+     "tokens": 313
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 7.056,
+     "tokens": 280
+    },
+    {
+     "case": 11,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 6.26,
+     "tokens": 244
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 0.596,
+     "tokens": 17
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 9.382,
+     "tokens": 377
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 398 (line 1 column 399)"
+     ]
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.203,
+     "tokens": 343
+    },
+    {
+     "case": 16,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 451 (line 1 column 452)"
+     ]
+    },
+    {
+     "case": 17,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 339 (line 1 column 340)"
+     ]
+    },
+    {
+     "case": 18,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.49,
+     "tokens": 317
+    },
+    {
+     "case": 19,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.785,
+     "tokens": 210
+    },
+    {
+     "case": 20,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 7.473,
+     "tokens": 258
+    },
+    {
+     "case": 21,
+     "project": "dgx-spark-vs",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 7.237,
+     "tokens": 262
+    },
+    {
+     "case": 22,
+     "project": "dgx-spark-vs",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.508,
+     "tokens": 319
+    },
+    {
+     "case": 23,
+     "project": "dgx-spark-vs",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.142,
+     "tokens": 310
+    },
+    {
+     "case": 24,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.204,
+     "tokens": 330
+    },
+    {
+     "case": 25,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 403 (line 1 column 404)"
+     ]
+    },
+    {
+     "case": 26,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.413,
+     "tokens": 160
+    },
+    {
+     "case": 27,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 466 (line 1 column 467)"
+     ]
+    },
+    {
+     "case": 28,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 5.778,
+     "tokens": 196
+    },
+    {
+     "case": 29,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 349 (line 1 column 350)"
+     ]
+    },
+    {
+     "case": 30,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 488 (line 1 column 489)"
+     ]
+    },
+    {
+     "case": 31,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 6.548,
+     "tokens": 215
+    },
+    {
+     "case": 32,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "\"approve\" missing"
+     ],
+     "seconds": 6.406,
+     "tokens": 195
+    },
+    {
+     "case": 33,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 7.54,
+     "tokens": 281
+    },
+    {
+     "case": 34,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 6.341,
+     "tokens": 253
+    },
+    {
+     "case": 35,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.165,
+     "tokens": 286
+    },
+    {
+     "case": 36,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 6.951,
+     "tokens": 268
+    },
+    {
+     "case": 37,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 8.244,
+     "tokens": 315
+    },
+    {
+     "case": 38,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 356 (line 1 column 357)"
+     ]
+    },
+    {
+     "case": 39,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 575 (line 1 column 576)"
+     ]
+    },
+    {
+     "case": 40,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 323 (line 1 column 324)"
+     ]
+    },
+    {
+     "case": 41,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.187,
+     "tokens": 270
+    },
+    {
+     "case": 42,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 7.825,
+     "tokens": 270
+    },
+    {
+     "case": 43,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 8.42,
+     "tokens": 263
+    },
+    {
+     "case": 44,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 9.371,
+     "tokens": 308
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.155,
+     "tokens": 282
+    },
+    {
+     "case": 1,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 8.16,
+     "tokens": 289
+    },
+    {
+     "case": 2,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no usable reply: Expected ',' or ']' after array element in JSON at position 275 (line 1 column 276)"
+     ]
+    },
+    {
+     "case": 3,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.047,
+     "tokens": 298
+    },
+    {
+     "case": 4,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.288,
+     "tokens": 165
+    },
+    {
+     "case": 5,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 8.551,
+     "tokens": 274
+    },
+    {
+     "case": 6,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 11.121,
+     "tokens": 286
+    },
+    {
+     "case": 7,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.758,
+     "tokens": 192
+    },
+    {
+     "case": 8,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.364,
+     "tokens": 239
+    },
+    {
+     "case": 9,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 1.285,
+     "tokens": 21
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.341,
+     "tokens": 149
+    },
+    {
+     "case": 11,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 10.583,
+     "tokens": 303
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.712,
+     "tokens": 21
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"全网第一\"",
+      "beat 1 not rewritten",
+      "block-level wording remains"
+     ],
+     "seconds": 0.8,
+     "tokens": 21
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 0.785,
+     "tokens": 21
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.949,
+     "tokens": 21
+    },
+    {
+     "case": 16,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.93,
+     "tokens": 285
+    },
+    {
+     "case": 17,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 3 not rewritten"
+     ],
+     "seconds": 0.802,
+     "tokens": 21
+    },
+    {
+     "case": 18,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.372,
+     "tokens": 281
+    },
+    {
+     "case": 19,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 10.626,
+     "tokens": 293
+    },
+    {
+     "case": 20,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 1.101,
+     "tokens": 21
+    },
+    {
+     "case": 21,
+     "project": "dgx-spark-vs",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 10.17,
+     "tokens": 315
+    },
+    {
+     "case": 22,
+     "project": "dgx-spark-vs",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"最好\"",
+      "beat 1 not rewritten",
+      "block-level wording remains"
+     ],
+     "seconds": 0.948,
+     "tokens": 21
+    },
+    {
+     "case": 23,
+     "project": "dgx-spark-vs",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 0.986,
+     "tokens": 21
+    },
+    {
+     "case": 24,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 0.899,
+     "tokens": 21
+    },
+    {
+     "case": 25,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"绝对安全\"",
+      "beat 1 not rewritten"
+     ],
+     "seconds": 0.971,
+     "tokens": 21
+    },
+    {
+     "case": 26,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 2 not rewritten"
+     ],
+     "seconds": 1.152,
+     "tokens": 21
+    },
+    {
+     "case": 27,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 1.062,
+     "tokens": 21
+    },
+    {
+     "case": 28,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.325,
+     "tokens": 291
+    },
+    {
+     "case": 29,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "approved copy containing \"让你效率翻倍\"",
+      "beat 1 not rewritten"
+     ],
+     "seconds": 0.983,
+     "tokens": 21
+    },
+    {
+     "case": 30,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 6.271,
+     "tokens": 213
+    },
+    {
+     "case": 31,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 7.138,
+     "tokens": 246
+    },
+    {
+     "case": 32,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.829,
+     "tokens": 135
+    },
+    {
+     "case": 33,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.575,
+     "tokens": 278
+    },
+    {
+     "case": 34,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 10.555,
+     "tokens": 323
+    },
+    {
+     "case": 35,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 11.239,
+     "tokens": 373
+    },
+    {
+     "case": 36,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 8.863,
+     "tokens": 293
+    },
+    {
+     "case": 37,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase",
+      "block-level wording remains"
+     ],
+     "seconds": 7.631,
+     "tokens": 283
+    },
+    {
+     "case": 38,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "rewrite keeps the restricted phrase"
+     ],
+     "seconds": 4.472,
+     "tokens": 149
+    },
+    {
+     "case": 39,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 9.003,
+     "tokens": 356
+    },
+    {
+     "case": 40,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 7.259,
+     "tokens": 285
+    },
+    {
+     "case": 41,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.975,
+     "tokens": 180
+    },
+    {
+     "case": 42,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clean historical copy rejected (false positive)"
+     ],
+     "seconds": 4.39,
+     "tokens": 144
+    },
+    {
+     "case": 43,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.292,
+     "tokens": 148
+    },
+    {
+     "case": 44,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.302,
+     "tokens": 194
+    }
+   ]
+  },
+  "repair": {
+   "skill": "shot-quality-gate",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 32,
+    "clean": 3,
+    "meanViolations": 1.56
+   },
+   "withSkill": {
+    "runs": 32,
+    "clean": 2,
+    "meanViolations": 1.69
+   },
+   "topWithout": [
+    [
+     "product mismatch: scene not simplified",
+     17
+    ],
+    [
+     "resubmitted unchanged",
+     12
+    ],
+    [
+     "product sentence not kept",
+     8
+    ],
+    [
+     "unwanted hands: not reframed as product-only",
+     6
+    ],
+    [
+     "stray text: no explicit no-text instruction",
+     3
+    ]
+   ],
+   "topWith": [
+    [
+     "resubmitted unchanged",
+     23
+    ],
+    [
+     "product mismatch: scene not simplified",
+     20
+    ],
+    [
+     "unwanted hands: not reframed as product-only",
+     8
+    ],
+    [
+     "unwanted hands: people still described",
+     2
+    ],
+    [
+     "missing content: not moved to the front",
+     1
+    ]
+   ],
+   "minutes": 0.5,
+   "rows": [
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept",
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified",
+      "missing content: not moved to the front"
+     ],
+     "seconds": 4.568,
+     "tokens": 141
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.148,
+     "tokens": 161
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.25,
+     "tokens": 136
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept",
+      "unwanted hands: people still described",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 4.339,
+     "tokens": 136
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept"
+     ],
+     "seconds": 3.822,
+     "tokens": 91
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "stray text: no explicit no-text instruction"
+     ],
+     "seconds": 2.402,
+     "tokens": 94
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.069,
+     "tokens": 119
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.538,
+     "tokens": 136
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 3.696,
+     "tokens": 163
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept"
+     ],
+     "seconds": 3.581,
+     "tokens": 100
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.286,
+     "tokens": 119
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.935,
+     "tokens": 123
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.65,
+     "tokens": 113
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.064,
+     "tokens": 131
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.23,
+     "tokens": 115
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.575,
+     "tokens": 123
+    },
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.945,
+     "tokens": 125
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.362,
+     "tokens": 147
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.14,
+     "tokens": 136
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "unwanted hands: people still described",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 4.137,
+     "tokens": 132
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 5.44,
+     "tokens": 166
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.945,
+     "tokens": 131
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.874,
+     "tokens": 125
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.803,
+     "tokens": 139
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 4.45,
+     "tokens": 163
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.671,
+     "tokens": 131
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.388,
+     "tokens": 118
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.452,
+     "tokens": 123
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.532,
+     "tokens": 128
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified",
+      "missing content: not moved to the front"
+     ],
+     "seconds": 3.025,
+     "tokens": 113
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.029,
+     "tokens": 118
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.441,
+     "tokens": 123
+    },
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.248,
+     "tokens": 129
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.82,
+     "tokens": 158
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.087,
+     "tokens": 136
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 5.02,
+     "tokens": 161
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 3.819,
+     "tokens": 166
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "stray text: no explicit no-text instruction"
+     ],
+     "seconds": 2.326,
+     "tokens": 97
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.061,
+     "tokens": 124
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.15,
+     "tokens": 137
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 3.856,
+     "tokens": 163
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept"
+     ],
+     "seconds": 3.793,
+     "tokens": 135
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept",
+      "stray text: numbers left in the scene",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.105,
+     "tokens": 120
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.7,
+     "tokens": 123
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.519,
+     "tokens": 113
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 4.004,
+     "tokens": 133
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.309,
+     "tokens": 115
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product sentence not kept",
+      "stray text: numbers left in the scene",
+      "stray text: no explicit no-text instruction",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 6.895,
+     "tokens": 158
+    },
+    {
+     "case": 0,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.675,
+     "tokens": 129
+    },
+    {
+     "case": 1,
+     "project": "show-keyboard-v4",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.686,
+     "tokens": 161
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.642,
+     "tokens": 136
+    },
+    {
+     "case": 3,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "unwanted hands: people still described",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.833,
+     "tokens": 135
+    },
+    {
+     "case": 4,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 4.752,
+     "tokens": 166
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.133,
+     "tokens": 131
+    },
+    {
+     "case": 6,
+     "project": "show-soda-fast2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.544,
+     "tokens": 123
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.992,
+     "tokens": 136
+    },
+    {
+     "case": 8,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged"
+     ],
+     "seconds": 4.317,
+     "tokens": 166
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "unwanted hands: not reframed as product-only"
+     ],
+     "seconds": 3.725,
+     "tokens": 128
+    },
+    {
+     "case": 10,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.42,
+     "tokens": 118
+    },
+    {
+     "case": 11,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.365,
+     "tokens": 126
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.163,
+     "tokens": 128
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 3.048,
+     "tokens": 124
+    },
+    {
+     "case": 14,
+     "project": "show-soda-v3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 2.771,
+     "tokens": 115
+    },
+    {
+     "case": 15,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "resubmitted unchanged",
+      "product mismatch: scene not simplified"
+     ],
+     "seconds": 1.58,
+     "tokens": 123
+    }
+   ]
+  },
+  "media": {
+   "skill": "spark-local-media-generation",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 32,
+    "clean": 0,
+    "meanViolations": 5.97
+   },
+   "withSkill": {
+    "runs": 32,
+    "clean": 10,
+    "meanViolations": 0.75
+   },
+   "topWithout": [
+    [
+     "reference not named (\"\")",
+     32
+    ],
+    [
+     "no ban on captions / lettering",
+     32
+    ],
+    [
+     "clip not driven by this shot's gated frame",
+     32
+    ],
+    [
+     "frame not anchored to the hero still (--ref)",
+     28
+    ],
+    [
+     "no hero still written to refs/product.png",
+     22
+    ]
+   ],
+   "topWith": [
+    [
+     "frame size is not 1920x1080",
+     18
+    ],
+    [
+     "numbers in the image prompt",
+     2
+    ],
+    [
+     "product-only clip without \"\"",
+     2
+    ],
+    [
+     "clip not driven by this shot's gated frame",
+     2
+    ]
+   ],
+   "minutes": 1,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 4.359,
+     "tokens": 169
+    },
+    {
+     "case": 1,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.104,
+     "tokens": 275
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 4.757,
+     "tokens": 195
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.874,
+     "tokens": 291
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.182,
+     "tokens": 212
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.608,
+     "tokens": 260
+    },
+    {
+     "case": 6,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.174,
+     "tokens": 281
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.543,
+     "tokens": 266
+    },
+    {
+     "case": 8,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 8.691,
+     "tokens": 318
+    },
+    {
+     "case": 9,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "numbers in the image prompt",
+      "clip not driven by this shot's gated frame",
+      "product-only clip without \"no people and no hands\""
+     ],
+     "seconds": 6.225,
+     "tokens": 267
+    },
+    {
+     "case": 10,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.092,
+     "tokens": 273
+    },
+    {
+     "case": 11,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 4.257,
+     "tokens": 173
+    },
+    {
+     "case": 12,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.616,
+     "tokens": 246
+    },
+    {
+     "case": 13,
+     "project": "show-coffee-portrait",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.945,
+     "tokens": 215
+    },
+    {
+     "case": 14,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.168,
+     "tokens": 207
+    },
+    {
+     "case": 15,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.964,
+     "tokens": 242
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.831,
+     "tokens": 328
+    },
+    {
+     "case": 1,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 10.72,
+     "tokens": 359
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 7.077,
+     "tokens": 261
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.319,
+     "tokens": 231
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 8.531,
+     "tokens": 307
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.235,
+     "tokens": 241
+    },
+    {
+     "case": 6,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.408,
+     "tokens": 251
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.679,
+     "tokens": 255
+    },
+    {
+     "case": 8,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 8.663,
+     "tokens": 315
+    },
+    {
+     "case": 9,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "numbers in the image prompt",
+      "product-only clip without \"no people and no hands\""
+     ],
+     "seconds": 8.734,
+     "tokens": 316
+    },
+    {
+     "case": 10,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 8.671,
+     "tokens": 327
+    },
+    {
+     "case": 11,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 8.097,
+     "tokens": 315
+    },
+    {
+     "case": 12,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 7.452,
+     "tokens": 283
+    },
+    {
+     "case": 13,
+     "project": "show-coffee-portrait",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.65,
+     "tokens": 310
+    },
+    {
+     "case": 14,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 7.654,
+     "tokens": 287
+    },
+    {
+     "case": 15,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 8.241,
+     "tokens": 314
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.869,
+     "tokens": 223
+    },
+    {
+     "case": 1,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.514,
+     "tokens": 220
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.018,
+     "tokens": 280
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.187,
+     "tokens": 282
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 4.394,
+     "tokens": 190
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.707,
+     "tokens": 274
+    },
+    {
+     "case": 6,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.16,
+     "tokens": 266
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "regenerates a hero still although the real photo exists",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.508,
+     "tokens": 275
+    },
+    {
+     "case": 8,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.457,
+     "tokens": 227
+    },
+    {
+     "case": 9,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "numbers in the image prompt",
+      "clip not driven by this shot's gated frame",
+      "product-only clip without \"no people and no hands\""
+     ],
+     "seconds": 8.881,
+     "tokens": 327
+    },
+    {
+     "case": 10,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.925,
+     "tokens": 243
+    },
+    {
+     "case": 11,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.181,
+     "tokens": 202
+    },
+    {
+     "case": 12,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 8.812,
+     "tokens": 303
+    },
+    {
+     "case": 13,
+     "project": "show-coffee-portrait",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.486,
+     "tokens": 241
+    },
+    {
+     "case": 14,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1920x1080",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 5.177,
+     "tokens": 211
+    },
+    {
+     "case": 15,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no hero still written to refs/product.png",
+      "frame not anchored to the hero still (--ref)",
+      "frame size is not 1080x1920",
+      "reference not named (\"Image 1 is the product\")",
+      "no ban on captions / lettering",
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 6.449,
+     "tokens": 237
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 9.479,
+     "tokens": 325
+    },
+    {
+     "case": 1,
+     "project": "chenlu-sparkling-20260928",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 10.147,
+     "tokens": 358
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.988,
+     "tokens": 261
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.092,
+     "tokens": 231
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 8.912,
+     "tokens": 307
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.531,
+     "tokens": 241
+    },
+    {
+     "case": 6,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.627,
+     "tokens": 251
+    },
+    {
+     "case": 7,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 7.233,
+     "tokens": 255
+    },
+    {
+     "case": 8,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 8.521,
+     "tokens": 318
+    },
+    {
+     "case": 9,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "numbers in the image prompt",
+      "product-only clip without \"no people and no hands\""
+     ],
+     "seconds": 8.527,
+     "tokens": 312
+    },
+    {
+     "case": 10,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 8.03,
+     "tokens": 326
+    },
+    {
+     "case": 11,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "clip not driven by this shot's gated frame"
+     ],
+     "seconds": 7.251,
+     "tokens": 314
+    },
+    {
+     "case": 12,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.719,
+     "tokens": 276
+    },
+    {
+     "case": 13,
+     "project": "show-coffee-portrait",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 6.731,
+     "tokens": 299
+    },
+    {
+     "case": 14,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "frame size is not 1920x1080"
+     ],
+     "seconds": 6.119,
+     "tokens": 291
+    },
+    {
+     "case": 15,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.679,
+     "tokens": 305
+    }
+   ]
+  },
+  "cut": {
+   "skill": "final-cut-assembly",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 32,
+    "clean": 0,
+    "meanViolations": 8.56
+   },
+   "withSkill": {
+    "runs": 32,
+    "clean": 0,
+    "meanViolations": 3.81
+   },
+   "topWithout": [
+    [
+     "voiceover not 0.45 s after the beat starts",
+     96
+    ],
+    [
+     "music not generated locally",
+     32
+    ],
+    [
+     "crossfade is not 0.4 s",
+     31
+    ],
+    [
+     "end card is not 3 s",
+     30
+    ],
+    [
+     "total is not the brief + 3 s end card",
+     30
+    ]
+   ],
+   "topWith": [
+    [
+     "voiceover not 0.45 s after the beat starts",
+     96
+    ],
+    [
+     "total is not the brief + 3 s end card",
+     12
+    ],
+    [
+     "music not generated locally",
+     11
+    ],
+    [
+     "size is not 1920x1080",
+     2
+    ],
+    [
+     "end card is not 3 s",
+     1
+    ]
+   ],
+   "minutes": 0.8,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.281,
+     "tokens": 267
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.284,
+     "tokens": 272
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.573,
+     "tokens": 292
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.392,
+     "tokens": 280
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.693,
+     "tokens": 287
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.344,
+     "tokens": 272
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.099,
+     "tokens": 288
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.344,
+     "tokens": 263
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally"
+     ],
+     "seconds": 6.543,
+     "tokens": 281
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.431,
+     "tokens": 261
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.296,
+     "tokens": 260
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.016,
+     "tokens": 264
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.797,
+     "tokens": 257
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.62,
+     "tokens": 263
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.349,
+     "tokens": 271
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.051,
+     "tokens": 260
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.254,
+     "tokens": 262
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.616,
+     "tokens": 269
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 5.529,
+     "tokens": 241
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.365,
+     "tokens": 268
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.407,
+     "tokens": 269
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally"
+     ],
+     "seconds": 6.548,
+     "tokens": 267
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.371,
+     "tokens": 248
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.347,
+     "tokens": 261
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.231,
+     "tokens": 263
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.227,
+     "tokens": 260
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 5.859,
+     "tokens": 254
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 5.787,
+     "tokens": 254
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.836,
+     "tokens": 252
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.15,
+     "tokens": 257
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "size is not 1920x1080"
+     ],
+     "seconds": 5.28,
+     "tokens": 232
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.623,
+     "tokens": 256
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.739,
+     "tokens": 263
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.739,
+     "tokens": 267
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally"
+     ],
+     "seconds": 6.207,
+     "tokens": 277
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.26,
+     "tokens": 281
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.424,
+     "tokens": 264
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.261,
+     "tokens": 275
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.248,
+     "tokens": 289
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.317,
+     "tokens": 287
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.437,
+     "tokens": 279
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "size is not 1080x1920",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.917,
+     "tokens": 264
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.69,
+     "tokens": 278
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.076,
+     "tokens": 271
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.409,
+     "tokens": 265
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card does not close on the product hero still",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.732,
+     "tokens": 263
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "fps is not 24",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.711,
+     "tokens": 272
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "end card title is not the brand",
+      "crossfade is not 0.4 s",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.207,
+     "tokens": 268
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 5.967,
+     "tokens": 236
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.645,
+     "tokens": 269
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally"
+     ],
+     "seconds": 6.471,
+     "tokens": 266
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.381,
+     "tokens": 266
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally"
+     ],
+     "seconds": 6.912,
+     "tokens": 269
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 6.876,
+     "tokens": 272
+    },
+    {
+     "case": 6,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally"
+     ],
+     "seconds": 6.155,
+     "tokens": 250
+    },
+    {
+     "case": 7,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.689,
+     "tokens": 261
+    },
+    {
+     "case": 8,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.435,
+     "tokens": 265
+    },
+    {
+     "case": 9,
+     "project": "show-coffee-portrait",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 6.071,
+     "tokens": 258
+    },
+    {
+     "case": 10,
+     "project": "show-coffee-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "end card is not 3 s",
+      "size is not 1920x1080"
+     ],
+     "seconds": 6.07,
+     "tokens": 254
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally"
+     ],
+     "seconds": 5.614,
+     "tokens": 252
+    },
+    {
+     "case": 12,
+     "project": "show-cream-wrong-product",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "music not generated locally",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.24,
+     "tokens": 250
+    },
+    {
+     "case": 13,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 5.152,
+     "tokens": 257
+    },
+    {
+     "case": 14,
+     "project": "show-keyboard-v1",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts"
+     ],
+     "seconds": 5.049,
+     "tokens": 257
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "beat 1: voiceover not 0.45 s after the beat starts",
+      "beat 2: voiceover not 0.45 s after the beat starts",
+      "beat 3: voiceover not 0.45 s after the beat starts",
+      "total is not the brief + 3 s end card"
+     ],
+     "seconds": 4.718,
+     "tokens": 260
+    }
+   ]
+  },
+  "scheduler": {
+   "skill": "spark-model-scheduler",
+   "cases": 19,
+   "withoutSkill": {
+    "runs": 38,
+    "clean": 32,
+    "meanViolations": 0.16
+   },
+   "withSkill": {
+    "runs": 38,
+    "clean": 38,
+    "meanViolations": 0
+   },
+   "topWithout": [
+    [
+     "trusted docker stats instead of available memory",
+     2
+    ],
+    [
+     "action \"\" for step37",
+     2
+    ],
+    [
+     "action \"\" for parallel",
+     2
+    ]
+   ],
+   "topWith": [],
+   "minutes": 0.6,
+   "rows": [
+    {
+     "case": 0,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.112,
+     "tokens": 143
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.556,
+     "tokens": 102
+    },
+    {
+     "case": 2,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.554,
+     "tokens": 113
+    },
+    {
+     "case": 3,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.259,
+     "tokens": 112
+    },
+    {
+     "case": 4,
+     "project": "show-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.556,
+     "tokens": 87
+    },
+    {
+     "case": 5,
+     "project": "show-keyboard-v4",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.07,
+     "tokens": 79
+    },
+    {
+     "case": 6,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.584,
+     "tokens": 68
+    },
+    {
+     "case": 7,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.876,
+     "tokens": 159
+    },
+    {
+     "case": 8,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.294,
+     "tokens": 68
+    },
+    {
+     "case": 9,
+     "project": "show-soda-fast2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.38,
+     "tokens": 92
+    },
+    {
+     "case": 10,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.788,
+     "tokens": 116
+    },
+    {
+     "case": 11,
+     "project": "show-keyboard-v1",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 5.412,
+     "tokens": 142
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.488,
+     "tokens": 129
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.478,
+     "tokens": 132
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.235,
+     "tokens": 91
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.115,
+     "tokens": 99
+    },
+    {
+     "case": 16,
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "trusted docker stats instead of available memory"
+     ],
+     "seconds": 5.701,
+     "tokens": 123
+    },
+    {
+     "case": 17,
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "action \"free_then_load\" for step37"
+     ],
+     "seconds": 3.728,
+     "tokens": 83
+    },
+    {
+     "case": 18,
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "action \"free_then_load\" for parallel"
+     ],
+     "seconds": 3.534,
+     "tokens": 59
+    },
+    {
+     "case": 0,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.612,
+     "tokens": 109
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-vs3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.46,
+     "tokens": 73
+    },
+    {
+     "case": 2,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.73,
+     "tokens": 71
+    },
+    {
+     "case": 3,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.101,
+     "tokens": 83
+    },
+    {
+     "case": 4,
+     "project": "show-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.067,
+     "tokens": 88
+    },
+    {
+     "case": 5,
+     "project": "show-keyboard-v4",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.399,
+     "tokens": 72
+    },
+    {
+     "case": 6,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.518,
+     "tokens": 73
+    },
+    {
+     "case": 7,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.315,
+     "tokens": 96
+    },
+    {
+     "case": 8,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.385,
+     "tokens": 103
+    },
+    {
+     "case": 9,
+     "project": "show-soda-fast2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.439,
+     "tokens": 93
+    },
+    {
+     "case": 10,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.295,
+     "tokens": 117
+    },
+    {
+     "case": 11,
+     "project": "show-keyboard-v1",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.627,
+     "tokens": 131
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.839,
+     "tokens": 75
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.279,
+     "tokens": 103
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.626,
+     "tokens": 85
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v5",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.867,
+     "tokens": 99
+    },
+    {
+     "case": 16,
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.43,
+     "tokens": 73
+    },
+    {
+     "case": 17,
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.401,
+     "tokens": 103
+    },
+    {
+     "case": 18,
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.36,
+     "tokens": 111
+    },
+    {
+     "case": 0,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.47,
+     "tokens": 99
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.4,
+     "tokens": 68
+    },
+    {
+     "case": 2,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.264,
+     "tokens": 70
+    },
+    {
+     "case": 3,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.496,
+     "tokens": 93
+    },
+    {
+     "case": 4,
+     "project": "show-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.728,
+     "tokens": 98
+    },
+    {
+     "case": 5,
+     "project": "show-keyboard-v4",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.436,
+     "tokens": 97
+    },
+    {
+     "case": 6,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.399,
+     "tokens": 82
+    },
+    {
+     "case": 7,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.528,
+     "tokens": 70
+    },
+    {
+     "case": 8,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.836,
+     "tokens": 112
+    },
+    {
+     "case": 9,
+     "project": "show-soda-fast2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.587,
+     "tokens": 112
+    },
+    {
+     "case": 10,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.82,
+     "tokens": 112
+    },
+    {
+     "case": 11,
+     "project": "show-keyboard-v1",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.628,
+     "tokens": 103
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.667,
+     "tokens": 110
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 3.198,
+     "tokens": 84
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 4.861,
+     "tokens": 116
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 2.234,
+     "tokens": 74
+    },
+    {
+     "case": 16,
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "trusted docker stats instead of available memory"
+     ],
+     "seconds": 3.596,
+     "tokens": 76
+    },
+    {
+     "case": 17,
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "action \"free_then_load\" for step37"
+     ],
+     "seconds": 5.64,
+     "tokens": 147
+    },
+    {
+     "case": 18,
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "action \"load\" for parallel"
+     ],
+     "seconds": 6.051,
+     "tokens": 112
+    },
+    {
+     "case": 0,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.726,
+     "tokens": 86
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-vs3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.33,
+     "tokens": 109
+    },
+    {
+     "case": 2,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.327,
+     "tokens": 100
+    },
+    {
+     "case": 3,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.547,
+     "tokens": 105
+    },
+    {
+     "case": 4,
+     "project": "show-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.773,
+     "tokens": 109
+    },
+    {
+     "case": 5,
+     "project": "show-keyboard-v4",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.321,
+     "tokens": 105
+    },
+    {
+     "case": 6,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.352,
+     "tokens": 95
+    },
+    {
+     "case": 7,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.706,
+     "tokens": 112
+    },
+    {
+     "case": 8,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.8,
+     "tokens": 111
+    },
+    {
+     "case": 9,
+     "project": "show-soda-fast2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 5.64,
+     "tokens": 105
+    },
+    {
+     "case": 10,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.272,
+     "tokens": 77
+    },
+    {
+     "case": 11,
+     "project": "show-keyboard-v1",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.015,
+     "tokens": 86
+    },
+    {
+     "case": 12,
+     "project": "dgx-spark-vs3-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.168,
+     "tokens": 98
+    },
+    {
+     "case": 13,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 4.242,
+     "tokens": 92
+    },
+    {
+     "case": 14,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.47,
+     "tokens": 89
+    },
+    {
+     "case": 15,
+     "project": "show-keyboard-v5",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.331,
+     "tokens": 105
+    },
+    {
+     "case": 16,
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.509,
+     "tokens": 115
+    },
+    {
+     "case": 17,
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 3.463,
+     "tokens": 105
+    },
+    {
+     "case": 18,
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 2.587,
+     "tokens": 104
+    }
+   ]
+  },
+  "film": {
+   "skill": "cineloom-ad-film",
+   "cases": 16,
+   "withoutSkill": {
+    "runs": 32,
+    "clean": 0,
+    "meanViolations": 3.22
+   },
+   "withSkill": {
+    "runs": 32,
+    "clean": 0,
+    "meanViolations": 1.78
+   },
+   "topWithout": [
+    [
+     "no check that another film is running",
+     32
+    ],
+    [
+     "does not read the delivery report",
+     22
+    ],
+    [
+     "unrequested --plan-only",
+     20
+    ],
+    [
+     "brief not passed verbatim",
+     17
+    ],
+    [
+     "ratio contradicts the request",
+     8
+    ]
+   ],
+   "topWith": [
+    [
+     "no check that another film is running",
+     32
+    ],
+    [
+     "brief not passed verbatim",
+     13
+    ],
+    [
+     "unrequested --plan-only",
+     8
+    ],
+    [
+     "ratio contradicts the request",
+     4
+    ]
+   ],
+   "minutes": 0.8,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.319,
+     "tokens": 149
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.974,
+     "tokens": 193
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product photo not passed as --product-image",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.972,
+     "tokens": 192
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 6.495,
+     "tokens": 205
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 3.367,
+     "tokens": 90
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "product photo not passed as --product-image",
+      "no check that another film is running"
+     ],
+     "seconds": 5.25,
+     "tokens": 167
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "ratio contradicts the request",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 3.433,
+     "tokens": 106
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 4.426,
+     "tokens": 135
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 4.707,
+     "tokens": 149
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.142,
+     "tokens": 164
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "ratio contradicts the request",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.771,
+     "tokens": 181
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 7.112,
+     "tokens": 196
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 6.39,
+     "tokens": 190
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 5.332,
+     "tokens": 171
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 5.262,
+     "tokens": 172
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 3.163,
+     "tokens": 94
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 8.335,
+     "tokens": 262
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.245,
+     "tokens": 257
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.766,
+     "tokens": 258
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 7.888,
+     "tokens": 267
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 8.211,
+     "tokens": 245
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.164,
+     "tokens": 234
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 6.152,
+     "tokens": 221
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 5.724,
+     "tokens": 198
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 6.807,
+     "tokens": 220
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.57,
+     "tokens": 251
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 7.907,
+     "tokens": 273
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 8.002,
+     "tokens": 280
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 8.256,
+     "tokens": 289
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 7.845,
+     "tokens": 279
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 5.576,
+     "tokens": 191
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 4.53,
+     "tokens": 187
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 6.377,
+     "tokens": 201
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.096,
+     "tokens": 184
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product photo not passed as --product-image",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.504,
+     "tokens": 179
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "product photo not passed as --product-image",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 6.396,
+     "tokens": 216
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 4.624,
+     "tokens": 125
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 5.484,
+     "tokens": 165
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "ratio contradicts the request",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 4.801,
+     "tokens": 166
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 3.863,
+     "tokens": 125
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 4.893,
+     "tokens": 153
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 7.692,
+     "tokens": 257
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "unrequested --plan-only",
+      "ratio contradicts the request",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 6.746,
+     "tokens": 201
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running",
+      "does not read the delivery report"
+     ],
+     "seconds": 6.716,
+     "tokens": 206
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 5.471,
+     "tokens": 189
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 7.769,
+     "tokens": 277
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 3.168,
+     "tokens": 118
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 2,
+     "withSkill": false,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 3.001,
+     "tokens": 100
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 8.398,
+     "tokens": 263
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 8.012,
+     "tokens": 270
+    },
+    {
+     "case": 2,
+     "project": "dgx-spark-ltx",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.371,
+     "tokens": 254
+    },
+    {
+     "case": 3,
+     "project": "dgx-spark-night",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 8.157,
+     "tokens": 267
+    },
+    {
+     "case": 4,
+     "project": "dgx-spark-photo",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 6.679,
+     "tokens": 232
+    },
+    {
+     "case": 5,
+     "project": "dgx-spark-photo2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.381,
+     "tokens": 245
+    },
+    {
+     "case": 6,
+     "project": "jev-smoke",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 6.605,
+     "tokens": 210
+    },
+    {
+     "case": 7,
+     "project": "leng-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 6.237,
+     "tokens": 199
+    },
+    {
+     "case": 8,
+     "project": "leng-soda-v2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 6.959,
+     "tokens": 223
+    },
+    {
+     "case": 9,
+     "project": "morning-drop-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 7.361,
+     "tokens": 257
+    },
+    {
+     "case": 10,
+     "project": "show-coffee",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "ratio contradicts the request",
+      "no check that another film is running"
+     ],
+     "seconds": 7.489,
+     "tokens": 273
+    },
+    {
+     "case": 11,
+     "project": "show-cream",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "unrequested --plan-only",
+      "no check that another film is running"
+     ],
+     "seconds": 6.82,
+     "tokens": 263
+    },
+    {
+     "case": 12,
+     "project": "show-keyboard",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 6.726,
+     "tokens": 293
+    },
+    {
+     "case": 13,
+     "project": "show-soda",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 6.143,
+     "tokens": 265
+    },
+    {
+     "case": 14,
+     "project": "eval-brief-2",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "no check that another film is running"
+     ],
+     "seconds": 5.162,
+     "tokens": 191
+    },
+    {
+     "case": 15,
+     "project": "eval-brief-3",
+     "repeat": 2,
+     "withSkill": true,
+     "problems": [
+      "brief not passed verbatim",
+      "no check that another film is running"
+     ],
+     "seconds": 4.697,
+     "tokens": 196
+    }
+   ]
+  },
+  "breakdown": {
+   "skill": "ad-reference-breakdown",
+   "cases": 6,
+   "withoutSkill": {
+    "runs": 6,
+    "clean": 4,
+    "meanViolations": 0.83
+   },
+   "withSkill": {
+    "runs": 6,
+    "clean": 1,
+    "meanViolations": 3.17
+   },
+   "topWithout": [
+    [
+     "more than one camera move",
+     4
+    ],
+    [
+     "no usable reply: Expected ',' or '}' after property value in JSON at position 90 (line 6 column 4)",
+     1
+    ]
+   ],
+   "topWith": [
+    [
+     "role \"\"",
+     16
+    ],
+    [
+     "more than one camera move",
+     3
+    ]
+   ],
+   "minutes": 16.1,
+   "rows": [
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 217.648,
+     "tokens": 3767
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "shot 1: more than one camera move",
+      "shot 2: more than one camera move",
+      "shot 3: more than one camera move",
+      "shot 4: more than one camera move"
+     ],
+     "seconds": 112.095,
+     "tokens": 1955
+    },
+    {
+     "case": 2,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 150.407,
+     "tokens": 2529
+    },
+    {
+     "case": 3,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 147.035,
+     "tokens": 2319
+    },
+    {
+     "case": 4,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [],
+     "seconds": 81.284,
+     "tokens": 1329
+    },
+    {
+     "case": 5,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": false,
+     "problems": [
+      "no usable reply: Expected ',' or '}' after property value in JSON at position 90 (line 6 column 4)"
+     ]
+    },
+    {
+     "case": 0,
+     "project": "chenlu-commute-15s-retry",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "shot 1: role \"hook|product_reveal|benefit\"",
+      "shot 2: role \"product_reveal|benefit\"",
+      "shot 3: role \"benefit|social_proof|product_reveal\"",
+      "shot 4: role \"product_reveal|benefit\""
+     ],
+     "seconds": 141.886,
+     "tokens": 2540
+    },
+    {
+     "case": 1,
+     "project": "dgx-spark-ad",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [],
+     "seconds": 160.2,
+     "tokens": 2824
+    },
+    {
+     "case": 2,
+     "project": "leng-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "shot 1: role \"hook|product_reveal\"",
+      "shot 3: role \"social_proof|benefit\""
+     ],
+     "seconds": 224.378,
+     "tokens": 3932
+    },
+    {
+     "case": 3,
+     "project": "morning-drop-soda",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "shot 1: role \"hook|product_reveal\"",
+      "shot 3: role \"social_proof|benefit\"",
+      "shot 4: role \"product_reveal|benefit\""
+     ],
+     "seconds": 139.127,
+     "tokens": 2374
+    },
+    {
+     "case": 4,
+     "project": "show-coffee",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "shot 1: role \"hook | product_reveal\"",
+      "shot 2: role \"product_reveal | benefit\"",
+      "shot 2: more than one camera move",
+      "shot 3: role \"benefit | social_proof\"",
+      "shot 3: more than one camera move",
+      "shot 4: role \"product_reveal | cta\"",
+      "shot 4: more than one camera move"
+     ],
+     "seconds": 166.446,
+     "tokens": 2971
+    },
+    {
+     "case": 5,
+     "project": "show-cream",
+     "repeat": 1,
+     "withSkill": true,
+     "problems": [
+      "shot 1: role \"hook|product_reveal\"",
+      "shot 3: role \"product_reveal|benefit\"",
+      "shot 4: role \"benefit|product_reveal\""
+     ],
+     "seconds": 140.371,
+     "tokens": 2567
+    }
+   ]
+  }
+ }
+}

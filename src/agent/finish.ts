@@ -33,6 +33,8 @@ export interface FinishInput {
   script: Script
   storyboard: Storyboard
   heroPath: string
+  /** Background of the end card instead of the hero still, e.g. the last frame of the last shot. */
+  endStill?: string
   comfy: ComfyClient
   audio?: string
   silent?: boolean
@@ -53,7 +55,7 @@ export async function finishFilm(input: FinishInput): Promise<string> {
   // End card: the approved hero still with the brand and the single message. It guarantees the
   // film closes on the product, and that the brand text on screen is typeset, not generated.
   const endCard = join(dir, 'clips', 'endcard.mp4')
-  await stillToClip(hero.path, endCard, { width, height, fps: 24, seconds: END_CARD_SECONDS })
+  await stillToClip(input.endStill ?? hero.path, endCard, { width, height, fps: 24, seconds: END_CARD_SECONDS })
   clipPaths.push(endCard)
   durations.push(END_CARD_SECONDS)
 
@@ -65,9 +67,11 @@ export async function finishFilm(input: FinishInput): Promise<string> {
     subtitle: beat.vo,
   }))
   const endStart = clipStart(durations.length - 1, durations, CROSSFADE_SECONDS)
-  // The hero still already carries the brand on its label, so the end card adds only the message.
-  cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', closing: brief.message } as (typeof cues)[number] & { closing: string })
-  const onScreen = cues.map((cue) => `${cue.title ?? ''}${cue.subtitle ?? ''}`).join('') + brief.message
+  // The hero still already carries the brand on its label, so the end card adds only the message,
+  // or the client's own closing line when the request quoted one.
+  const closing = brief.tagline?.trim() || brief.message
+  cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', closing } as (typeof cues)[number] & { closing: string })
+  const onScreen = cues.map((cue) => `${cue.title ?? ''}${cue.subtitle ?? ''}`).join('') + closing
   const coverage = await fontCovers(TITLE_FONT, onScreen)
   if (!coverage.ok) throw new Error(`The title font ${TITLE_FONT} has no glyph for: ${coverage.missing.join(' ')}. Refusing to render boxes on screen.`)
   const ass = join(dir, 'cut', 'titles.ass')

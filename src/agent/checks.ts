@@ -22,6 +22,10 @@ export interface Brief {
   appearance?: string
   /** What the vision model read off the user's product photo; with a photo, the photo is the product's look. */
   photo?: ProductPhoto
+  /** The closing line the request quotes for the end card, character for character. It replaces `message` on the end card. */
+  tagline?: string
+  /** Facts the client can substantiate (specs, figures). Only these may back a claim in the copy. */
+  proof?: string
 }
 
 /** The vision model's reading of a user-supplied product photo: the product's look only, never its placement, light or background. */
@@ -69,6 +73,10 @@ const CJK = /[一-鿿]/
 // Container words that only make sense for a specific product form.
 const CONTAINER_WORDS = ['罐', '瓶']
 // Drinks may come in a can or a bottle even when the brief does not say so; a drip-bag coffee or a face cream does not.
+// Switches, keycaps and key travel are a keyboard's own sensations.
+// 回弹 is left out: skin and foam rebound too.
+const KEYBOARD_WORDS = /[青红茶黑银]轴|轴体|键帽|键程|按键手感/
+const KEYBOARD_PRODUCT = /keyboard|keycap|键盘|键帽/i
 const CANNED_DRINK = /\bcans?\b|bottle|水|饮|汽|气泡|啤酒|可乐|茶|juice|soda|water|drink|beverage|beer|cola|tea/i
 
 // Everything a caption may contain: CJK, Latin letters, digits and ordinary punctuation. Anything else
@@ -102,6 +110,8 @@ export function checkBrief(brief: Brief): string[] {
   if (!brand) problems.push('brandText is empty: copy the lettering printed on the product')
   else if (CJK.test(brand) ? [...brand].length > 4 : brand.length > 12) problems.push(`brandText "${brand}" is too long: at most 4 Chinese characters or 12 Latin letters, copied exactly as printed on the product`)
   for (const field of ['title', 'product', 'audience', 'message', 'tone'] as const) if (!brief[field]?.trim()) problems.push(`${field} is empty`)
+  // An English message went straight onto the end card of a Chinese film ("AI supercomputing on your desk").
+  if (brief.message?.trim() && !CJK.test(brief.message)) problems.push(`message "${brief.message}" must be in Chinese: it is the line the viewer remembers`)
   return problems
 }
 
@@ -129,6 +139,9 @@ export function checkScript(script: Script, brief: Brief): string[] {
     const productText = `${brief.product} ${brief.message} ${brief.title}`
     for (const word of CONTAINER_WORDS) if ((beat.text ?? '').includes(word) && !productText.includes(word) && !CANNED_DRINK.test(productText))
       problems.push(`${label}: "${beat.text}" talks about a container (${word}) that this product does not have (${brief.product}); write a title about this product`)
+    // "指尖落下，青轴一声清响" for a desktop AI computer: the skill's keyboard example, copied onto a product with no keys.
+    const keys = KEYBOARD_WORDS.exec(`${beat.vo ?? ''} ${beat.text ?? ''}`)?.[0]
+    if (keys && !KEYBOARD_PRODUCT.test(productText)) problems.push(`${label}: "${keys}" belongs to a keyboard, not to this product (${brief.product}); write about what this product does`)
   }
   const copy = beats.map((beat) => `${beat.vo}\n${beat.text ?? ''}`).join('\n')
   for (const finding of scanCopy(copy, brief.category).filter((item) => item.severity === 'block'))
@@ -211,6 +224,8 @@ export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: 
     if (spokenLength(shot.on_screen_text ?? '') > TEXT_MAX_CHARS) problems.push(`${label}: on_screen_text is longer than ${TEXT_MAX_CHARS} characters and will warp`)
     // Screens, cursors and interfaces: image models invent gibberish UI and four attempts failed on "a cursor moving across a screen".
     if (/\b(cursor|user interface|\bUI\b|on-screen|on screen|menu|dashboard)\b/i.test(`${shot.image_prompt} ${shot.must_show}`)) problems.push(`${label}: asks for screen or interface content (cursor, UI, on-screen); show the device, not what it displays`)
+    // "screen illuminates showing running 2000B parameter model" / "parameter model overlay": the gate then fails every frame for painted text.
+    else if (SCREEN_CONTENT.test(`${shot.image_prompt} ${shot.must_show}`)) problems.push(`${label}: asks for what a screen shows or a text overlay (${SCREEN_CONTENT.exec(`${shot.image_prompt} ${shot.must_show}`)?.[0]}); show the screen's glow on the scene, never its contents`)
   }
   if (storyboard.style?.trim() && CJK.test(storyboard.style)) problems.push('style must be in English: it is appended to every image prompt')
   // Variety: two shots with the same framing and the same camera move read as one long shot (the keyboard film: three near-identical three-quarter views; then two macro push-ins on a pressed key).
@@ -219,25 +234,70 @@ export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: 
     if (a.framing?.trim().toLowerCase() === b.framing?.trim().toLowerCase() && a.camera?.trim().toLowerCase() === b.camera?.trim().toLowerCase())
       problems.push(`shot ${b.shot}: same framing and camera move as shot ${a.shot} (${b.framing}, ${b.camera}); give each shot its own framing and move (macro push-in, medium orbit, wide pull-back)`)
   }
+  // A second vessel next to the product. The edit model redraws image 1's single product, so an
+  // unplaced "icy bubbles in a poured glass" came out as water poured onto the can, four times running.
+  // must_show is what the gate checks, so it must say where the object stands; the image prompt
+  // borrows that placement when it has none of its own (composeImagePrompt).
+  for (const shot of shots) {
+    const props = secondObjects(shot, storyboard.product ?? '')
+    if (props.length && !PLACEMENT.test(shot.must_show ?? '')) problems.push(`shot ${shot.shot}: must_show adds a second object (${props.join(', ')}) without saying where it stands relative to the product; place it apart ("a glass to the right of the can"), or leave it out and keep one subject`)
+  }
   for (const shot of shots) {
     if (/\b(row by row|gradually|slowly|moving|moves|rising|swirling|flowing|sweeping|lights up|turns on)\b/i.test(shot.must_show ?? '')) problems.push(`shot ${shot.shot}: must_show describes motion ("${shot.must_show}"); the gate sees one still frame, so name what is visible in a single picture`)
   }
   const HANDS = /\b(hand|hands|finger|fingers|typing|typed|types|presses|pressing|pressed|in use|being used|holding|held|grips?|gripping)\b/i
   const withHands = shots.filter((shot) => HANDS.test(`${shot.image_prompt} ${shot.must_show}`))
   if (withHands.length > 1) problems.push(`hands or fingers appear in ${withHands.length} shots (${withHands.map((shot) => shot.shot).join(', ')}); at most one shot may include a hand, and the product alone carries the rest`)
-  for (const shot of withHands) if (/no people|no hands|hands-free/i.test(shot.image_prompt)) problems.push(`shot ${shot.shot}: asks for a finger or hand and also says "no people/no hands"; decide one`)
+  for (const shot of withHands) if (/no people|no hands|hands-free/i.test(`${shot.image_prompt} ${shot.video_prompt}`)) problems.push(`shot ${shot.shot}: asks for a finger or hand and also says "no people/no hands"; decide one`)
   if (shots.length >= 3 && new Set(shots.map((shot) => shot.framing?.trim().toLowerCase())).size === 1) problems.push(`all ${shots.length} shots use the same framing (${shots[0]!.framing}); a film needs at least two framings`)
-  // Electronics playbook, the rules the keyboard film broke.
-  if (brief && briefIndustry(brief) === 'electronics') {
+  // Electronics playbook, the rules the keyboard film broke. Computers are lit and shot the same way.
+  if (brief && LIT_LIKE_ELECTRONICS.includes(briefIndustry(brief))) {
     const briefText = `${brief.product}`
     for (const shot of shots) {
       const label = `shot ${shot.shot}`
       const text = `${shot.image_prompt} ${shot.video_prompt} ${storyboard.style}`
       if (/rainbow|RGB|multicolou?r(ed)? (light|glow|backlight)/i.test(text) && !/rainbow|RGB|幻彩|炫彩|多彩/i.test(briefText)) problems.push(`${label}: rainbow or RGB lighting that the brief did not ask for; electronics are lit with one or two colours (rim light, a single accent)`)
-      if (/(top-down|overhead|bird'?s[- ]eye|from above)/i.test(text) && /\b(hand|hands|typing|fingers)\b/i.test(text)) problems.push(`${label}: hands typing seen from above look unnatural and warp; shoot hands from a low side angle with wrists in frame, or leave hands out`)
+      if (briefIndustry(brief) === 'computing' && COLD_LIGHT.test(text) && !/blue|cyan|蓝|青色|冷色/i.test(`${brief.product} ${brief.appearance ?? ''}`)) problems.push(`${label}: ${COLD_LIGHT.exec(text)?.[0]}: blue, cyan or "cool" light turns the product's own colours blue; light computers with soft warm gold, and at most a faint green accent in the background`)
+      // The camera angle is the shot's own: an "overhead light" in the shared style line failed every hand shot six times running.
+      const angle = `${shot.image_prompt} ${shot.video_prompt} ${shot.framing} ${shot.camera}`.replace(/overhead (light|lighting|lamp|spotlight)s?/gi, '')
+      if (/(top-down|overhead|bird'?s[- ]eye|from above)/i.test(angle) && /\b(hand|hands|typing|fingers)\b/i.test(angle)) problems.push(`${label}: hands typing seen from above look unnatural and warp; shoot hands from a low side angle with wrists in frame, or leave hands out`)
       if (/\b(keyboard|keycaps?)\b/i.test(briefText + ' ' + text) && /\b(whole|entire|full|complete) keyboard\b|all (the )?keys/i.test(shot.image_prompt) && !/bokeh|out of focus|shallow|blur/i.test(shot.image_prompt)) problems.push(`${label}: a whole keyboard in sharp focus shows dozens of tiny legends that the model garbles; go macro on a few keys, or keep the legends out of focus`)
     }
   }
+  return problems
+}
+
+const COLD_LIGHT = /\b(blue|cyan|teal|icy|cold|cool)(-toned)?\s+(\w+\s+)?(light|lighting|glow|ambient|ambience|rim|tint|hue|haze|backlight|accent)\b|\bneon\b|\bLED (strip|edge|glow)/i
+const SCREEN_CONTENT = /\b(screens?|monitors?|displays?)\b[^.]{0,40}\b(showing|shows|displaying|with (text|code|numbers|a chart))\b|\boverlays?\b|\b(code|chat window|terminal|parameter model)\b[^.]{0,20}\b(on|across) (the )?(screen|monitor|display)\b/i
+// Vessels and props other than the product, including a monitor or keyboard next to a computer: each must be placed in must_show.
+const SECOND_OBJECT = /\b(monitors?|screens?(?![- ](glow|light))|keyboards?|laptops?|glass(es)?(?![- ](table|surface|shelf|top|counter|backdrop|background|wall|panel|door|window|bottle|jar|beads?|droplets?|reflections?))|cups?|mugs?|tumblers?|goblets?|bowls?|plates?|trays?|pitchers?|jugs?|bottles?|cans?|jars?|boxe?s?)\b/g
+const PLACEMENT = /\b(beside|next to|alongside|behind|in front of|to the (left|right) of|on the (left|right)|(left|right) of|foreground|background)\b/i
+/** Vessels and props other than the product itself, named in the shot. */
+export function secondObjects(shot: Pick<Shot, 'must_show' | 'image_prompt'>, product: string): string[] {
+  const own = new Set(product.toLowerCase().match(/[a-z]+/g) ?? [])
+  return [...new Set(`${shot.must_show ?? ''} ${shot.image_prompt ?? ''}`.toLowerCase().match(SECOND_OBJECT) ?? [])].filter((word) => !own.has(word) && !own.has(word.replace(/e?s$/, '')))
+}
+const FRAMINGS = ['extreme close-up', 'close-up', 'macro', 'medium', 'wide', 'full shot', 'establishing', 'overhead', 'top-down']
+const framingOf = (text: string) => {
+  const lower = text.toLowerCase()
+  return FRAMINGS.map((name) => [name, lower.indexOf(name)] as const).filter(([, at]) => at >= 0).sort((a, b) => a[1] - b[1] || b[0].length - a[0].length)[0]?.[0]
+}
+
+/**
+ * A repaired frame prompt may only rewrite the scene. A repair once moved "wide" to "close-up",
+ * put the can inside the glass and turned the label "冷" into the literal text "韰".
+ */
+export function checkRepairedPrompt(previous: string, revised: string): string[] {
+  const problems: string[] = []
+  if (/\\u[0-9a-f]{4}/i.test(revised)) problems.push('contains an escape sequence like \\uXXXX; write the characters themselves')
+  for (const quoted of new Set(previous.match(/"[^"]+"/g) ?? [])) {
+    if (!revised.includes(quoted)) problems.push(`the label text ${quoted} must appear exactly as it is, inside the same quotes`)
+  }
+  const anchor = /Image 1 is the product|The product:/.exec(previous)
+  if (anchor && !revised.includes(previous.slice(anchor.index))) problems.push(`everything from "${anchor[0]}" onward must be kept word for word`)
+  const framing = framingOf(previous.slice(0, anchor?.index))
+  const now = framingOf(revised.slice(0, anchor ? revised.indexOf(anchor[0]) : undefined))
+  if (framing && now !== framing) problems.push(`the framing is "${framing}"${now ? `, not "${now}"` : ''}; keep the storyboard's framing and change only what is in the scene`)
   return problems
 }
 
@@ -245,15 +305,21 @@ export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: 
 export const sanitizeStyle = (style: string) =>
   style.replace(/\b\d+(\.\d+)?\s?mm\b/gi, '').replace(/\bf\/?\d+(\.\d+)?\b/gi, '').replace(/\b\d+k\b/gi, '').replace(/\s*,\s*(?=,|$)/g, '').replace(/^\s*,\s*/, '').replace(/\s{2,}/g, ' ').trim()
 
-export type Industry = 'electronics' | 'drink' | 'skincare' | 'food' | 'general'
-export const INDUSTRIES: Industry[] = ['electronics', 'drink', 'skincare', 'food', 'general']
+/**
+ * `computing` (computers, workstations, servers, GPUs) is lit like `electronics` but sold on what it runs,
+ * not on how it feels: under `electronics` a desktop AI computer got keyboard copy ("青轴响亮").
+ */
+export type Industry = 'computing' | 'electronics' | 'drink' | 'skincare' | 'food' | 'general'
+export const INDUSTRIES: Industry[] = ['computing', 'electronics', 'drink', 'skincare', 'food', 'general']
+export const LIT_LIKE_ELECTRONICS: Industry[] = ['computing', 'electronics']
 
 /**
  * A rough industry read of the product's name, the fallback when the brief carries no `industry`.
  * Whole words only: a single 面 (noodles) once matched 桌面 (desktop) and shot a computer as food.
  */
 export function industryOf(text: string): Industry {
-  if (/\b(keyboards?|mouse|mice|headphones?|earbuds?|earphones?|phones?|smartphones?|laptops?|tablets?|cameras?|smartwatch(es)?|watch(es)?|speakers?|chargers?|monitors?|consoles?|computers?|PCs?|workstations?|servers?|supercomputers?|GPUs?|routers?|drones?|projectors?)\b|键盘|鼠标|耳机|手机|笔记本|平板|相机|手表|音箱|充电|显示器|电脑|计算机|主机|服务器|工作站|显卡|路由器|无人机|投影仪/i.test(text)) return 'electronics'
+  if (/\b(computers?|mini[- ]?PCs?|PCs?|laptops?|workstations?|servers?|supercomputers?|GPUs?|AI (box|system|appliance))\b|电脑|计算机|主机|服务器|工作站|显卡|超算|超级计算机|笔记本电脑/i.test(text)) return 'computing'
+  if (/\b(keyboards?|mouse|mice|headphones?|earbuds?|earphones?|phones?|smartphones?|laptops?|tablets?|cameras?|smartwatch(es)?|watch(es)?|speakers?|chargers?|monitors?|consoles?|routers?|drones?|projectors?)\b|键盘|鼠标|耳机|手机|平板|相机|手表|音箱|充电|显示器|路由器|无人机|投影仪/i.test(text)) return 'electronics'
   if (/\b(cans?|bottles?|soda|drinks?|beverages?|water|beer|cola|tea|coffee|juice|milk)\b|饮料|饮品|汽水|气泡水|矿泉水|啤酒|可乐|茶(?!几|具|台|杯)|咖啡|果汁|牛奶|酸奶/i.test(text)) return 'drink'
   if (/\b(creams?|serums?|lotions?|skincare|cosmetics?|lipsticks?)\b|面霜|精华|乳液|护肤|口红|化妆品/i.test(text)) return 'skincare'
   if (/\b(snacks?|chocolates?|biscuits?|cakes?|noodles?|rice|sauces?)\b|零食|巧克力|饼干|蛋糕|面条|方便面|拉面|意面|挂面|面包|米饭|大米|米粉|酱料|辣酱/i.test(text)) return 'food'
@@ -268,8 +334,11 @@ export const briefIndustry = (brief: Pick<Brief, 'industry' | 'product'>): Indus
  * Category anchors appended to every frame prompt. They encode how each kind of product is shot
  * in real commercials, so the storyboard agent's scene sits on a professional base.
  */
+const ELECTRONICS_ANCHOR = 'Consumer electronics commercial photography: dark studio, cool rim light along the edges, a subtle gradient light sweep on the surface, reflective black tabletop, shallow depth of field so any small printed legends fall softly out of focus, no rainbow lighting'
 const INDUSTRY_ANCHOR: Record<Industry, string> = {
-  electronics: 'Consumer electronics commercial photography: dark studio, cool rim light along the edges, a subtle gradient light sweep on the surface, reflective black tabletop, shallow depth of field so any small printed legends fall softly out of focus, no rainbow lighting',
+  // "Cool rim light" turned a gold DGX Spark blue: the image and video models read cool as blue and spread it over the whole metal body.
+  computing: 'Premium computer commercial photography: dark studio, soft warm golden key light and rim light along the edges, at most a faint green accent far in the background, reflective dark tabletop, shallow depth of field so any small printed legends fall softly out of focus, no blue or cyan light, no neon, no rainbow lighting',
+  electronics: ELECTRONICS_ANCHOR,
   drink: 'Beverage commercial photography: backlit, crisp condensation, clean highlights, shallow depth of field',
   skincare: 'Skincare commercial photography: soft diffused light, clean pale surfaces, gentle highlights, shallow depth of field',
   food: 'Food commercial photography: warm directional light, appetising texture, shallow depth of field',
@@ -281,7 +350,7 @@ const NO_TEXT = 'No captions, no subtitles, no slogans, no watermark, no numbers
 /** The hero still that every shot is anchored to. */
 export function composeProductPrompt(storyboard: Storyboard, industry: Industry = 'general', brandText?: string): string {
   // "Stands upright" is right for a can and wrong for a keyboard: the hero once showed a keyboard on its end, and the end card inherited it.
-  const pose = industry === 'electronics'
+  const pose = LIT_LIKE_ELECTRONICS.includes(industry)
     ? 'The product rests flat in its natural working position, seen from a slightly elevated three-quarter angle, centred and fully visible, on a seamless dark backdrop with a cool rim light. Apart from its one small badge it carries no other words, logos or brand names anywhere'
     : 'The product stands upright, centred, fully visible, on a seamless neutral backdrop with soft even light'
   return `Studio product photograph of ${storyboard.product.trim().replace(/[.。]$/, '')}. ${pose}. ${brandText ? `The only lettering anywhere in the picture is the label "${brandText}", written once, exactly like that, with no other words, slogans, claims or quotation marks. ` : ''}${NO_TEXT}. ${sanitizeStyle(storyboard.style)}`
@@ -289,6 +358,7 @@ export function composeProductPrompt(storyboard: Storyboard, industry: Industry 
 
 /** Motion rules appended to every clip prompt by industry: what the video model drifts into on its own. */
 const VIDEO_ANCHOR: Record<Industry, string> = {
+  computing: 'The light stays soft warm gold for the whole clip, with at most a faint green accent in the background: no blue or cyan glow, no glowing edges or LED strips, no colour cycling, no flashing. The product keeps its own colours and stays exactly where it is',
   electronics: 'The lighting keeps its one cool colour for the whole clip: no colour cycling, no rainbow, no flashing. The product stays exactly where it is',
   drink: 'The container keeps its shape and label; liquid and light move, the product does not deform',
   skincare: 'Slow and quiet; the jar keeps its shape and label',
@@ -298,6 +368,7 @@ const VIDEO_ANCHOR: Record<Industry, string> = {
 
 /** Negative prompt additions per industry: rainbow cycling and ghost duplicates are what Wan adds to a keyboard on its own. */
 const VIDEO_NEGATIVE_EXTRA: Record<Industry, string> = {
+  computing: 'blue light, blue tint, cyan glow, neon edge light, glowing LED strip, rainbow lighting, RGB colour cycling, colour changing light, multicoloured glow, flashing, duplicated product, ghost copy, transparent overlay, second computer',
   electronics: 'rainbow lighting, RGB colour cycling, colour changing light, multicoloured glow, flashing, duplicated product, ghost copy, transparent overlay, second keyboard',
   drink: 'duplicated product, second can, melting label',
   skincare: 'duplicated product, opening lid, spilling',
@@ -315,9 +386,11 @@ export function composeVideoPrompt(shot: Shot, industry: Industry = 'general'): 
  * carries them verbatim. `withReference` is set when the frame is generated from the hero still.
  */
 export function composeImagePrompt(shot: Shot, storyboard: Storyboard, withReference = false, industry: Industry = 'general'): string {
-  const scene = shot.image_prompt.trim().replace(/[.。]$/, '')
+  let scene = shot.image_prompt.trim().replace(/[.。]$/, '')
+  // A second object the scene leaves unplaced takes its place from must_show, the picture the gate expects.
+  if (secondObjects(shot, storyboard.product ?? '').length && !PLACEMENT.test(scene) && PLACEMENT.test(shot.must_show ?? '')) scene += `. In the picture: ${shot.must_show.trim().replace(/[.。]$/, '')}`
   const product = withReference
-    ? 'Image 1 shows the product: reproduce only the product itself, with its shape, proportions, colours, material, surface texture and label exactly as in image 1. Do not copy image 1\'s background, surface, props or lighting; place and light the product as this prompt describes'
+    ? 'Image 1 is the product: keep its shape, proportions, colours, material and label exactly as in image 1'
     : `The product: ${storyboard.product.trim().replace(/[.。]$/, '')}`
   return `${scene}. ${product}. ${NO_TEXT}. ${INDUSTRY_ANCHOR[industry]}. ${sanitizeStyle(storyboard.style)}`
 }

@@ -238,8 +238,8 @@ GB10 上的环境要点已写入配置：Docker 通过 CDI（`nvidia.com/gpu=all
 | FP8 KV cache 与前缀缓存 | `--kv-cache-dtype fp8 --enable-prefix-caching` | 导演智能体每轮都带同一段系统提示和 Skill，前缀命中率高 |
 | FP8 视觉模型 | Step3-VL-10B-FP8，15.1 GB；设 `VLLM_USE_DEEP_GEMM=0` | 质检要常驻，体积必须小。DeepGEMM 的 FP8 内核在 GB10 上断言失败，改走 vLLM 通用 FP8 路径 |
 | 8 步蒸馏 LoRA | Qwen-Image + Lightning 8-step，cfg 1 | 单张 1080×1920 首帧实测 22.7 秒，质检重生成才负担得起 |
-| 14B 视频模型 + 4 步蒸馏 | Wan2.2 I2V A14B（FP8，高噪/低噪两个专家）+ lightx2v 4-step LoRA | 实测 353 秒一段，不比 5B 模型（365 秒）慢，画面明显更好，因此设为默认 |
-| 蒸馏视频模型（可选） | LTX-2.5 Fast：22B 蒸馏版，Comfy INT8 主干 + INT8 Gemma 4 12B 文本编码器，半尺寸 8 步 + 两倍潜空间放大 + 3 步精修；`--video-model ltx25-fast` | 同一组首帧与提示词，实测每段 90–126 秒，约为 Wan2.2 的三分之一；产品外形保持得更稳，但特效描述仍会画到产品表面上，暂不设为默认 |
+| 14B 视频模型 + 4 步蒸馏 | Wan2.2 I2V A14B（FP8，高噪/低噪两个专家）+ lightx2v 4-step LoRA | 实测 353 秒一段，不比 5B 模型（365 秒）慢，画面明显更好；`--video-model wan22-14b` |
+| 蒸馏视频模型（默认） | LTX-2.5 Fast：22B 蒸馏版，Comfy INT8 主干 + INT8 Gemma 4 12B 文本编码器，半尺寸 8 步 + 两倍潜空间放大 + 3 步精修；`--video-model ltx25-fast` | 同一组首帧与提示词，实测每段 90–126 秒，约为 Wan2.2 的三分之一；产品外形保持得更稳，因此设为默认；特效描述仍可能画到产品表面上 |
 | 按任务开关思考 | 脚本、分镜、审稿关闭 Nemotron 的思考模式 | 开着时会把整个 token 额度用在推理上、正文为空；关掉后 0.3 秒出结构化结果，由校验器和重试兜底 |
 | 原生分辨率预算 | 超过 1328×1328 像素总量的请求先按预算生成再放大 | 扩散耗时随像素数增长，预算内生成、Lanczos 放大 |
 | 校准概率做分流 | 可选：Jev 对每句文案和每个镜头回答类型化问题（绝对化用语、健康功效、品类语感、是否要求画字、一镜多动作…），p ≥ 0.7 直接退回重写，0.3–0.7 交审稿智能体裁决 | 自由文本 JSON 的“分数”不校准（本地视觉模型几乎只给 30/40/90 三档）；类型化答案能设阈值，也不会出现“思考完没额度写结论”的故障。实测每句 1.6 s |
@@ -277,7 +277,7 @@ GB10 上的环境要点已写入配置：Docker 通过 CDI（`nvidia.com/gpu=all
 | 改动后，无返工 | 524 s | 1121 s | 1842 s（−18%） |
 | 改动后，镜头 3 返工两次 | 933 s | 1066 s | 2250 s |
 
-首帧阶段节省一半以上；视频阶段约占总时长六成，Wan2.2 14B 四步在 720p 下每段约 340 秒，不降低规格难以再压缩。换用可选的 LTX-2.5 Fast，同一组首帧与提示词下三段合计 308 秒（Wan2.2 为 1081 秒）。
+首帧阶段节省一半以上；视频阶段约占总时长六成，Wan2.2 14B 四步在 720p 下每段约 340 秒，不降低规格难以再压缩。因此默认改用 LTX-2.5 Fast：同一组首帧与提示词下三段合计 308 秒（Wan2.2 为 1081 秒）。
 
 ### 3. 如何设计 Agent Skills
 
@@ -348,9 +348,9 @@ GB10 上的环境要点已写入配置：Docker 通过 CDI（`nvidia.com/gpu=all
 |---|---|
 | vLLM | 两个 LLM 的 OpenAI 兼容服务 |
 | ComfyUI · Qwen-Image / Qwen-Image-Edit-2509（含 Lightning 8-step LoRA） | 首帧生成；带产品参考图的生成；能渲染中文字 |
-| ComfyUI · Wan2.2 I2V A14B（FP8）+ lightx2v 4-step LoRA | 默认视频模型：首帧驱动的 5 秒片段 |
+| ComfyUI · Wan2.2 I2V A14B（FP8）+ lightx2v 4-step LoRA | 备选视频模型：首帧驱动的 5 秒片段，`--video-model wan22-14b` |
 | ComfyUI · Wan2.2 TI2V-5B | 备选视频模型，支持无首帧的文生视频 |
-| ComfyUI · LTX-2.5 Fast（Lightricks，22B 蒸馏；INT8 或 NVFP4 主干） | 可选视频模型：首帧驱动，24 fps，`--video-model ltx25-fast` 或 `ltx25-fast-nvfp4`。权重在 Hugging Face 受限仓库 `Lightricks/LTX-2.5`，需登录并同意条款后下载（约 60 GB，`scripts/download-models.sh` 未包含），按 LTX-2.x 社区许可使用 |
+| ComfyUI · LTX-2.5 Fast（Lightricks，22B 蒸馏；INT8 或 NVFP4 主干） | 默认视频模型：首帧驱动，24 fps（`--video-model ltx25-fast`，或 `ltx25-fast-nvfp4`）。权重在 Hugging Face 受限仓库 `Lightricks/LTX-2.5`，需登录并同意条款后下载（约 60 GB，`scripts/download-models.sh` 未包含），按 LTX-2.x 社区许可使用 |
 | ffmpeg · libass | 参考片切镜、尾帧续接；成片的转场、调色、颗粒、暗角、真字体标题字幕与混音 |
 | Qwen3-TTS-12Hz-1.7B VoiceDesign / Base（本地，容器 `cineloom/qwen-tts`） | 样片与演示片的配音：VoiceDesign 按文字描述设计出不存在的旁白音色（`scripts/voice-design.py`），Base 用这段参考音逐句克隆，再过广播级后期链（压缩、提亮、限幅）。`CINELOOM_TTS_ENGINE=qwen-tts` 启用 |
 | Kokoro-82M-v1.1-zh | 离线中文配音的默认引擎，无需额外容器 |

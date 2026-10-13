@@ -133,9 +133,11 @@ def load(path: str):
         pending = []
         prev = max(prev, t)
     gates = [e for e in events if e.get("agent") == "quality-gate"]
+    clips_phase = next((e["phase"] for e in events if e.get("agent") == "scheduler" and str(e.get("phase", "")).startswith("clips")), "")
     return {
         "id": run_id(path),
         "frameScheduling": "queue" if queue else "serial",
+        "videoModel": "LTX-2.5 Fast" if "ltx" in clips_phase.lower() else clips_phase[clips_phase.find("(") + 1:-1] or "Wan2.2",
         "startedAt": datetime.fromtimestamp(start).astimezone().isoformat(timespec="seconds"),
         "wall": director["wallSeconds"],
         "regen": director.get("qaRegenerations"),
@@ -150,12 +152,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--compare", nargs=2, metavar=("OLD", "NEW"), help="two project ids to draw on one time axis")
     parser.add_argument("--note", default="", help="caveat printed under the comparison")
+    parser.add_argument("--changed", default="frames", help="phases the new version changed, comma separated (copy,hero,frames,clips,cut)")
     args = parser.parse_args()
     runs = [r for r in (load(p) for p in sorted(glob.glob(os.path.join(ROOT, "projects/*/reports/run.jsonl")))) if r]
     if not runs:
         sys.exit("no completed runs found")
     runs.sort(key=lambda r: r["startedAt"])
-    clips = [e["seconds"] for r in runs for b in r["bars"] for e in b["events"]
+    clips = [e["seconds"] for r in runs if r["videoModel"] == "Wan2.2" for b in r["bars"] for e in b["events"]
              if e["stage"] == "clips" and "seconds" in e]
     summary = {
         "runs": len(runs),
@@ -171,7 +174,8 @@ def main() -> None:
         missing = [i for i in args.compare if i not in by_id]
         if missing:
             sys.exit(f"no completed run for: {', '.join(missing)}")
-        extra["compare"] = {"old": by_id[args.compare[0]], "new": by_id[args.compare[1]], "note": args.note}
+        extra["compare"] = {"old": by_id[args.compare[0]], "new": by_id[args.compare[1]], "note": args.note,
+                           "changed": args.changed.split(",")}
     template = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "production-gantt.template.html")).read()
     data = json.dumps({"runs": runs, "summary": summary, **extra}, ensure_ascii=False).replace("</", "<\\/")
     sys.stdout.write(template.replace("/*__DATA__*/null", data))

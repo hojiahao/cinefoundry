@@ -17,6 +17,9 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const director = rows.find((row) => row.agent === 'director')
   const unverified = gates.filter((row) => row.score === -1)
   const userPhoto = rows.find((row) => row.agent === 'product-hero' && row.source === 'user photo')
+  // The frame the harness kept: the highest score, the later attempt on a tie (harness.ts, consider).
+  const keptGate = (shot: number) => gates.filter((row) => row.shot === shot)
+    .reduce<Row | undefined>((top, row) => (!top || (row.pass && !top.pass) || (!!row.pass === !!top.pass && (row.score as number) >= (top.score as number)) ? row : top), undefined)
   const keptAfterFail = storyboard.shots.filter((shot) => {
     const attempts = gates.filter((row) => row.shot === shot.shot)
     return attempts.length > 0 && !attempts.some((row) => row.pass)
@@ -24,7 +27,7 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const seconds = (value: unknown) => (typeof value === 'number' ? `${value.toFixed(1)} s` : '-')
   const shotRows = storyboard.shots.map((shot) => {
     const attempts = gates.filter((row) => row.shot === shot.shot)
-    const best = attempts.reduce<Row | undefined>((top, row) => (!top || (row.score as number) > (top.score as number) ? row : top), undefined)
+    const best = keptGate(shot.shot)
     const clip = clips.find((row) => row.shot === shot.shot)
     const frameSeconds = attempts.reduce((sum, row) => sum + ((row.imageSeconds as number) || 0), 0)
     return `| ${shot.shot} | ${shot.framing} · ${shot.camera} | ${attempts.length} | ${best ? `${best.pass ? 'pass' : 'kept after fail'} ${best.score}` : '-'} | ${frameSeconds.toFixed(1)} s | ${seconds(clip?.seconds)} |`
@@ -36,7 +39,8 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
 
 - 成片：\`${finalCut.slice(dir.length + 1)}\` · ${brief.ratio} · ${brief.durationSeconds} 秒正片 + 3 秒定版
 - 创意原话记录于 \`state.json\`；需求单 \`brief.json\`；脚本 \`script/script.json\`；分镜 \`storyboard/storyboard.json\`
-- 品类 ${brief.category} · 拍摄行业 ${brief.industry ?? '未记录'} · 品牌字「${brief.brandText}」 · 受众 ${brief.audience} · 核心信息「${brief.message}」
+- 品类 ${brief.category} · 拍摄行业 ${brief.industry ?? '未记录'} · 品牌字「${brief.brandText}」 · 受众 ${brief.audience} · 核心信息「${brief.message}」${brief.tagline ? ` · 定版字幕（用户原话）「${brief.tagline}」` : ''}${brief.proof ? `
+- 卖点依据（用户提供）：${brief.proof}` : ''}
 
 ## 逐镜头
 
@@ -69,7 +73,7 @@ ${memory || '| - | - | - |'}
 ## 待确认事项
 
 ${[
-  ...keptAfterFail.map((shot) => `- 镜头 ${shot.shot} 在质检未通过的情况下保留了最高分候选（${gates.filter((row) => row.shot === shot.shot).slice(-1)[0]?.issues ? (gates.filter((row) => row.shot === shot.shot).slice(-1)[0]!.issues as string[])[0] : ''}）`),
+  ...keptAfterFail.map((shot) => `- 镜头 ${shot.shot} 在质检未通过的情况下保留了最高分候选 ${keptGate(shot.shot)?.candidate ?? ''}（${keptGate(shot.shot)?.score} 分：${(keptGate(shot.shot)?.issues as string[] | undefined)?.[0] ?? ''}）`),
   ...(userPhoto && !userPhoto.pass ? [`- 定妆图使用用户提供的产品照片；质检未通过（${(userPhoto.issues as string[] | undefined)?.[0] ?? ''}），照片仍作为全片产品依据`] : []),
   ...unverified.map((row) => `- 镜头 ${row.shot ?? '定妆图'} 的一次质检未能得到判定，该帧按未验证处理`),
   userPhoto ? '- 本片的画面由 AI 依据用户提供的产品照片生成，配音与音乐为 AI 生成；对外发布时须按平台规范标注' : '- 本片的画面、配音与音乐均为 AI 生成；对外发布时须按平台规范标注',

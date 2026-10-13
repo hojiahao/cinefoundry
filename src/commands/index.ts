@@ -204,7 +204,7 @@ async function cut(args: ParsedArgs): Promise<number> {
     appendFile(join(dir, 'reports', 'run.jsonl'), `${JSON.stringify({ ts: new Date().toISOString(), stage, agent, execution: 'local-dgx-spark', ...detail })}\n`)
   const output = await finishFilm({
     dir, brief: await read<Brief>('brief.json'), script: await read<Script>('script/script.json'), storyboard: await read<Storyboard>('storyboard/storyboard.json'),
-    heroPath: join(dir, hero.path), comfy: new ComfyClient(), audio: flag(args, 'audio'), silent: flag(args, 'silent') === 'true', record, log: (line) => console.error(line),
+    heroPath: join(dir, hero.path), endStill: flag(args, 'end-still') ? resolve(flag(args, 'end-still')!) : undefined, comfy: new ComfyClient(), audio: flag(args, 'audio'), silent: flag(args, 'silent') === 'true', record, log: (line) => console.error(line),
   })
   await addAsset(id, { id: 'final-cut', kind: 'video', stage: 'cut', path: 'cut/final.mp4', execution: 'local-dgx-spark', model: 'ffmpeg' })
   await setStage(id, 'cut', 'done')
@@ -246,7 +246,7 @@ async function studio(args: ParsedArgs): Promise<number> {
 /** Brief in, finished film out: CineLoom Harness runs every stage with its agents and skills. */
 async function harnessCommand(args: ParsedArgs): Promise<number> {
   const brief = args.positionals.join(' ').trim()
-  if (!brief) throw new UsageError('usage: cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--plan-only] [--without-skills]')
+  if (!brief) throw new UsageError('usage: cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
   const result = await runHarness({
     brief,
     id: flag(args, 'id'),
@@ -259,6 +259,7 @@ async function harnessCommand(args: ParsedArgs): Promise<number> {
     audio: flag(args, 'audio'),
     silent: flag(args, 'silent') === 'true',
     productImage: flag(args, 'product-image'),
+    proof: flag(args, 'proof'),
     candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
     bestOf: flag(args, 'best-of') === 'true',
     frameScheduling: flag(args, 'frame-scheduling') as never,

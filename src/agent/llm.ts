@@ -114,7 +114,7 @@ export interface JsonAttempt<T> {
 
 /** Every attempt came back without usable JSON. Carries the last reply's accounting so callers can say why. */
 export class JsonReplyError extends Error {
-  constructor(message: string, readonly seconds: number, readonly completionTokens: number, readonly finishReason: string | undefined) {
+  constructor(message: string, readonly seconds: number, readonly completionTokens: number, readonly finishReason: string | undefined, readonly rejected: string[][] = []) {
     super(message)
   }
 }
@@ -153,7 +153,7 @@ export async function chatJson<T>(
     rejected.push(problems)
     if (attempt === maxAttempts) {
       if (value !== undefined) return { value, unresolved: problems, attempts: attempt, seconds, completionTokens, rejected, finishReason }
-      throw new JsonReplyError(`${endpoint.name} did not return usable JSON after ${maxAttempts} attempts: ${problems.join('; ')}`, seconds, completionTokens, finishReason)
+      throw new JsonReplyError(`${endpoint.name} did not return usable JSON after ${maxAttempts} attempts: ${problems.join('; ')}`, seconds, completionTokens, finishReason, rejected)
     }
     // Send the rejected answer back with the problems, so the model edits it instead of starting over
     // (a fresh rewrite drifted: fewer shots, new mistakes).

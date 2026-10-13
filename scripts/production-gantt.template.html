@@ -205,7 +205,7 @@ const PHASES = [
   { key: "swap",   name: "模型调度" },
   { key: "hero",   name: "产品主图" },
   { key: "frames", name: "分镜帧 + 质检" },
-  { key: "clips",  name: "视频（Wan2.2）" },
+  { key: "clips",  name: "视频" },
   { key: "cut",    name: "成片" },
 ];
 const PNAME = Object.fromEntries(PHASES.map(p => [p.key, p.name]));
@@ -464,18 +464,21 @@ function renderCompare() {
   const ta = phaseTotals(a), tb = phaseTotals(b);
   const pct = (x, y) => `${y < x ? "−" : "+"}${Math.abs((y - x) / x * 100).toFixed(0)}%`;
   const delta = (x, y) => `${y < x ? "−" : "+"}${fmt(Math.abs(y - x))}`;
+  const changed = D.compare.changed || ["frames"];
+  const how = r => `${r.frameScheduling === "queue" ? "分镜帧并行队列" : "分镜帧逐镜头串行"} · 视频 ${r.videoModel || "Wan2.2"}`;
+  const tag = k => changed.includes(k) ? "（改动环节）" : "（两版做法相同）";
   const head = (r, label) => `${label}<span class="muted">${esc(r.id)} · 总计 ${fmt(r.wall)} · 质检 ${r.gatesPassed}/${r.gates} 通过 · 重生成 ${r.regen ?? "—"} 次</span>`;
   document.getElementById("compareTitle").textContent = "同一条 brief：旧版本与新版本的甘特图对比";
   document.getElementById("compareSub").textContent = "两张图共用同一条时间轴（开工后的分钟数），右端越短越快。悬停任意一条可以看到原始日志字段。";
-  document.getElementById("oldHead").innerHTML = head(a, "旧版本 · 分镜帧逐镜头串行");
-  document.getElementById("newHead").innerHTML = head(b, "新版本 · 分镜帧并行队列");
+  document.getElementById("oldHead").innerHTML = head(a, `旧版本 · ${how(a)}`);
+  document.getElementById("newHead").innerHTML = head(b, `新版本 · ${how(b)}`);
   const maxS = Math.max(a.wall, b.wall);
   drawRunChart(a, document.getElementById("oldChart"), maxS);
   drawRunChart(b, document.getElementById("newChart"), maxS);
   document.getElementById("tiles").innerHTML = [
     ["总时长", `${fmt(a.wall)} → ${fmt(b.wall)}`, `${delta(a.wall, b.wall)}（${pct(a.wall, b.wall)}）`],
-    ["分镜帧 + 质检（唯一改动的环节）", `${fmt(ta.frames)} → ${fmt(tb.frames)}`, `${delta(ta.frames, tb.frames)}（${pct(ta.frames, tb.frames)}）`],
-    ["视频（Wan2.2）", `${fmt(ta.clips)} → ${fmt(tb.clips)}`, `${delta(ta.clips, tb.clips)}（${pct(ta.clips, tb.clips)}）`],
+    [`分镜帧 + 质检${tag("frames")}`, `${fmt(ta.frames)} → ${fmt(tb.frames)}`, `${delta(ta.frames, tb.frames)}（${pct(ta.frames, tb.frames)}）`],
+    [`视频 ${a.videoModel === b.videoModel ? a.videoModel || "Wan2.2" : `${a.videoModel} → ${b.videoModel}`}${tag("clips")}`, `${fmt(ta.clips)} → ${fmt(tb.clips)}`, `${delta(ta.clips, tb.clips)}（${pct(ta.clips, tb.clips)}）`],
     ["帧质检次数", `${a.gates} → ${b.gates}`, `通过 ${a.gatesPassed} → ${b.gatesPassed}`],
   ].map(([k, v, n]) => `<div class="tile"><div class="k">${k}</div><div class="v" style="font-size:20px">${v}</div><div class="n">${n}</div></div>`).join("");
   document.getElementById("deltaTable").innerHTML = `<table><thead><tr><th>阶段</th><th>旧版本</th><th>新版本</th><th>变化</th></tr></thead><tbody>${

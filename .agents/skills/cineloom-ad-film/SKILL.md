@@ -21,19 +21,28 @@ skill, and checks every result before the next stage starts.
 
 ## Before you start
 
-1. Check the stack is up: `curl -s 127.0.0.1:8001/v1/models`, `127.0.0.1:8002/v1/models` and `127.0.0.1:8188/system_stats` must all answer. If not, run `scripts/spark-up.sh`.
-2. Check nothing else is generating: `pgrep -af "cli.js harness"` must be empty. One film at a time; two runs on one GPU make both slow and can fail a model load.
-3. Check memory with `cineloom mem status` (see `spark-model-scheduler`). About 45 GB available with the three services idle is normal.
+Run this one check first, before anything else:
+
+```bash
+pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl -sf 127.0.0.1:8002/v1/models >/dev/null && curl -sf 127.0.0.1:8188/system_stats >/dev/null && echo "stack up"; cineloom mem status
+```
+
+- Any `cli.js harness` line means another film is generating: stop and tell the user. One film at a time; two runs on one GPU make both slow and can fail a model load. The harness also refuses to start while another run holds its lock.
+- No `stack up`: run `scripts/spark-up.sh`.
+- Memory: see `spark-model-scheduler`. About 45 GB available with the three services idle is normal.
 
 ## Workflow
 
-1. Take the user's brief as written. Keep their words about the product's look (container, colours, label), the aspect ratio and the duration: the harness enforces them against what its agents write.
+1. Take the user's brief as written, in the user's language. Never translate, summarise or rephrase it: a Chinese brief passed on in English lost its quoted closing line ("DGX Spark，把 AI 超算放上你的桌面") and turned "千亿参数" into "billion-parameter". Keep its quotation marks too (put the brief in single quotes on the command line so “…” survive). Keep their words about the product's look (container, colours, label), the aspect ratio and the duration: the harness enforces them against what its agents write.
 2. Ask only if the product, the audience or the one message is missing. Decide everything else.
 3. Run, from the repository root:
 
    ```bash
-   node dist/cli.js harness "<the brief, verbatim>" [--id <project-id>] [--ratio 9:16|16:9|1:1] [--duration 10|15|20] [--product-image <photo>]
+   node dist/cli.js harness "<the brief, verbatim>" [--id <project-id>] [--ratio 9:16|16:9|1:1] [--duration 10|15|20] [--product-image <photo>] [--proof "<facts>"]
    ```
+
+   When the user gives facts the brand can back (specs, figures, a source), pass them with `--proof`.
+   They are the only claims the copy may make; without them the compliance reviewer strips every number.
 
    If the user gives a photo of the real product, pass it as `--product-image`. It replaces the
    generated hero still, so every shot shows the real shape and logo instead of the image model's

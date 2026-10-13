@@ -26,8 +26,8 @@ that belongs to the same film.
 5. Design around what the models do badly. Prefer product, liquid, ice, glass, steam, light and macro compositions. Use at most one shot with a person, framed so that hands and face are not the subject. Never two subjects or two actions in one shot: the video model picks one.
 6. Vary the shots like a cinematographer: change framing between neighbours (macro -> medium -> wide), give each shot a motivated light source, and build to the product reveal.
 7. `image_prompt` in English: subject first, then action, setting, light, framing.
-8. `camera` is one move verb with its qualifiers ("slow push-in with a subtle handheld float" is one move; "push-in then pan" is two and is rejected). `video_prompt` in English, separate from the look: what moves, that one camera move described the way a cinematographer would, and what stays still. For product-only shots end with "No people and no hands enter the frame" - otherwise the video model tends to add a hand.
-9. `must_show` is what the quality gate checks on a single still frame, so write something visible and specific in one picture: the product, its placement, what surrounds it. Never motion ("cursor moving", "steam rising"), never screen or UI content, never sound. Motion belongs in `video_prompt`.
+8. `camera` is one move verb with its qualifiers ("slow push-in", "low-angle slow orbit"). "Handheld" is a move of its own: "slow push-in with a subtle handheld float" counts two and is rejected, as is "push-in then pan". Put a float or sway in `video_prompt` instead. `video_prompt` in English, separate from the look: what moves, that one camera move described the way a cinematographer would, and what stays still. For product-only shots end with "No people and no hands enter the frame" - otherwise the video model tends to add a hand.
+9. `must_show` is what the quality gate checks on a single still frame, so write something visible and specific in one picture: the product, its placement, what surrounds it. Never motion ("cursor moving", "steam rising"), never screen or UI content, never sound. Motion belongs in `video_prompt`. One subject per shot: if a second object stands with the product (a glass, a cup, a plate), say where in `must_show` ("a glass of soda to the right of the can"), and preferably in `image_prompt` too; the validator rejects a second object that `must_show` does not place, and an image prompt without a placement borrows the one from `must_show`.
 10. If a reference breakdown exists, keep its shot count, durations, framing and camera moves; replace subject, product and scene.
 
 ## Category playbooks
@@ -46,6 +46,17 @@ keyboard in sharp focus is rejected (*checked*). Hands in at most one shot (*che
 frame, never from above (*checked*), and never as the subject; a shot that asks for a finger and also says "no hands" is rejected (*checked*). No screens, cursors or interfaces
 (*checked*). Motion vocabulary for `video_prompt`: light sweeping across the keys row by row, a slow
 ten-degree orbit, a rack focus from the badge to the keys, dust motes in the rim light.
+
+**Computers (desktops, mini PCs, workstations, servers, GPUs).** Dark studio and reflective tabletop like
+consumer electronics, but lit soft warm gold, with at most a faint green accent in the background: blue,
+cyan, "cool" or neon light is rejected (*checked*) because the models spread it over the metal and a gold
+DGX Spark came out blue, LED strips glowing along its edges. Data-center racks stay dim and warm. The story is what the machine
+does, so the person and the result may appear. Shot list that works: (1) the product on a desk at night,
+three-quarter, slow push-in; (2) the moment of use - a hand at a keyboard from a low side angle, or a face lit
+by a screen that faces away from camera or sits out of focus - one hand shot at most (*checked*); (3) a
+pull-back or wide reveal of scale: the desk, then rows of server racks, or the product against a data-center
+backdrop. Never ask the image model for screen contents (code, charts, chat windows): it invents gibberish
+(*checked*); show the glow, not the text. The product has no screen of its own: a monitor or keyboard in the shot is a second object, so `must_show` says where it stands ("a monitor behind the product, out of focus") (*checked*). A shot with a hand does not also say "no hands" anywhere, video prompt included (*checked*). No keyboard macros of keys and switches unless the product is the keyboard.
 
 **Drinks.** Backlight, condensation, ice, pour and splash in macro; the container upright and whole in at
 least two shots; the last shot hands over to the end card.
@@ -98,6 +109,7 @@ is rejected by the validator before anything is generated.
 - A shot built around a screen, a display or UI: image models invent gibberish interfaces and the gate rejects them. Show the device, not what it shows.
 - A keyboard shown whole and sharp: sixty tiny legends, all of them garbled, and a "青" badge that landed on the space bar. Macro on a few keys, or shallow depth of field.
 - A hand in every shot (a finger pressing a key three times): the film is about the hand, not the keyboard, and the model changed the product under it. One hand shot at most.
+- A second object with no place ("icy bubbles in a poured glass" next to the can): every frame is edited from the hero still of the can alone, so the model poured water onto the can, then put the can inside the glass, then drew only a glass. Four rejects. Place it beside the product, or leave it out.
 - must_show written as motion ("keys glowing row by row"): the gate looks at one still and rejects every candidate. Name what one picture shows.
 - Two macro push-ins on a pressed key, one at each end of the film: same framing and move twice is rejected wherever the two shots sit.
 - Rainbow RGB underglow nobody asked for: it reads as cheap on a product that was briefed as cool-toned rim light. Light with one or two colours.

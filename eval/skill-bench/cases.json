@@ -1,0 +1,3113 @@
+{
+ "brief": [
+  {
+   "project": "chenlu-commute-15s",
+   "request": "用 cineloom-ad-film 给「晨露」无糖气泡水做一条 15 秒竖屏广告。目标人群是通勤白领，核心卖点是清爽无糖。产品是银色易拉罐、浅蓝标签，风格清新，结尾写“清爽一下，再出发”。",
+   "photo": false
+  },
+  {
+   "project": "dgx-spark-ad",
+   "request": "15秒16:9广告片，宣传NVIDIA DGX Spark桌面AI超级计算机。产品外观为香槟金色金属小方盒，正面配有细密金属网孔，置于开发者书桌上。目标受众为AI开发者和研究者。核心信息：千亿参数大模型，放上你的桌面。",
+   "photo": false
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "request": "为 NVIDIA DGX Spark 桌面AI超级计算机做一支15秒16:9广告片，受众是AI开发者和研究者，核心信息：千亿参数大模型，放上你的桌面",
+   "photo": true
+  },
+  {
+   "project": "dgx-spark-night",
+   "request": "深夜，开发者的桌面上放着一台巴掌大小的金色主机。他敲下回车，屏幕瞬间亮起：千亿参数大模型在本地流畅运行。镜头拉远，桌面化作一座数据中心。字幕：‘DGX Spark，把 AI 超算放上你的桌面。’",
+   "photo": true
+  },
+  {
+   "project": "dgx-spark-photo",
+   "request": "NVIDIA DGX Spark 15秒16:9广告片，产品外观扁平金色金属机身、正面金属泡沫纹理、NVIDIA标志，受众是AI开发者和研究者，核心信息：千亿参数大模型，放上你的桌面",
+   "photo": false
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "request": "NVIDIA DGX Spark 15秒16:9广告片，产品实拍照片，受众是AI开发者和研究者，核心信息：千亿参数大模型，放上你的桌面",
+   "photo": true
+  },
+  {
+   "project": "jev-smoke",
+   "request": "给一款叫“砾”的挂耳咖啡做一条 10 秒横版广告，面向早起通勤的上班族，温暖克制",
+   "photo": false
+  },
+  {
+   "project": "leng-soda",
+   "request": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版短视频广告，面向大学生，夏天，清爽",
+   "photo": false
+  },
+  {
+   "project": "leng-soda-v2",
+   "request": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版短视频广告，面向大学生，夏天，清爽。要电影质感：微距、冰、气泡、逆光，节奏克制。",
+   "photo": false
+  },
+  {
+   "project": "morning-drop-soda",
+   "request": "给晨露无糖气泡水做一条15秒竖屏广告。产品是银色易拉罐、浅蓝标签，风格清新。核心卖点是清爽无糖。目标人群是通勤白领。结尾写‘清爽一下，再出发’.",
+   "photo": false
+  },
+  {
+   "project": "show-coffee",
+   "request": "给一款叫“醒”的挂耳咖啡做一条 15 秒横版广告，面向清晨通勤的上班族。电影质感：晨光、蒸汽、慢倒的热水、深色木桌，温暖克制。产品是牛皮纸色的挂耳咖啡包装盒，正面有黑色衬线字“醒”。",
+   "photo": false
+  },
+  {
+   "project": "show-cream",
+   "request": "给国货保湿面霜“润”做一条 15 秒竖版广告，面向 25 到 35 岁女性，质感高级、安静。电影质感：乳白与暖金、柔光、水波与霜体纹理的微距。产品是磨砂白色圆罐，金色盖子，罐身有金色细体字“润”。",
+   "photo": false
+  },
+  {
+   "project": "show-keyboard",
+   "request": "给机械键盘“青”做一条 15 秒横版广告，面向程序员，利落、有科技感。电影质感：暗调、冷色轮廓光、按键微距、键帽背光逐排亮起。产品是深灰色铝合金机械键盘，空格键上方有一枚小小的青色“青”字铭牌。",
+   "photo": false
+  },
+  {
+   "project": "show-soda",
+   "request": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版短视频广告，面向大学生，夏天。电影质感：微距、冰、气泡、逆光，节奏克制。产品是银色铝罐，青绿色标签上有白色书法字“冷”。",
+   "photo": false
+  },
+  {
+   "project": "eval-brief-2",
+   "request": "一款叫“砾”的挂耳咖啡，10 秒横版广告，面向早起通勤的上班族，温暖克制",
+   "photo": false
+  },
+  {
+   "project": "eval-brief-3",
+   "request": "国货面霜“雾屿”的 15 秒竖版广告，面向 25-35 岁女性，强调保湿，质感高级",
+   "photo": false
+  }
+ ],
+ "compliance": [
+  {
+   "project": "chenlu-commute-15s",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can on desk, condensation forming",
+     "vo": "清晨上班路，疲惫还在",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand opens tab, sparkling water pours into glass",
+     "vo": "气泡细腻，入喉不苦",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter takes sip, refreshes, smiles at camera",
+     "vo": "入口即化，余味悠长",
+     "text": "晨露"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "chenlu-commute-15s",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can on desk, condensation forming",
+     "vo": "清晨上班路，疲惫还在",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand opens tab, sparkling water pours into glass",
+     "vo": "气泡细腻，入喉不苦",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter takes sip, refreshes, smiles at camera",
+     "vo": "入口即化，余味悠长",
+     "text": "晨露"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "100%天然",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "chenlu-commute-15s",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can on desk, condensation forming",
+     "vo": "清晨上班路，疲惫还在",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand opens tab, sparkling water pours into glass",
+     "vo": "气泡细腻，入喉不苦",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter takes sip, refreshes, smiles at camera",
+     "vo": "入口即化，余味悠长",
+     "text": "晨露"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "解暑降火",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "chenlu-commute-15s-retry",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can being lifted from a messenger bag",
+     "vo": "晨光洒在早高峰里",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up pouring sparkling water into a glass, bubbles rising",
+     "vo": "气泡轻舞，入口即化",
+     "text": "无糖气泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter taking a sip, looking refreshed on a subway platform",
+     "vo": "通勤路上，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "chenlu-commute-15s-retry",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can being lifted from a messenger bag",
+     "vo": "晨光洒在早高峰里",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up pouring sparkling water into a glass, bubbles rising",
+     "vo": "气泡轻舞，入口即化",
+     "text": "无糖气泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter taking a sip, looking refreshed on a subway platform",
+     "vo": "通勤路上，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "全网第一",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "chenlu-commute-15s-retry",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can being lifted from a messenger bag",
+     "vo": "晨光洒在早高峰里",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up pouring sparkling water into a glass, bubbles rising",
+     "vo": "气泡轻舞，入口即化",
+     "text": "无糖气泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter taking a sip, looking refreshed on a subway platform",
+     "vo": "通勤路上，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "提神醒脑",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "chenlu-sparkling-20260928",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of condensation beads forming on a cold can surface",
+     "vo": "冰凉触感瞬间苏醒",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand grips the can, lifts it to light ice cubes rattling inside",
+     "vo": "气泡细腻持久，入口即化",
+     "text": "无糖自由"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter takes a sip on a bustling street, expression relaxes",
+     "vo": "城市漫步，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "chenlu-sparkling-20260928",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of condensation beads forming on a cold can surface",
+     "vo": "冰凉触感瞬间苏醒",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand grips the can, lifts it to light ice cubes rattling inside",
+     "vo": "气泡细腻持久，入口即化",
+     "text": "无糖自由"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter takes a sip on a bustling street, expression relaxes",
+     "vo": "城市漫步，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "全网第一",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "chenlu-sparkling-20260928",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of condensation beads forming on a cold can surface",
+     "vo": "冰凉触感瞬间苏醒",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand grips the can, lifts it to light ice cubes rattling inside",
+     "vo": "气泡细腻持久，入口即化",
+     "text": "无糖自由"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter takes a sip on a bustling street, expression relaxes",
+     "vo": "城市漫步，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "解暑降火",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of sleek black desktop AI supercomputer on reflective surface, top bronze panel glowing subtly",
+     "vo": "台上放置，千亿参数随手可得",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "camera pulls back, showing data-flow visualizations swirling around the unit, subtle blue indicators active",
+     "vo": "强大算力，尽在指尖掌控",
+     "text": "指尖算力"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hero shot of the unit standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around",
+     "vo": "桌面即AI实验室，创意无限可能",
+     "text": "AI实验室"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of sleek black desktop AI supercomputer on reflective surface, top bronze panel glowing subtly",
+     "vo": "台上放置，千亿参数随手可得",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "camera pulls back, showing data-flow visualizations swirling around the unit, subtle blue indicators active",
+     "vo": "强大算力，尽在指尖掌控",
+     "text": "指尖算力"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hero shot of the unit standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around",
+     "vo": "桌面即AI实验室，创意无限可能",
+     "text": "AI实验室"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "全网第一",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of sleek black desktop AI supercomputer on reflective surface, top bronze panel glowing subtly",
+     "vo": "台上放置，千亿参数随手可得",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "camera pulls back, showing data-flow visualizations swirling around the unit, subtle blue indicators active",
+     "vo": "强大算力，尽在指尖掌控",
+     "text": "指尖算力"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hero shot of the unit standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around",
+     "vo": "桌面即AI实验室，创意无限可能",
+     "text": "AI实验室"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-night",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "golden palm-sized box on dark matte surface, close-up of textured front face",
+     "vo": "指尖触摸粗砂金属",
+     "text": "指尖触感"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "reflective bronze-gold top face catching soft rim light, subtle glow from internal vents",
+     "vo": "本地千亿参数大模型",
+     "text": "本地运行"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "device illuminated from within, camera pulling back to show compact form against dark background",
+     "vo": "随时随地启动创意",
+     "text": "随时创意"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-night",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "golden palm-sized box on dark matte surface, close-up of textured front face",
+     "vo": "指尖触摸粗砂金属",
+     "text": "指尖触感"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "reflective bronze-gold top face catching soft rim light, subtle glow from internal vents",
+     "vo": "本地千亿参数大模型",
+     "text": "本地运行"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "device illuminated from within, camera pulling back to show compact form against dark background",
+     "vo": "随时随地启动创意",
+     "text": "随时创意"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "全网第一",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-night",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "golden palm-sized box on dark matte surface, close-up of textured front face",
+     "vo": "指尖触摸粗砂金属",
+     "text": "指尖触感"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "reflective bronze-gold top face catching soft rim light, subtle glow from internal vents",
+     "vo": "本地千亿参数大模型",
+     "text": "本地运行"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "device illuminated from within, camera pulling back to show compact form against dark background",
+     "vo": "随时随地启动创意",
+     "text": "随时创意"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-photo",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "sleek desktop AI supercomputer, front view, foam texture detail",
+     "vo": "桌上千亿参数，指尖即刻启动",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up keyboard and mouse, hands typing on matte surface",
+     "vo": "随心所欲，生成千万词元",
+     "text": "随心生成"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "unit standing vertically, NVIDIA logo illuminated, desktop workspace",
+     "vo": "性能洗牌，随时随地",
+     "text": "随时随地"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-photo",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "sleek desktop AI supercomputer, front view, foam texture detail",
+     "vo": "桌上千亿参数，指尖即刻启动",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up keyboard and mouse, hands typing on matte surface",
+     "vo": "随心所欲，生成千万词元",
+     "text": "随心生成"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "unit standing vertically, NVIDIA logo illuminated, desktop workspace",
+     "vo": "性能洗牌，随时随地",
+     "text": "随时随地"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "全网第一",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-photo",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "sleek desktop AI supercomputer, front view, foam texture detail",
+     "vo": "桌上千亿参数，指尖即刻启动",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up keyboard and mouse, hands typing on matte surface",
+     "vo": "随心所欲，生成千万词元",
+     "text": "随心生成"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "unit standing vertically, NVIDIA logo illuminated, desktop workspace",
+     "vo": "性能洗牌，随时随地",
+     "text": "随时随地"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Close-up of a sleek black rectangular prism on a dark desk, honeycomb texture visible on top face",
+     "vo": "千亿参数，桌上即用",
+     "text": "桌上即用"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Side panel reveals NVIDIA logo and rectangular vent, light reflects off smooth metallic surface",
+     "vo": "本地推理，无云延迟",
+     "text": "本地推理"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Product centered, glowing NVIDIA logo, camera pulls back to show compact desk setup",
+     "vo": "千亿模型，随手可得",
+     "text": "千亿模型"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Close-up of a sleek black rectangular prism on a dark desk, honeycomb texture visible on top face",
+     "vo": "千亿参数，桌上即用",
+     "text": "桌上即用"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Side panel reveals NVIDIA logo and rectangular vent, light reflects off smooth metallic surface",
+     "vo": "本地推理，无云延迟",
+     "text": "本地推理"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Product centered, glowing NVIDIA logo, camera pulls back to show compact desk setup",
+     "vo": "千亿模型，随手可得",
+     "text": "千亿模型"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "最好",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Close-up of a sleek black rectangular prism on a dark desk, honeycomb texture visible on top face",
+     "vo": "千亿参数，桌上即用",
+     "text": "桌上即用"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Side panel reveals NVIDIA logo and rectangular vent, light reflects off smooth metallic surface",
+     "vo": "本地推理，无云延迟",
+     "text": "本地推理"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Product centered, glowing NVIDIA logo, camera pulls back to show compact desk setup",
+     "vo": "千亿模型，随手可得",
+     "text": "千亿模型"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-vs",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop AI supercomputer on a tidy desk, power LED soft glow",
+     "vo": "强大参数，重新定义桌面体验",
+     "text": "桌面AI"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up of silver aluminum chassis, matte front face with NVIDIA logo, rectangular cutouts on right side",
+     "vo": "银色铝身，细腻质感尽收眼底",
+     "text": "铝身质感"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hands using the device, desktop setup with vibrant AI visualization overlay, brand end card appearing",
+     "vo": "千亿参数模型，随时随地启动",
+     "text": "随时启动"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-vs",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop AI supercomputer on a tidy desk, power LED soft glow",
+     "vo": "强大参数，重新定义桌面体验",
+     "text": "桌面AI"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up of silver aluminum chassis, matte front face with NVIDIA logo, rectangular cutouts on right side",
+     "vo": "银色铝身，细腻质感尽收眼底",
+     "text": "铝身质感"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hands using the device, desktop setup with vibrant AI visualization overlay, brand end card appearing",
+     "vo": "千亿参数模型，随时随地启动",
+     "text": "随时启动"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "最好",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-vs",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop AI supercomputer on a tidy desk, power LED soft glow",
+     "vo": "强大参数，重新定义桌面体验",
+     "text": "桌面AI"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up of silver aluminum chassis, matte front face with NVIDIA logo, rectangular cutouts on right side",
+     "vo": "银色铝身，细腻质感尽收眼底",
+     "text": "铝身质感"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hands using the device, desktop setup with vibrant AI visualization overlay, brand end card appearing",
+     "vo": "千亿参数模型，随时随地启动",
+     "text": "随时启动"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-vs3",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-vs3",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "绝对安全",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-vs3",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "dgx-spark-vs3-ltx",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "dgx-spark-vs3-ltx",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "最好",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "dgx-spark-vs3-ltx",
+   "category": "general",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "让你效率翻倍",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "jev-smoke",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee beans pouring into a ear-shaped filter, soft morning light",
+     "vo": "砾，唤醒清晨的第一口",
+     "text": "砾"
+    },
+    {
+     "beat": 2,
+     "job": "payoff",
+     "see": "steaming ear of coffee placed on a saucer, gentle light",
+     "vo": "一口入喉，唤醒清晨",
+     "text": "清晨"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "jev-smoke",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee beans pouring into a ear-shaped filter, soft morning light",
+     "vo": "砾，唤醒清晨的第一口",
+     "text": "砾"
+    },
+    {
+     "beat": 2,
+     "job": "payoff",
+     "see": "steaming ear of coffee placed on a saucer, gentle light",
+     "vo": "一口入喉，唤醒清晨",
+     "text": "清晨"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "100%天然",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "jev-smoke",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee beans pouring into a ear-shaped filter, soft morning light",
+     "vo": "砾，唤醒清晨的第一口",
+     "text": "砾"
+    },
+    {
+     "beat": 2,
+     "job": "payoff",
+     "see": "steaming ear of coffee placed on a saucer, gentle light",
+     "vo": "一口入喉，唤醒清晨",
+     "text": "清晨"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "提神醒脑",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "leng-soda",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of water droplets forming on a chilled soda can, condensation beading up, camera pulls back to reveal a university student sitting at a dorm room desk with sunlight streaming in",
+     "vo": "夏日午后，热浪扑来",
+     "text": "清爽一刻"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand grips the can, tab pops open, fine bubbles rise effervescently into the liquid, the student takes a sip and smiles",
+     "vo": "气泡细腻涌动，唤醒味蕾",
+     "text": "气泡细腻"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "student holds the can up, ice crystals glisten on the surface, tagline '冷' appears with a frosty effect",
+     "vo": "夏日清爽，从一口开始",
+     "text": "冷"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "leng-soda",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of water droplets forming on a chilled soda can, condensation beading up, camera pulls back to reveal a university student sitting at a dorm room desk with sunlight streaming in",
+     "vo": "夏日午后，热浪扑来",
+     "text": "清爽一刻"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand grips the can, tab pops open, fine bubbles rise effervescently into the liquid, the student takes a sip and smiles",
+     "vo": "气泡细腻涌动，唤醒味蕾",
+     "text": "气泡细腻"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "student holds the can up, ice crystals glisten on the surface, tagline '冷' appears with a frosty effect",
+     "vo": "夏日清爽，从一口开始",
+     "text": "冷"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "100%天然",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "leng-soda",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of water droplets forming on a chilled soda can, condensation beading up, camera pulls back to reveal a university student sitting at a dorm room desk with sunlight streaming in",
+     "vo": "夏日午后，热浪扑来",
+     "text": "清爽一刻"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand grips the can, tab pops open, fine bubbles rise effervescently into the liquid, the student takes a sip and smiles",
+     "vo": "气泡细腻涌动，唤醒味蕾",
+     "text": "气泡细腻"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "student holds the can up, ice crystals glisten on the surface, tagline '冷' appears with a frosty effect",
+     "vo": "夏日清爽，从一口开始",
+     "text": "冷"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "解暑降火",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "leng-soda-v2",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Macro close-up of condensation forming on a chilled soda can surface, ice crystals shimmering in cool blue reverse light",
+     "vo": "夏日炎炎，肌肤已燥热难耐",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Pouring cold无糖气泡水 into a glass, bubbles rising vigorously in reverse light",
+     "vo": "无糖气泡水，零负担的清爽",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Person taking a sip, moment of refreshment captured in slow motion",
+     "vo": "夏日清爽，一口解暑",
+     "text": "冷"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "leng-soda-v2",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Macro close-up of condensation forming on a chilled soda can surface, ice crystals shimmering in cool blue reverse light",
+     "vo": "夏日炎炎，肌肤已燥热难耐",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Pouring cold无糖气泡水 into a glass, bubbles rising vigorously in reverse light",
+     "vo": "无糖气泡水，零负担的清爽",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Person taking a sip, moment of refreshment captured in slow motion",
+     "vo": "夏日清爽，一口解暑",
+     "text": "冷"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "100%天然",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "leng-soda-v2",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Macro close-up of condensation forming on a chilled soda can surface, ice crystals shimmering in cool blue reverse light",
+     "vo": "夏日炎炎，肌肤已燥热难耐",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Pouring cold无糖气泡水 into a glass, bubbles rising vigorously in reverse light",
+     "vo": "无糖气泡水，零负担的清爽",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Person taking a sip, moment of refreshment captured in slow motion",
+     "vo": "夏日清爽，一口解暑",
+     "text": "冷"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "补充能量又养胃",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "morning-drop-soda",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of a hand opening a silver soda can",
+     "vo": "手打开冰凉易拉罐",
+     "text": "开罐"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifts can, pours sparkling water into a glass over ice",
+     "vo": "冰镇气泡清爽一刻",
+     "text": "气泡清爽"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "person drinks, looks refreshed, urban commuting backdrop",
+     "vo": "城市通勤清爽无糖",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "morning-drop-soda",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of a hand opening a silver soda can",
+     "vo": "手打开冰凉易拉罐",
+     "text": "开罐"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifts can, pours sparkling water into a glass over ice",
+     "vo": "冰镇气泡清爽一刻",
+     "text": "气泡清爽"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "person drinks, looks refreshed, urban commuting backdrop",
+     "vo": "城市通勤清爽无糖",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "最好",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "morning-drop-soda",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of a hand opening a silver soda can",
+     "vo": "手打开冰凉易拉罐",
+     "text": "开罐"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifts can, pours sparkling water into a glass over ice",
+     "vo": "冰镇气泡清爽一刻",
+     "text": "气泡清爽"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "person drinks, looks refreshed, urban commuting backdrop",
+     "vo": "城市通勤清爽无糖",
+     "text": "清爽无糖"
+    }
+   ],
+   "inject": {
+    "beat": 2,
+    "phrase": "解暑降火",
+    "kind": "implied"
+   }
+  },
+  {
+   "project": "show-coffee",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee grounds swirling in hot water, steam rising, morning light",
+     "vo": "清晨光落，咖啡香起",
+     "text": "晨光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifting a steaming挂耳咖啡袋, placing it on a dark wood mug",
+     "vo": "一袋挂耳，随手冲泡",
+     "text": "随泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "sipping dark coffee, eyes closing in satisfaction, morning city view outside",
+     "vo": "温热入喉，清晨唤醒",
+     "text": "唤醒"
+    }
+   ],
+   "inject": null
+  },
+  {
+   "project": "show-coffee",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee grounds swirling in hot water, steam rising, morning light",
+     "vo": "清晨光落，咖啡香起",
+     "text": "晨光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifting a steaming挂耳咖啡袋, placing it on a dark wood mug",
+     "vo": "一袋挂耳，随手冲泡",
+     "text": "随泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "sipping dark coffee, eyes closing in satisfaction, morning city view outside",
+     "vo": "温热入喉，清晨唤醒",
+     "text": "唤醒"
+    }
+   ],
+   "inject": {
+    "beat": 3,
+    "phrase": "绝对安全",
+    "kind": "scan"
+   }
+  },
+  {
+   "project": "show-coffee",
+   "category": "food",
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee grounds swirling in hot water, steam rising, morning light",
+     "vo": "清晨光落，咖啡香起",
+     "text": "晨光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifting a steaming挂耳咖啡袋, placing it on a dark wood mug",
+     "vo": "一袋挂耳，随手冲泡",
+     "text": "随泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "sipping dark coffee, eyes closing in satisfaction, morning city view outside",
+     "vo": "温热入喉，清晨唤醒",
+     "text": "唤醒"
+    }
+   ],
+   "inject": {
+    "beat": 1,
+    "phrase": "提神醒脑",
+    "kind": "implied"
+   }
+  }
+ ],
+ "repair": [
+  {
+   "project": "show-cream",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow pull-back revealing texture",
+    "image_prompt": "white cream extruded from jar, slow spread across skin, the product",
+    "video_prompt": "slow pull-back with subtle breath-like handheld float, cream spreading, no people and no hands enter the frame",
+    "on_screen_text": "细腻",
+    "must_show": "cream extruded from jar spreading across skin"
+   },
+   "storyboard": {
+    "style": "premium quiet cinematic, milky white and warm gold, soft diffusion, macro water ripples and frost texture",
+    "product": "磨砂白色圆罐，金色盖子，罐身有金色细体字‘润’的保湿面霜"
+   },
+   "issues": [
+    "required content missing: cream is spreading across a surface rather than skin",
+    "product in image 1 is a different product from image 2: different cap color/design (transparent cap vs gold cap)"
+   ]
+  },
+  {
+   "project": "show-keyboard-v4",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "low side angle",
+    "camera": "slow orbit 10 degrees",
+    "image_prompt": "low side angle of keyboard, keystroke mid-travel, keycap backlight sweeps row by row from spacebar outward, the product",
+    "video_prompt": "keycap backlight sweeps row by row from spacebar outward, slow orbit 10 degrees, No people and no hands enter the frame",
+    "on_screen_text": "回弹有力",
+    "must_show": "low side angle of keyboard with backlight at row start, keycaps mid-travel"
+   },
+   "storyboard": {
+    "style": "dark palette, cool rim light, keycap macro, crisp texture",
+    "product": "深灰色铝合金机械键盘 \"青\""
+   },
+   "issues": [
+    "required content is missing: low side angle not met, backlight at row start not visible, keycaps not mid-travel"
+   ]
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "wide",
+    "camera": "slow push-in",
+    "image_prompt": "hero shot of NVIDIA DGX Spark standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around unit, clean studio lighting, subtle glowing accents",
+    "video_prompt": "slow push-in toward the unit, data streams flow toward camera, No people and no hands enter the frame",
+    "on_screen_text": "AI实验室",
+    "must_show": "vertical hero shot with illuminated white NVIDIA logo and data streams on dark background"
+   },
+   "storyboard": {
+    "style": "clean studio lighting, cool-toned rim light, subtle data-flow texture, premium high-tech mood",
+    "product": "The product is a compact rectangular desktop unit. Its top surface is a smooth, metallic bronze - colored panel with a reflective finish. Two side panels have a textured, granular surface in the same bronze tone; on one of these textured sides, the \"NVIDIA\" text and the NVIDIA eye logo are located near the lower part of that panel. Rectangular cutouts are present on the textured and adjacent smooth panels, defining its industrial form."
+   },
+   "issues": [
+    "the product in image 1 is a different product from image 2: different brand lettering (NVIBIA vs NVIDIA)"
+   ]
+  },
+  {
+   "project": "show-cream",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "close-up",
+    "camera": "slow push-in with gentle float",
+    "image_prompt": "fingertip gliding over face, skin appearing plumper, the product visible on vanity nearby",
+    "video_prompt": "slow push-in with gentle float, fingertip gliding, skin smoothing, no people and no hands enter the frame",
+    "on_screen_text": "顺滑",
+    "must_show": "fingertip gliding over skin, skin looking plumper"
+   },
+   "storyboard": {
+    "style": "premium quiet cinematic, milky white and warm gold, soft diffusion, macro water ripples and frost texture",
+    "product": "磨砂白色圆罐，金色盖子，罐身有金色细体字‘润’的保湿面霜"
+   },
+   "issues": [
+    "a person, a hand or fingers appear although this shot does not call for them"
+   ]
+  },
+  {
+   "project": "show-keyboard-v5",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "macro of mechanical keyboard keys being pressed down, deep gray aluminum body, cool rim light along edges, keys gradually lighting from top row down, shallow depth of field",
+    "video_prompt": "light sweeping across the keys row by row, subtle handheld float, No people and no hands enter the frame",
+    "on_screen_text": "青轴手感",
+    "must_show": "keyboard keys with finger pressing down, deep gray aluminum body, cool rim light"
+   },
+   "storyboard": {
+    "style": "clean, tech-forward, dark, cool rim light, keycap backlight gradually lighting row by row",
+    "product": "deep gray aluminum mechanical keyboard, labeled \"青\""
+   },
+   "issues": [
+    "a hand appears although this shot does not call for them"
+   ]
+  },
+  {
+   "project": "dgx-spark-photo",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow ten-degree orbit",
+    "image_prompt": "product at shallow depth of field, keyboard and mouse on matte surface, hands typing from low side angle, wrists in frame, cool accent light",
+    "video_prompt": "light sweeping across keys row by row, slow orbit, No people and no hands enter the frame",
+    "on_screen_text": "随心生成",
+    "must_show": "keyboard and mouse on matte surface, hands typing from low angle"
+   },
+   "storyboard": {
+    "style": "professional cool rim light on cool-toned metal, pale palette, smooth texture, cutting-edge minimalism",
+    "product": "flat gold metal body, front metal foam texture, \"NVIDIA\""
+   },
+   "issues": [
+    "the product in image 1 is a different product from image 2: different brand lettering (NVIDIA in image 2, no matching brand in image 1) and product appearance (surface texture, design details) differ"
+   ]
+  },
+  {
+   "project": "show-soda-fast2",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow push-in",
+    "image_prompt": "can held against summer sky, the product the focus, summer atmosphere",
+    "video_prompt": "slow push-in, No people and no hands enter the frame",
+    "on_screen_text": "清爽",
+    "must_show": "can against summer sky with mist spraying out"
+   },
+   "storyboard": {
+    "style": "cool tones, condensation, cinematic macro, summer atmosphere",
+    "product": "silver aluminum can, teal-green label with white Chinese calligraphy \"冷\""
+   },
+   "issues": [
+    "a hand appears although the reference shot does not call for a hand",
+    "mist spraying out is missing from the summer sky background"
+   ]
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "wide",
+    "camera": "slow push-in",
+    "image_prompt": "hero shot of NVIDIA DGX Spark standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around unit, clean studio lighting, subtle glowing accents",
+    "video_prompt": "slow push-in toward the unit, data streams flow toward camera, No people and no hands enter the frame",
+    "on_screen_text": "AI实验室",
+    "must_show": "vertical hero shot with illuminated white NVIDIA logo and data streams on dark background"
+   },
+   "storyboard": {
+    "style": "clean studio lighting, cool-toned rim light, subtle data-flow texture, premium high-tech mood",
+    "product": "The product is a compact rectangular desktop unit. Its top surface is a smooth, metallic bronze - colored panel with a reflective finish. Two side panels have a textured, granular surface in the same bronze tone; on one of these textured sides, the \"NVIDIA\" text and the NVIDIA eye logo are located near the lower part of that panel. Rectangular cutouts are present on the textured and adjacent smooth panels, defining its industrial form."
+   },
+   "issues": [
+    "required content missing (illuminated white NVIDIA logo and data streams not present)",
+    "product main colours differ (image1 blue vs image2 gold)",
+    "shot orientation not vertical hero shot"
+   ]
+  },
+  {
+   "project": "show-keyboard",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow pull-back revealing the blue switch",
+    "image_prompt": "macro close-up on blue switch of the keyboard, keycap backlight row illuminates from off, deep gray aluminum body, cool contour light",
+    "video_prompt": "slow pull-back with subtle breath-like handheld float, blue switch activates, no people and no hands enter the frame",
+    "on_screen_text": "青轴",
+    "must_show": "blue switch with keycap backlight row illuminating from off"
+   },
+   "storyboard": {
+    "style": "cold palette, brushed aluminum texture, cool contour light, subtle keycap backlight gradient rise, macro focus",
+    "product": "深灰色铝合金机械键盘, 材质为深灰色铝合金, 颜色深灰配青色字母, 标签 \"青\""
+   },
+   "issues": [
+    "text that is not printed on the product itself: '青' appears on a keycap in image 1, but image 2 shows '青' as a side label, and the keycap in image 1 does not have '青' printed on it in image 2"
+   ]
+  },
+  {
+   "project": "morning-drop-soda",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow dolly left",
+    "image_prompt": "the product poured into a glass over ice, condensation beads, cool blue rim light",
+    "video_prompt": "pour of sparkling water from the product into glass over ice, condensation glistening, cool blue rim light moves across glass, No people and no hands enter the frame",
+    "on_screen_text": "气泡清爽",
+    "must_show": "product in glass with ice and condensation"
+   },
+   "storyboard": {
+    "style": "cool-toned studio, soft diffused rim light, subtle carbonation sparkle, clean palette of silver and pale blue, crisp texture",
+    "product": "silver can with pale blue label \"晨露\""
+   },
+   "issues": [
+    "a hand or fingers appear although this shot does not call for them"
+   ]
+  },
+  {
+   "project": "dgx-spark-photo",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "wide",
+    "camera": "slow push-in",
+    "image_prompt": "product standing vertically on a desktop workspace, cool ambient lighting, product as hero still",
+    "video_prompt": "slow push-in as the illuminated logo comes into view, No people and no hands enter the frame",
+    "on_screen_text": "随时随地",
+    "must_show": "unit vertical, NVIDIA logo illuminated, desktop workspace"
+   },
+   "storyboard": {
+    "style": "professional cool rim light on cool-toned metal, pale palette, smooth texture, cutting-edge minimalism",
+    "product": "flat gold metal body, front metal foam texture, \"NVIDIA\""
+   },
+   "issues": [
+    "required content missing: NVIDIA logo not present or illuminated",
+    "product is different: different brand lettering (TUMBLE vs NVIDIA) and different main colour (silver vs gold textured)"
+   ]
+  },
+  {
+   "project": "show-coffee-v2",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow push-in",
+    "image_prompt": "empty cup against morning light, steam curling up, brand logo visible, dark wood table, the product",
+    "video_prompt": "slow push-in with a subtle, breath-like handheld float, steam curling up, no people and no hands enter the frame",
+    "on_screen_text": "唤醒",
+    "must_show": "empty cup, steam curling, brand logo visible"
+   },
+   "storyboard": {
+    "style": "cinematic, warm, restrained; morning light, steam, slow pour, dark wood table",
+    "product": "挂耳咖啡, 纸包装, 深咖啡色与牛皮纸包装, \"醒\""
+   },
+   "issues": [
+    "the product in image 1 is a different product from image 2: image 1 shows a cup, image 2 shows a coffee bag with a filter"
+   ]
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "close-up",
+    "camera": "slow orbit with backlight travelling across product",
+    "image_prompt": "side view of the product, smooth metallic side panel visible, cool rim light, dark background",
+    "video_prompt": "subtle ten-degree orbit, backlight sweep across metallic surface, No people and no hands enter the frame",
+    "on_screen_text": "本地推理",
+    "must_show": "NVIDIA text and green logo on side panel, rectangular vent, reflective metallic surface"
+   },
+   "storyboard": {
+    "style": "dark studio, cool rim light, sleek texture, professional mood",
+    "product": "The product is a rectangular prism with a longer length than width and moderate height. Its main body has a metallic light gold finish; the central face features a rough, honeycomb - textured gray surface, while the left and right side panels are smooth metallic with a reflective finish, each containing a rectangular vent, and the left side panel displays the \"NVIDIA\" text alongside the green NVIDIA logo."
+   },
+   "issues": [
+    "the product in image 1 is a different product from image 2: different main design (front vent vs mesh front, side panel branding presentation)"
+   ]
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "close-up",
+    "camera": "slow orbit with backlight travelling across product",
+    "image_prompt": "side view of the product, smooth metallic side panel visible, cool rim light, dark background",
+    "video_prompt": "subtle ten-degree orbit, backlight sweep across metallic surface, No people and no hands enter the frame",
+    "on_screen_text": "本地推理",
+    "must_show": "NVIDIA text and green logo on side panel, rectangular vent, reflective metallic surface"
+   },
+   "storyboard": {
+    "style": "dark studio, cool rim light, sleek texture, professional mood",
+    "product": "The product is a rectangular prism with a longer length than width and moderate height. Its main body has a metallic light gold finish; the central face features a rough, honeycomb - textured gray surface, while the left and right side panels are smooth metallic with a reflective finish, each containing a rectangular vent, and the left side panel displays the \"NVIDIA\" text alongside the green NVIDIA logo."
+   },
+   "issues": [
+    "NVIDIA text and green logo missing; product in image 1 is a different product from image 2 (lack of NVIDIA branding on side panel)"
+   ]
+  },
+  {
+   "project": "show-soda-v3",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow dolly forward",
+    "image_prompt": "hand lifts and tilts the product, revealing liquid pouring into a glass, light backlighting",
+    "video_prompt": "hand lifts and tilts the product, liquid pours into glass, slow dolly forward",
+    "on_screen_text": "开盖",
+    "must_show": "product tilted in hand, liquid in glass"
+   },
+   "storyboard": {
+    "style": "cool tones, ice, backlighting, restrained pacing",
+    "product": "silver aluminum can, teal-green label with white Chinese calligraphy \"冷\""
+   },
+   "issues": [
+    "the product in image 1 is a different product from image 2: different brand lettering (text on can differs)"
+   ]
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "wide",
+    "camera": "slow pull-back revealing compact desk setup",
+    "image_prompt": "product centered with glowing NVIDIA logo, camera pulls back to show compact desk setup with the product as focal point, soft diffused light",
+    "video_prompt": "slow pull-back move, product remains centered, No people and no hands enter the frame",
+    "on_screen_text": "千亿模型",
+    "must_show": "product centered, glowing NVIDIA logo, compact desk setup visible"
+   },
+   "storyboard": {
+    "style": "dark studio, cool rim light, sleek texture, professional mood",
+    "product": "The product is a rectangular prism with a longer length than width and moderate height. Its main body has a metallic light gold finish; the central face features a rough, honeycomb - textured gray surface, while the left and right side panels are smooth metallic with a reflective finish, each containing a rectangular vent, and the left side panel displays the \"NVIDIA\" text alongside the green NVIDIA logo."
+   },
+   "issues": [
+    "product has different brand lettering: image 1 shows 'VIBIA' while image 2 shows 'NVIDIA' on the product's label"
+   ]
+  },
+  {
+   "project": "show-keyboard-v1",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow push-in",
+    "image_prompt": "Medium shot of the keyboard, keycap backlight cycling through rows from top to bottom, tactile bump highlighted in sharp focus",
+    "video_prompt": "Slow push-in with a subtle, breath-like handheld float. Keycap backlight cycles through rows. The keyboard stays still. No people and no hands enter the frame.",
+    "on_screen_text": "触发",
+    "must_show": "keycap backlight cycling with a tactile bump visible in sharp focus"
+   },
+   "storyboard": {
+    "style": "cool backlit morning light, pastel teal and coral, shallow depth of field, fine film grain, clean commercial look",
+    "product": "a deep grey aluminium mechanical keyboard with a single \"青\" label on the spacebar, matte surface, backlit from below with a gradual row-by-row brightening effect"
+   },
+   "issues": [
+    "required content missing: keycap backlight cycling not present (only bottom lighting, no keycap backlight); tactile bump not visible in sharp focus"
+   ]
+  },
+  {
+   "project": "show-coffee",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow pull-back revealing the city view",
+    "image_prompt": "sipping dark coffee, eyes closing in satisfaction, morning city view outside, the product",
+    "video_prompt": "gentle pull-back, coffee cup remains still, city view moves into frame, No people and no hands enter the frame",
+    "on_screen_text": "唤醒",
+    "must_show": "dark coffee in a cup, person sipping with eyes closed, morning city view through a window"
+   },
+   "storyboard": {
+    "style": "warm morning light, soft focus, dark wood texture, steam vapor, cinematic restraint",
+    "product": "挂耳咖啡, paper packet, beige and brown, label \"醒\""
+   },
+   "issues": [
+    "required content missing: person sipping with eyes closed is not present"
+   ]
+  },
+  {
+   "project": "show-keyboard-v4",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "close-up side view",
+    "camera": "slow push-in",
+    "image_prompt": "close-up side view of keyboard frame, brass-finish texture catching soft rim light, finger hovers over key, the product",
+    "video_prompt": "finger lowers onto key, keypress activates, brass texture glints under cool rim light, slow push-in, No people and no hands enter the frame",
+    "on_screen_text": "青轴之光",
+    "must_show": "keyboard frame side view with brass texture and soft rim light, finger hovering over key"
+   },
+   "storyboard": {
+    "style": "dark palette, cool rim light, keycap macro, crisp texture",
+    "product": "深灰色铝合金机械键盘 \"青\""
+   },
+   "issues": [
+    "the product in image 1 is a different product from image 2: other main colours (gold frame vs silver frame), presence of cable in image 2 but not in image 1"
+   ]
+  },
+  {
+   "project": "show-keyboard-v5",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "macro of mechanical keyboard keys being pressed down, deep gray aluminum body, cool rim light along edges, keys gradually lighting from top row down, shallow depth of field",
+    "video_prompt": "light sweeping across the keys row by row, subtle handheld float, No people and no hands enter the frame",
+    "on_screen_text": "青轴手感",
+    "must_show": "keyboard keys with finger pressing down, deep gray aluminum body, cool rim light"
+   },
+   "storyboard": {
+    "style": "clean, tech-forward, dark, cool rim light, keycap backlight gradually lighting row by row",
+    "product": "deep gray aluminum mechanical keyboard, labeled \"青\""
+   },
+   "issues": [
+    "a person, a hand or fingers appear although this shot does not call for them",
+    "the product in image 1 is a different product from image 2: different brand lettering"
+   ]
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "wide",
+    "camera": "slow push-in",
+    "image_prompt": "hero shot of NVIDIA DGX Spark standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around unit, clean studio lighting, subtle glowing accents",
+    "video_prompt": "slow push-in toward the unit, data streams flow toward camera, No people and no hands enter the frame",
+    "on_screen_text": "AI实验室",
+    "must_show": "vertical hero shot with illuminated white NVIDIA logo and data streams on dark background"
+   },
+   "storyboard": {
+    "style": "clean studio lighting, cool-toned rim light, subtle data-flow texture, premium high-tech mood",
+    "product": "The product is a compact rectangular desktop unit. Its top surface is a smooth, metallic bronze - colored panel with a reflective finish. Two side panels have a textured, granular surface in the same bronze tone; on one of these textured sides, the \"NVIDIA\" text and the NVIDIA eye logo are located near the lower part of that panel. Rectangular cutouts are present on the textured and adjacent smooth panels, defining its industrial form."
+   },
+   "issues": [
+    "required content missing: vertical hero shot not present, illuminated white NVIDIA logo not present, data streams not present",
+    "product in image 1 is a different product from image 2: other main colours (blue vs gold)"
+   ]
+  },
+  {
+   "project": "show-cream-wrong-product",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "Macro of the product half buried in crushed ice, condensation beading on the metal, backlit mist",
+    "video_prompt": "Slow push-in with a subtle, breath-like handheld float. Droplets slide down the metal, mist drifts. The product stays still. No people and no hands enter the frame.",
+    "on_screen_text": "致敬",
+    "must_show": "the can upright in ice with its label readable"
+   },
+   "storyboard": {
+    "style": "cool backlit morning light, pastel teal and coral, shallow depth of field, fine film grain, clean commercial look",
+    "product": "a slim matte-silver aluminium can with a teal band whose label reads \"冷\" in bold white brush calligraphy"
+   },
+   "issues": [
+    "the can is not upright, missing required upright pose in ice"
+   ]
+  },
+  {
+   "project": "show-keyboard-v3",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "close-up of deep gray aluminum keyboard, finger presses spacebar, macro on a few keycaps and switches, cool rim light along edges, no people and no hands enter the frame",
+    "video_prompt": "light sweeping across the keys row by row, No people and no hands enter the frame",
+    "on_screen_text": "触感",
+    "must_show": "deep gray aluminum keyboard with finger pressing spacebar, cool rim light visible"
+   },
+   "storyboard": {
+    "style": "利落、有科技感。暗调、冷色轮廓光、按键微距、键帽背光逐排亮起",
+    "product": "深灰色铝合金机械键盘，标签 \"青\""
+   },
+   "issues": [
+    "required content missing: finger pressing spacebar not visible"
+   ]
+  },
+  {
+   "project": "show-cream-wrong-product",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "static",
+    "image_prompt": "Fingertip gently smoothing over the cream surface, warm golden light catching the texture, shallow depth of field",
+    "video_prompt": "Static. Fingertip glides smoothly across the cream, leaving a faint trail. Warm golden light shifts slowly. No people and no hands enter the frame beyond the initial touch.",
+    "on_screen_text": "白月光",
+    "must_show": "fingertip touching cream with golden light on surface"
+   },
+   "storyboard": {
+    "style": "cool backlit morning light, pastel teal and coral, shallow depth of field, fine film grain, clean commercial look",
+    "product": "a slim matte-silver aluminium can with a teal band whose label reads \"冷\" in bold white brush calligraphy"
+   },
+   "issues": [
+    "product in image 1 is different container type from image 2 (image 2 is can, image 1 has no can)",
+    "hand/fingers appear in image 1 when reference image does not call for them",
+    "required content 'golden light on surface' likely missing (cream has light but not specified golden)"
+   ]
+  }
+ ],
+ "media": [
+  {
+   "project": "chenlu-commute-15s-retry",
+   "ratio": "9:16",
+   "brandText": "晨露",
+   "productPhoto": false,
+   "product": "silver can, light blue label \"晨露\"",
+   "style": "fresh diffused light, pale cool tones, smooth texture, urban commute mood",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "the product being lifted from a messenger bag, fresh morning light falling across the surface, quiet urban morning",
+    "video_prompt": "the product lifts clear of the bag, slow push-in, no people and no hands enter the frame",
+    "on_screen_text": "清爽一口",
+    "must_show": "the product emerging from a messenger bag"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "chenlu-sparkling-20260928",
+   "ratio": "9:16",
+   "brandText": "晨露",
+   "productPhoto": false,
+   "product": "silver can, light blue label \"晨露\"",
+   "style": "cool tones with pops of blue, soft diffused light, condensation texture, urban commute mood",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "close-up of condensation beads forming on the product, light blue rim light highlighting the beads, shallow depth of field",
+    "video_prompt": "light sweeping across the condensation beads row by row, subtle handheld float, No people and no hands enter the frame",
+    "on_screen_text": "清爽一口",
+    "must_show": "condensation beads on the cold can surface"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "ratio": "16:9",
+   "brandText": "NVIDIA",
+   "productPhoto": true,
+   "product": "The product is a compact rectangular desktop unit. Its top surface is a smooth, metallic bronze - colored panel with a reflective finish. Two side panels have a textured, granular surface in the same bronze tone; on one of these textured sides, the \"NVIDIA\" text and the NVIDIA eye logo are located near the lower part of that panel. Rectangular cutouts are present on the textured and adjacent smooth panels, defining its industrial form.",
+   "style": "clean studio lighting, cool-toned rim light, subtle data-flow texture, premium high-tech mood",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "close-up of the NVIDIA DGX Spark's textured bronze side panel showing the white NVIDIA eye logo and text, cool blue indicator light active, shallow depth of field, studio lighting",
+    "video_prompt": "slow ten-degree orbit around the textured panel, light sweep across the surface, No people and no hands enter the frame",
+    "on_screen_text": "桌上千亿",
+    "must_show": "NVIDIA logo and blue indicator light on textured bronze panel, shallow focus"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "dgx-spark-night",
+   "ratio": "16:9",
+   "brandText": "NVIDIA",
+   "productPhoto": true,
+   "product": "It is a palm - sized rectangular box with a square top face. The top face is smooth and reflective in a metallic bronze - gold hue, while the front and side faces feature a coarse, granular matte texture. On the front textured face, the vertical text \"NVIDIA\" is displayed alongside the NVIDIA logo (a stylized eye icon) above the text, and there are two vertical rectangular openings on the right - hand side and front faces of the product.",
+   "style": "late-night, cool rim light, matte gold texture, focused, cinematic",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "close-up of coarse granular matte gold surface, fingertip touching the texture, the product",
+    "video_prompt": "fingertip glides across the textured surface row by row, No people and no hands enter the frame",
+    "on_screen_text": "指尖触感",
+    "must_show": "vertical NVIDIA text and logo on coarse matte gold surface, fingertip in contact"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "dgx-spark-photo",
+   "ratio": "16:9",
+   "brandText": "NVIDIA",
+   "productPhoto": false,
+   "product": "flat gold metal body, front metal foam texture, \"NVIDIA\"",
+   "style": "professional cool rim light on cool-toned metal, pale palette, smooth texture, cutting-edge minimalism",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow ten-degree orbit",
+    "image_prompt": "product at shallow depth of field, keyboard and mouse on matte surface, hands typing from low side angle, wrists in frame, cool accent light",
+    "video_prompt": "light sweeping across keys row by row, slow orbit, No people and no hands enter the frame",
+    "on_screen_text": "随心生成",
+    "must_show": "keyboard and mouse on matte surface, hands typing from low angle"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "ratio": "16:9",
+   "brandText": "NVIDIA",
+   "productPhoto": true,
+   "product": "The product is a rectangular prism with a longer length than width and moderate height. Its main body has a metallic light gold finish; the central face features a rough, honeycomb - textured gray surface, while the left and right side panels are smooth metallic with a reflective finish, each containing a rectangular vent, and the left side panel displays the \"NVIDIA\" text alongside the green NVIDIA logo.",
+   "style": "dark studio, cool rim light, sleek texture, professional mood",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "close-up of the product on a dark desk, honeycomb texture on top face visible, cool rim light along edges",
+    "video_prompt": "slow push-in across the top surface, light sweep moving row by row, No people and no hands enter the frame",
+    "on_screen_text": "桌上即用",
+    "must_show": "honeycomb texture on product top face, dark desk surface, cool rim light"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "dgx-spark-vs3",
+   "ratio": "16:9",
+   "brandText": "DGX",
+   "productPhoto": true,
+   "product": "The product is a compact rectangular desktop unit. Its top surface is a smooth, metallic bronze - colored panel with a reflective finish. Two side panels have a textured, granular surface in the same bronze tone; on one of these textured sides, the \"NVIDIA\" text and the NVIDIA eye logo are located near the lower part of that panel. Rectangular cutouts are present on the textured and adjacent smooth panels, defining its industrial form.",
+   "style": "dark studio, cool rim light, bronze texture, neon blue accent, professional mood",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "the product side panel textured granular surface, NVIDIA logo and eye visible, cool neon blue rim light sweeping across, dark studio background",
+    "video_prompt": "slow ten-degree orbit around the side panel, light sweep across texture row by row, No people and no hands enter the frame",
+    "on_screen_text": "质感蓝光",
+    "must_show": "NVIDIA DGX Spark side panel with textured surface, NVIDIA logo and eye, cool blue rim light"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "dgx-spark-vs3-ltx",
+   "ratio": "16:9",
+   "brandText": "DGX",
+   "productPhoto": true,
+   "product": "The product is a compact rectangular desktop unit. Its top surface is a smooth, metallic bronze - colored panel with a reflective finish. Two side panels have a textured, granular surface in the same bronze tone; on one of these textured sides, the \"NVIDIA\" text and the NVIDIA eye logo are located near the lower part of that panel. Rectangular cutouts are present on the textured and adjacent smooth panels, defining its industrial form.",
+   "style": "dark studio, cool rim light, bronze texture, neon blue accent, professional mood",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow push-in",
+    "image_prompt": "the product top metallic bronze panel with reflective finish, side ventilation grooves visible, cool blue light tracing along grooves, dark studio background",
+    "video_prompt": "slow push-in along ventilation grooves, light trace travels across channels, No people and no hands enter the frame",
+    "on_screen_text": "侧面风道",
+    "must_show": "NVIDIA DGX Spark top panel with reflective bronze surface, side ventilation grooves, blue light accent"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "jev-smoke",
+   "ratio": "16:9",
+   "brandText": "砾",
+   "productPhoto": false,
+   "product": "a slim matte-silver aluminium can with a teal band whose label reads \"砾\" in bold white brush calligraphy",
+   "style": "warm minimal, soft morning light, shallow depth of field, fine film grain, clean commercial look",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "Macro of coffee beans pouring into a ear-shaped pour-over filter, soft morning light spilling across the beans, shallow depth of field",
+    "video_prompt": "Slow push-in with a subtle, breath-like handheld float. Beans settle into the filter. The product stays still. No people and no hands enter the frame.",
+    "on_screen_text": "砾",
+    "must_show": "coffee beans entering an ear-shaped filter with morning light"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "leng-soda",
+   "ratio": "9:16",
+   "brandText": "冷",
+   "productPhoto": false,
+   "product": "silver aluminium can with a minimal white label that reads \"冷\" in bold sans-serif, condensation beads on surface",
+   "style": "soft morning light, pastel teal and coral, 50mm, shallow depth of field, clean commercial look",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "extreme close-up",
+    "camera": "slow push-in",
+    "image_prompt": "extreme close-up of condensation beads forming on a chilled soda can, water droplets beading up, soft morning light, pastel teal and coral tones, 50mm shallow depth of field, clean commercial look",
+    "video_prompt": "slow push-in towards the can, droplets forming and sliding slightly",
+    "on_screen_text": "清爽一刻",
+    "must_show": "the can with condensation beads and readable \"冷\" label"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "leng-soda-v2",
+   "ratio": "9:16",
+   "brandText": "冷",
+   "productPhoto": false,
+   "product": "a slim matte-silver aluminium can with a teal band whose label reads \"冷\" in bold white brush calligraphy",
+   "style": "cool backlit morning light, pastel teal and coral, shallow depth of field, fine film grain, clean commercial look",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "Macro of the product half buried in crushed ice, condensation beading on the metal, backlit mist",
+    "video_prompt": "Slow push-in with a subtle, breath-like handheld float. Droplets slide down the metal, mist drifts. The product stays still. No people and no hands enter the frame.",
+    "on_screen_text": "清爽",
+    "must_show": "the can upright in ice with its label readable"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "morning-drop-soda",
+   "ratio": "9:16",
+   "brandText": "晨露",
+   "productPhoto": false,
+   "product": "silver can with pale blue label \"晨露\"",
+   "style": "cool-toned studio, soft diffused rim light, subtle carbonation sparkle, clean palette of silver and pale blue, crisp texture",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "wide",
+    "camera": "slow push-in",
+    "image_prompt": "person drinking from the product, urban commuting backdrop, cool-toned lighting",
+    "video_prompt": "person lifts the product to mouth and drinks, subtle body shift, cool rim light stays steady",
+    "on_screen_text": "清爽无糖",
+    "must_show": "person drinking from the product, urban backdrop, cool lighting"
+   },
+   "lastShot": true
+  },
+  {
+   "project": "show-coffee",
+   "ratio": "16:9",
+   "brandText": "醒",
+   "productPhoto": false,
+   "product": "挂耳咖啡, paper packet, beige and brown, label \"醒\"",
+   "style": "warm morning light, soft focus, dark wood texture, steam vapor, cinematic restraint",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow push-in",
+    "image_prompt": "coffee grounds swirling in hot water with steam, morning light, the product",
+    "video_prompt": "steam rising slowly, the packet stays still on the surface, No people and no hands enter the frame",
+    "on_screen_text": "晨光",
+    "must_show": "coffee grounds in hot water, packet on dark wood surface"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "show-coffee-portrait",
+   "ratio": "9:16",
+   "brandText": "醒",
+   "productPhoto": false,
+   "product": "a single hanging ear coffee packet with the label \"醒\" in bold brush calligraphy, steaming lightly when opened, placed on a dark wood table",
+   "style": "cinematic, warm, restrained; morning light, steam, slow pour, dark wood table",
+   "shot": {
+    "shot": 3,
+    "seconds": 5,
+    "framing": "medium",
+    "camera": "slow pull-back",
+    "image_prompt": "Sipping from the cup, dark liquid swirling, steam spiraling up, dark wood table, the hanging ear packet visible beside the cup",
+    "video_prompt": "Slow pull-back with gentle drift. Steam spirals up from the cup. The liquid stays still. No people and no hands enter the frame.",
+    "on_screen_text": "唤醒",
+    "must_show": "cup with dark coffee, steam rising, packet beside cup"
+   },
+   "lastShot": true
+  },
+  {
+   "project": "show-coffee-v2",
+   "ratio": "16:9",
+   "brandText": "醒",
+   "productPhoto": false,
+   "product": "挂耳咖啡, 纸包装, 深咖啡色与牛皮纸包装, \"醒\"",
+   "style": "cinematic, warm, restrained; morning light, steam, slow pour, dark wood table",
+   "shot": {
+    "shot": 1,
+    "seconds": 5,
+    "framing": "macro",
+    "camera": "slow pull-back",
+    "image_prompt": "close-up of a hanging coffee bag unfurling, dark water in a cup, morning light, dark wood table, the product",
+    "video_prompt": "slow pull-back with a subtle breath-like handheld float, no people and no hands enter the frame",
+    "on_screen_text": "黑色",
+    "must_show": "coffee bag, dark water, cup"
+   },
+   "lastShot": false
+  },
+  {
+   "project": "show-cream",
+   "ratio": "9:16",
+   "brandText": "润",
+   "productPhoto": false,
+   "product": "磨砂白色圆罐，金色盖子，罐身有金色细体字‘润’的保湿面霜",
+   "style": "premium quiet cinematic, milky white and warm gold, soft diffusion, macro water ripples and frost texture",
+   "shot": {
+    "shot": 2,
+    "seconds": 5,
+    "framing": "close-up",
+    "camera": "slow push-in with gentle float",
+    "image_prompt": "fingertip gliding over face, skin appearing plumper, the product visible on vanity nearby",
+    "video_prompt": "slow push-in with gentle float, fingertip gliding, skin smoothing, no people and no hands enter the frame",
+    "on_screen_text": "顺滑",
+    "must_show": "fingertip gliding over skin, skin looking plumper"
+   },
+   "lastShot": false
+  }
+ ],
+ "cut": [
+  {
+   "project": "chenlu-commute-15s-retry",
+   "brief": {
+    "title": "晨露",
+    "brandText": "晨露",
+    "message": "清爽无糖",
+    "ratio": "9:16",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of silver can being lifted from a messenger bag",
+     "vo": "晨光洒在早高峰里",
+     "text": "清爽一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up pouring sparkling water into a glass, bubbles rising",
+     "vo": "气泡轻舞，入口即化",
+     "text": "无糖气泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "commuter taking a sip, looking refreshed on a subway platform",
+     "vo": "通勤路上，清爽相伴",
+     "text": "清爽无糖"
+    }
+   ],
+   "voSeconds": [
+    1.6,
+    2.4,
+    2.0
+   ]
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "brief": {
+    "title": "DGX Spark",
+    "brandText": "NVIDIA",
+    "message": "千亿参数大模型，放上你的桌面",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of sleek black desktop AI supercomputer on reflective surface, top bronze panel glowing subtly",
+     "vo": "台上放置，千亿参数随手可得",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "camera pulls back, showing data-flow visualizations swirling around the unit, subtle blue indicators active",
+     "vo": "强大算力，尽在指尖掌控",
+     "text": "指尖算力"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hero shot of the unit standing vertically against dark background, white NVIDIA logo illuminated, data streams flowing around",
+     "vo": "桌面即AI实验室，创意无限可能",
+     "text": "AI实验室"
+    }
+   ],
+   "voSeconds": [
+    3.9,
+    3.4,
+    3.85
+   ]
+  },
+  {
+   "project": "dgx-spark-photo",
+   "brief": {
+    "title": "NVIDIA DGX Spark",
+    "brandText": "NVIDIA",
+    "message": "千亿参数大模型，放上你的桌面",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "sleek desktop AI supercomputer, front view, foam texture detail",
+     "vo": "桌上千亿参数，指尖即刻启动",
+     "text": "桌上千亿"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up keyboard and mouse, hands typing on matte surface",
+     "vo": "随心所欲，生成千万词元",
+     "text": "随心生成"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "unit standing vertically, NVIDIA logo illuminated, desktop workspace",
+     "vo": "性能洗牌，随时随地",
+     "text": "随时随地"
+    }
+   ],
+   "voSeconds": [
+    2.8,
+    2.76,
+    1.89
+   ]
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "brief": {
+    "title": "NVIDIA DGX Spark",
+    "brandText": "NVIDIA",
+    "message": "千亿参数大模型，放上你的桌面",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Close-up of a sleek black rectangular prism on a dark desk, honeycomb texture visible on top face",
+     "vo": "千亿参数，桌上即用",
+     "text": "桌上即用"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Side panel reveals NVIDIA logo and rectangular vent, light reflects off smooth metallic surface",
+     "vo": "本地推理，无云延迟",
+     "text": "本地推理"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Product centered, glowing NVIDIA logo, camera pulls back to show compact desk setup",
+     "vo": "千亿模型，随手可得",
+     "text": "千亿模型"
+    }
+   ],
+   "voSeconds": [
+    2.24,
+    2.13,
+    2.21
+   ]
+  },
+  {
+   "project": "dgx-spark-vs3",
+   "brief": {
+    "title": "DGX Spark",
+    "brandText": "DGX",
+    "message": "千亿参数大模型，放上你的桌面",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "voSeconds": [
+    2.8,
+    2.83,
+    3.33
+   ]
+  },
+  {
+   "project": "dgx-spark-vs3-ltx",
+   "brief": {
+    "title": "DGX Spark",
+    "brandText": "DGX",
+    "message": "千亿参数大模型，放上你的桌面",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "compact desktop unit side panel texture close-up, NVIDIA logo and eye visible",
+     "vo": "暗纹质感，蓝光初现",
+     "text": "质感蓝光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "side ventilation grooves with light tracing along channels",
+     "vo": "侧面风道，气流贯通",
+     "text": "侧面风道"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full desktop unit view, hands typing on keyboard, neon blue logo glows",
+     "vo": "指落键帽，青轴一声清响",
+     "text": "桌面在望"
+    }
+   ],
+   "voSeconds": [
+    2.8,
+    2.83,
+    3.33
+   ]
+  },
+  {
+   "project": "leng-soda-v2",
+   "brief": {
+    "title": "冷",
+    "brandText": "冷",
+    "message": "夏日清爽",
+    "ratio": "9:16",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "Macro close-up of condensation forming on a chilled soda can surface, ice crystals shimmering in cool blue reverse light",
+     "vo": "夏日炎炎，肌肤已燥热难耐",
+     "text": "清爽"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "Pouring cold无糖气泡水 into a glass, bubbles rising vigorously in reverse light",
+     "vo": "无糖气泡水，零负担的清爽",
+     "text": "无糖"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "Person taking a sip, moment of refreshment captured in slow motion",
+     "vo": "夏日清爽，一口解暑",
+     "text": "冷"
+    }
+   ],
+   "voSeconds": [
+    3.42,
+    3.55,
+    2.85
+   ]
+  },
+  {
+   "project": "morning-drop-soda",
+   "brief": {
+    "title": "晨露无糖",
+    "brandText": "晨露",
+    "message": "清爽无糖",
+    "ratio": "9:16",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of a hand opening a silver soda can",
+     "vo": "手打开冰凉易拉罐",
+     "text": "开罐"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifts can, pours sparkling water into a glass over ice",
+     "vo": "冰镇气泡清爽一刻",
+     "text": "气泡清爽"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "person drinks, looks refreshed, urban commuting backdrop",
+     "vo": "城市通勤清爽无糖",
+     "text": "清爽无糖"
+    }
+   ],
+   "voSeconds": [
+    1.52,
+    1.75,
+    2.08
+   ]
+  },
+  {
+   "project": "show-coffee",
+   "brief": {
+    "title": "醒咖啡",
+    "brandText": "醒",
+    "message": "唤醒清晨，从一杯咖啡开始",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee grounds swirling in hot water, steam rising, morning light",
+     "vo": "清晨光落，咖啡香起",
+     "text": "晨光"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hand lifting a steaming挂耳咖啡袋, placing it on a dark wood mug",
+     "vo": "一袋挂耳，随手冲泡",
+     "text": "随泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "sipping dark coffee, eyes closing in satisfaction, morning city view outside",
+     "vo": "温热入喉，清晨唤醒",
+     "text": "唤醒"
+    }
+   ],
+   "voSeconds": [
+    2.47,
+    1.98,
+    1.93
+   ]
+  },
+  {
+   "project": "show-coffee-portrait",
+   "brief": {
+    "title": "醒",
+    "brandText": "醒",
+    "message": "清晨一口，唤醒一天",
+    "ratio": "9:16",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "steam rising from a pour-over, morning light catching the rim",
+     "vo": "晨光里，咖啡香已醒",
+     "text": "一口"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hands lifting a hanging ear coffee, tearing the pack, hot water poured in",
+     "vo": "包开香满溢，热气蒸腾",
+     "text": "热泡"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "sipping from the cup, dark liquid swirling, steam spiraling up",
+     "vo": "一口入喉，回味悠长",
+     "text": "唤醒"
+    }
+   ],
+   "voSeconds": [
+    2.73,
+    3.1,
+    2.83
+   ]
+  },
+  {
+   "project": "show-coffee-v2",
+   "brief": {
+    "title": "醒咖啡",
+    "brandText": "醒",
+    "message": "清晨的仪式感",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "coffee bag unfurling, dark water stream pouring into cup, steam rising",
+     "vo": "黑色衬线，牛皮纸质感",
+     "text": "黑色"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "hanging coffee bag steeping, dark liquid swirling, first sip taken",
+     "vo": "清晨的第一口，温热流转",
+     "text": "第一口"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "empty cup against morning light, steam curling up, brand logo visible",
+     "vo": "仪式感，唤醒 mornings",
+     "text": "唤醒"
+    }
+   ],
+   "voSeconds": [
+    3.0,
+    3.42,
+    2.3
+   ]
+  },
+  {
+   "project": "show-cream",
+   "brief": {
+    "title": "国货保湿面霜",
+    "brandText": "润",
+    "message": "质感高级安静",
+    "ratio": "9:16",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "white cream extruded from jar, slow spread across skin",
+     "vo": "细腻入手，瞬间融合",
+     "text": "细腻"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "close-up fingertip gliding over face, skin appears plumper",
+     "vo": "肌肤如云般顺滑不黏腻",
+     "text": "顺滑"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "jar on vanity, gold letter '润' catching warm light",
+     "vo": "高级的静谧感，肌肤锁住水光",
+     "text": "高级"
+    }
+   ],
+   "voSeconds": [
+    2.5,
+    2.72,
+    3.1
+   ]
+  },
+  {
+   "project": "show-cream-wrong-product",
+   "brief": {
+    "title": "国潮保湿",
+    "brandText": "润",
+    "message": "质感致敬国货",
+    "ratio": "9:16",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "frost-textured cream surface, soft macro ripples, warm gold glint",
+     "vo": "丝滑焕新，质感致敬",
+     "text": "致敬"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "fingertip gently smoothing over the cream, warm golden light catching",
+     "vo": "指尖点染，柔光绽放",
+     "text": "白月光"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "cream dispensed onto palm, milky white spread, golden hour glow",
+     "vo": "温柔上色，如春风拂面",
+     "text": "春风"
+    }
+   ],
+   "voSeconds": [
+    2.83,
+    2.9,
+    3.1
+   ]
+  },
+  {
+   "project": "show-keyboard",
+   "brief": {
+    "title": "青轴之光",
+    "brandText": "青",
+    "message": "精准的青轴手感",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "keycap backlight illuminated from the side, deep grey aluminum body, macro view of switch housing",
+     "vo": "沉静的深灰配色，光影交错",
+     "text": "深灰"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "blue mechanical switch actuator, stem moving down, keycap pressing, tactile feedback visible",
+     "vo": "青轴精准回弹，指尖即时响应",
+     "text": "青轴"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "full keyboard view, keys lighting up row by row, deep grey aluminum under soft contour lighting",
+     "vo": "逐排亮起，尽享青轴之光",
+     "text": "青轴之光"
+    }
+   ],
+   "voSeconds": [
+    2.92,
+    3.62,
+    2.92
+   ]
+  },
+  {
+   "project": "show-keyboard-v1",
+   "brief": {
+    "title": "青轴光年",
+    "brandText": "青",
+    "message": "精准触发，流畅如风",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of keyboard keys, deep grey aluminum body, matte surface backlit from below",
+     "vo": "键盘敲击，指尖起舞",
+     "text": "青轴"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "keycap backlight cycling through rows, tactile bump visible in slow motion",
+     "vo": "青轴触发，实感回响指尖",
+     "text": "触发"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "hands typing fluidly on the keyboard, cursor moving smoothly across screen",
+     "vo": "流畅如风，指尖连接创意",
+     "text": "精准"
+    }
+   ],
+   "voSeconds": [
+    2.88,
+    3.42,
+    3.52
+   ]
+  },
+  {
+   "project": "show-keyboard-v3",
+   "brief": {
+    "title": "青轴之光",
+    "brandText": "青",
+    "message": "精准触感，极致科技",
+    "ratio": "16:9",
+    "durationSeconds": 15
+   },
+   "beats": [
+    {
+     "beat": 1,
+     "job": "hook",
+     "see": "close-up of gray aluminum keyboard, finger presses spacebar",
+     "vo": "指尖落下，青轴一声清响",
+     "text": "触感"
+    },
+    {
+     "beat": 2,
+     "job": "proof",
+     "see": "mid-shot of hands typing rapidly on keyboard, keys glowing row by row",
+     "vo": "指下落点，青轴回弹清脆",
+     "text": "回弹"
+    },
+    {
+     "beat": 3,
+     "job": "payoff",
+     "see": "extreme close-up of a single key illuminated, finger presses down",
+     "vo": "键帽背光逐排亮起，科技绽放",
+     "text": "科技"
+    }
+   ],
+   "voSeconds": [
+    3.45,
+    3.52,
+    4.08
+   ]
+  }
+ ],
+ "scheduler": [
+  {
+   "project": "show-keyboard-v5",
+   "resident": "Qwen-Image",
+   "availableGb": 50.3,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "dgx-spark-vs3",
+   "resident": "Wan2.2",
+   "availableGb": 28.7,
+   "next": "ACE-Step",
+   "nextPhase": "music"
+  },
+  {
+   "project": "show-cream",
+   "resident": "Wan2.2",
+   "availableGb": 26.0,
+   "next": "ACE-Step",
+   "nextPhase": "music"
+  },
+  {
+   "project": "morning-drop-soda",
+   "resident": "Qwen-Image",
+   "availableGb": 54.8,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "show-soda",
+   "resident": "Qwen-Image",
+   "availableGb": 54.2,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "show-keyboard-v4",
+   "resident": "Qwen-Image-Edit",
+   "availableGb": 19.8,
+   "next": "Wan2.2",
+   "nextPhase": "clips"
+  },
+  {
+   "project": "chenlu-commute-15s-retry",
+   "resident": "Wan2.2",
+   "availableGb": 27.8,
+   "next": "ACE-Step",
+   "nextPhase": "music"
+  },
+  {
+   "project": "show-coffee",
+   "resident": "Qwen-Image-Edit",
+   "availableGb": 25.4,
+   "next": "Wan2.2",
+   "nextPhase": "clips"
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "resident": "Qwen-Image-Edit",
+   "availableGb": 55.9,
+   "next": "LTX-2.5 Fast",
+   "nextPhase": "clips"
+  },
+  {
+   "project": "show-soda-fast2",
+   "resident": "Wan2.2",
+   "availableGb": 24.0,
+   "next": "ACE-Step",
+   "nextPhase": "music"
+  },
+  {
+   "project": "chenlu-commute-15s-retry",
+   "resident": "Qwen-Image",
+   "availableGb": 28.3,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "show-keyboard-v1",
+   "resident": "Qwen-Image",
+   "availableGb": 52.0,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "dgx-spark-vs3-ltx",
+   "resident": "Qwen-Image",
+   "availableGb": 56.8,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "dgx-spark-photo",
+   "resident": "Wan2.2",
+   "availableGb": 27.7,
+   "next": "ACE-Step",
+   "nextPhase": "music"
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "resident": "Qwen-Image",
+   "availableGb": 55.9,
+   "next": "Qwen-Image-Edit",
+   "nextPhase": "frames"
+  },
+  {
+   "project": "show-keyboard-v5",
+   "resident": "Qwen-Image-Edit",
+   "availableGb": 25.1,
+   "next": "Wan2.2",
+   "nextPhase": "clips"
+  }
+ ],
+ "schedulerFixed": [
+  {
+   "kind": "cgroup",
+   "question": "docker stats 显示 vLLM 容器只用了 4 GB，统一内存 121.7 GB。还能再起一个 40 GB 的模型吗？请按实际可用内存判断。",
+   "availableGb": 9.0
+  },
+  {
+   "kind": "step37",
+   "question": "想把 Step-3.7-Flash（198B，IQ4_XS 约 116 GB）和现有的 Nemotron、Step3-VL、ComfyUI 一起放在本机跑。",
+   "availableGb": 47.6
+  },
+  {
+   "kind": "parallel",
+   "question": "一支片子正在生成视频，能不能同时再跑一轮评测或者另一支片子？",
+   "availableGb": 26.5
+  }
+ ],
+ "film": [
+  {
+   "project": "chenlu-commute-15s",
+   "message": "用 cineloom-ad-film 给「晨露」无糖气泡水做一条 15 秒竖屏广告。目标人群是通勤白领，核心卖点是清爽无糖。产品是银色易拉罐、浅蓝标签，风格清新，结尾写“清爽一下，再出发”。",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "dgx-spark-ad",
+   "message": "15秒16:9广告片，宣传NVIDIA DGX Spark桌面AI超级计算机。产品外观为香槟金色金属小方盒，正面配有细密金属网孔，置于开发者书桌上。目标受众为AI开发者和研究者。核心信息：千亿参数大模型，放上你的桌面。",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "dgx-spark-ltx",
+   "message": "为 NVIDIA DGX Spark 桌面AI超级计算机做一支15秒16:9广告片，受众是AI开发者和研究者，核心信息：千亿参数大模型，放上你的桌面",
+   "photo": "/data/uploads/dgx-spark-ltx.png",
+   "planOnly": false
+  },
+  {
+   "project": "dgx-spark-night",
+   "message": "深夜，开发者的桌面上放着一台巴掌大小的金色主机。他敲下回车，屏幕瞬间亮起：千亿参数大模型在本地流畅运行。镜头拉远，桌面化作一座数据中心。字幕：‘DGX Spark，把 AI 超算放上你的桌面。’",
+   "photo": "/data/uploads/dgx-spark-night.png",
+   "planOnly": false
+  },
+  {
+   "project": "dgx-spark-photo",
+   "message": "NVIDIA DGX Spark 15秒16:9广告片，产品外观扁平金色金属机身、正面金属泡沫纹理、NVIDIA标志，受众是AI开发者和研究者，核心信息：千亿参数大模型，放上你的桌面",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "dgx-spark-photo2",
+   "message": "NVIDIA DGX Spark 15秒16:9广告片，产品实拍照片，受众是AI开发者和研究者，核心信息：千亿参数大模型，放上你的桌面",
+   "photo": "/data/uploads/dgx-spark-photo2.png",
+   "planOnly": false
+  },
+  {
+   "project": "jev-smoke",
+   "message": "给一款叫“砾”的挂耳咖啡做一条 10 秒横版广告，面向早起通勤的上班族，温暖克制",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "leng-soda",
+   "message": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版短视频广告，面向大学生，夏天，清爽",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "leng-soda-v2",
+   "message": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版短视频广告，面向大学生，夏天，清爽。要电影质感：微距、冰、气泡、逆光，节奏克制。",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "morning-drop-soda",
+   "message": "给晨露无糖气泡水做一条15秒竖屏广告。产品是银色易拉罐、浅蓝标签，风格清新。核心卖点是清爽无糖。目标人群是通勤白领。结尾写‘清爽一下，再出发’.",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "show-coffee",
+   "message": "给一款叫“醒”的挂耳咖啡做一条 15 秒横版广告，面向清晨通勤的上班族。电影质感：晨光、蒸汽、慢倒的热水、深色木桌，温暖克制。产品是牛皮纸色的挂耳咖啡包装盒，正面有黑色衬线字“醒”。",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "show-cream",
+   "message": "给国货保湿面霜“润”做一条 15 秒竖版广告，面向 25 到 35 岁女性，质感高级、安静。电影质感：乳白与暖金、柔光、水波与霜体纹理的微距。产品是磨砂白色圆罐，金色盖子，罐身有金色细体字“润”。",
+   "photo": null,
+   "planOnly": false
+  },
+  {
+   "project": "show-keyboard",
+   "message": "给机械键盘“青”做一条 15 秒横版广告，面向程序员，利落、有科技感。电影质感：暗调、冷色轮廓光、按键微距、键帽背光逐排亮起。产品是深灰色铝合金机械键盘，空格键上方有一枚小小的青色“青”字铭牌。 先给我看脚本和分镜，我确认了再生成视频。",
+   "photo": null,
+   "planOnly": true
+  },
+  {
+   "project": "show-soda",
+   "message": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版短视频广告，面向大学生，夏天。电影质感：微距、冰、气泡、逆光，节奏克制。产品是银色铝罐，青绿色标签上有白色书法字“冷”。 先给我看脚本和分镜，我确认了再生成视频。",
+   "photo": null,
+   "planOnly": true
+  },
+  {
+   "project": "eval-brief-2",
+   "message": "一款叫“砾”的挂耳咖啡，10 秒横版广告，面向早起通勤的上班族，温暖克制 先给我看脚本和分镜，我确认了再生成视频。",
+   "photo": null,
+   "planOnly": true
+  },
+  {
+   "project": "eval-brief-3",
+   "message": "国货面霜“雾屿”的 15 秒竖版广告，面向 25-35 岁女性，强调保湿，质感高级 先给我看脚本和分镜，我确认了再生成视频。",
+   "photo": null,
+   "planOnly": true
+  }
+ ],
+ "breakdown": [
+  {
+   "project": "chenlu-commute-15s-retry",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/chenlu-commute-15s-retry",
+   "shotCount": 4
+  },
+  {
+   "project": "dgx-spark-ad",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/dgx-spark-ad",
+   "shotCount": 4
+  },
+  {
+   "project": "leng-soda",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/leng-soda",
+   "shotCount": 4
+  },
+  {
+   "project": "morning-drop-soda",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/morning-drop-soda",
+   "shotCount": 4
+  },
+  {
+   "project": "show-coffee",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/show-coffee",
+   "shotCount": 4
+  },
+  {
+   "project": "show-cream",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/show-cream",
+   "shotCount": 4
+  }
+ ]
+}

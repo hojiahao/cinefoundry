@@ -111,7 +111,7 @@ export async function generateVideo(
   request: { prompt: string; negative?: string; output: string; resolution: string; ratio: string; durationSeconds: number; firstFrame?: string; freeAfter?: boolean; model?: VideoModel },
 ): Promise<MediaResult> {
   const started = Date.now()
-  const modelName = request.model ?? (process.env.CINELOOM_VIDEO_MODEL as VideoModel | undefined) ?? 'wan22-5b'
+  const modelName = request.model ?? (process.env.CINELOOM_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
   if (modelName === 'seedance') {
     // Opt-in cloud route. The first frame leaves the machine, so callers record this asset as cloud.
     const config = cloudVideoConfig()

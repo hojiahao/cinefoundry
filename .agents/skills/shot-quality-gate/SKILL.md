@@ -36,7 +36,7 @@ eyes that did not write the prompt, on a different model from the one that did.
    - the product cropped, floating, physically implausible, or a drink that should be clear in an odd colour.
 3. With several candidates for a shot, keep the passing one with the highest score.
 4. When every candidate is rejected, change the prompt according to the issue before regenerating - the same prompt mostly fails the same way:
-   - product mismatch -> restate that image 1 is the product and that its label must not change; simplify the scene around it
+   - product mismatch -> do not describe the product again: image 1 already carries its shape, colours, cap and lettering, and the fixed sentences already say its label must not change. Instead delete every word about the product's look (colour, cap, logo, label text) and every prop or effect around it, until the scene is the product, one surface and one light - shorter than before. Keep the framing and the must-show content
    - stray text -> remove whatever in the prompt reads like a caption, a number or a spec
    - unwanted hands or people -> reframe as a product-only composition
    - missing content -> move it to the front of the prompt

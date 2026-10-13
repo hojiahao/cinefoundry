@@ -19,5 +19,12 @@
     "expected_skill": "ad-script-writing",
     "expected_script": null,
     "ground_truth": "Every title and voiceover line refers to a drip bag or a cup, never to a can, bottle or opening a can; the see lines are in English only; the voiceover contains no English word and never describes the packaging's printing; the film ends on the product in a cup."
+  },
+  {
+    "id": "ad-script-writing-eval-004-computer-is-not-a-keyboard",
+    "question": "brief 已确认：NVIDIA DGX Spark 桌面 AI 超算，15 秒横版，受众是开发者，核心信息是“把 AI 超算放上你的桌面”，卖点依据：128GB 统一内存，可本地运行 2000 亿参数模型。用户原话的定版字幕：“DGX Spark，把 AI 超算放上你的桌面。” 写脚本。",
+    "expected_skill": "ad-script-writing",
+    "expected_script": null,
+    "ground_truth": "The agent writes three beats about what the computer runs and what that changes for a developer (pressing Enter and a model answering locally, a palm-sized box doing a data center's job, data staying on the desk), never about keys, switches, key travel or clicks (no 青轴/键帽/键程). Any figure it uses comes from the proof points (128GB, 2000 亿参数) and nothing stronger. No title or voiceover repeats the closing line; the last beat hands over to the end card that shows it verbatim."
   }
 ]

@@ -1,4 +1,4 @@
-import type { Industry, Shot } from './checks.js'
+import { LIT_LIKE_ELECTRONICS, type Industry, type Shot } from './checks.js'
 import { chatJson, JsonReplyError, type ModelEndpoint } from './llm.js'
 import { exec } from '../lib/exec.js'
 
@@ -71,7 +71,7 @@ ${productReference ? '- the product in image 1 is a different product from image
 ${/\b(hand|hands|person|people|student|man|woman|girl|boy|model|holding|drinking|sipping)\b/i.test(`${shot.must_show} ${shot.image_prompt}`) ? '' : '- a person, a hand or fingers appear although this shot does not call for them;\n'}- extra limbs, malformed hands or a distorted face;
 - the product is cropped, floating or physically implausible, or a drink that should be clear is an odd colour;
 - the product appears twice, as a ghost outline, a transparent overlay or a second copy;
-- the product carries a brand name, logo or wordmark that is not on image 2 (a small badge that matches image 2 is fine)${industry === 'electronics' ? ';\n- the lighting is rainbow or multicoloured (several hues at once): this product is lit in one or two colours' : ''}.
+- the product carries a brand name, logo or wordmark that is not on image 2 (a small badge that matches image 2 is fine)${LIT_LIKE_ELECTRONICS.includes(industry) ? ';\n- the lighting is rainbow or multicoloured (several hues at once): this product is lit in one or two colours' : ''}.
 Decide quickly; do not deliberate at length. Reply with JSON only: {"pass": boolean, "score": 0-100, "issues": ["short issue"]}. Pass requires score >= 80 and none of the reject conditions.`,
     },
     (verdict) => (typeof verdict.pass === 'boolean' && typeof verdict.score === 'number' ? [] : ['need boolean "pass" and numeric "score"']),

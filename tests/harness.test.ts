@@ -65,7 +65,7 @@ beforeAll(async () => {
       } else if (system.includes('intake producer')) { seen.push('brief'); reply = replies.brief }
       else if (system.includes('compliance reviewer')) { seen.push('review'); reply = replies.review }
       else if (system.includes('copywriter')) { seen.push('script'); reply = ++scriptCalls === 1 ? replies.badScript : replies.script }
-      else if (String(user).includes('quality gate rejected')) { seen.push('repair'); reply = { image_prompt: 'Product-only macro of the product on crushed ice' } }
+      else if (String(user).includes('quality gate rejected')) { seen.push('repair'); reply = { fixes: [{ issue: 'hands', change: 'product-only' }], delete: ['Shot 1: the product on crushed ice'], scene: String(/Current scene description: (.*)/.exec(String(user))?.[1]).replace(/^[^,]*/, 'Product-only macro of the product on crushed ice') } }
       else {
         seen.push('storyboard')
         reply = storyboardBroken ? { ...replies.storyboard, shots: replies.storyboard.shots.map((shot) => ({ ...shot, camera: 'slow push-in with handheld float' })) } : replies.storyboard
@@ -104,8 +104,8 @@ describe('CineLoom Harness', () => {
     expect(graphs[1]!['6'].class_type).toBe('TextEncodeQwenImageEditPlus')
     expect(graphs[1]!['6'].inputs.prompt).toContain('exactly as in image 1')
     expect(graphs[1]!['6'].inputs.prompt).toContain(STYLE)
-    // Clips come from the 14B image-to-video graph, one per shot, and memory is released between phases.
-    expect(graphs.filter((graph) => Object.values(graph).some((node: any) => node.class_type === 'WanImageToVideo'))).toHaveLength(2)
+    // Clips come from the default LTX-2.5 Fast image-to-video graph, one per shot, and memory is released between phases.
+    expect(graphs.filter((graph) => Object.values(graph).some((node: any) => node.class_type === 'LTXVImgToVideoInplace'))).toHaveLength(2)
     expect(comfy.freed()).toBeGreaterThanOrEqual(3)
 
     // Final cut: two 5 s shots plus a 3 s end card, crossfaded, with typeset titles.
@@ -133,7 +133,7 @@ describe('CineLoom Harness', () => {
 
     // No text-to-image graph: the first picture job is already an edit anchored to the photo.
     const graphs = comfy.graphs.slice(before)
-    const pictures = graphs.filter((graph) => !Object.values(graph).some((node: any) => node.class_type === 'WanImageToVideo'))
+    const pictures = graphs.filter((graph) => !Object.values(graph).some((node: any) => node.class_type === 'LTXVImgToVideoInplace'))
     expect(pictures.length).toBeGreaterThan(0)
     expect(pictures.every((graph) => graph['6'].class_type === 'TextEncodeQwenImageEditPlus')).toBe(true)
     expect(graphs[0]!['6'].class_type).toBe('TextEncodeQwenImageEditPlus')
