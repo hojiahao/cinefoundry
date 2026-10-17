@@ -14,7 +14,7 @@ import soundfile as sf
 import torch
 from qwen_tts import Qwen3TTSModel
 
-LIBRARY = os.environ.get('CINEFOUNDRY_VOICE_LIBRARY', '/repo/deploy/voices.json')
+LIBRARY = os.environ.get('CINEFOUNDRY_VOICE_LIBRARY', '/repo/deploy/voices/library.json')
 
 
 def main() -> None:
@@ -23,18 +23,19 @@ def main() -> None:
     parser.add_argument('--out', required=True, help='directory for the candidate takes')
     parser.add_argument('--takes', type=int, default=4, help='candidates per voice; scripts/asr-score.py picks the cleanest')
     parser.add_argument('--only', nargs='*', help='voice ids to design (default: the whole library)')
+    parser.add_argument('--language', choices=['English', 'Chinese'], help='only voices in this language')
     args = parser.parse_args()
     library = json.load(open(LIBRARY, encoding='utf8'))
-    text = library['referenceText']
     os.makedirs(args.out, exist_ok=True)
     model = Qwen3TTSModel.from_pretrained(args.model, device_map='cuda:0', dtype=torch.bfloat16)
     index = {}
     for voice in library['voices']:
-        if args.only and voice['id'] not in args.only:
+        if (args.only and voice['id'] not in args.only) or (args.language and voice['language'] != args.language):
             continue
+        text = library['referenceText'][voice['language']]
         for take in range(1, args.takes + 1):
             torch.manual_seed(1000 * take + len(voice['id']))
-            wavs, rate = model.generate_voice_design(text=text, instruct=voice['design'], language='Chinese')
+            wavs, rate = model.generate_voice_design(text=text, instruct=voice['design'], language=voice['language'])
             path = os.path.join(args.out, f"{voice['id']}-take{take}.wav")
             sf.write(path, wavs[0], rate)
             index[f"{voice['id']}-take{take}"] = {'voice': voice['id'], 'path': path, 'text': text, 'seconds': round(len(wavs[0]) / rate, 2)}

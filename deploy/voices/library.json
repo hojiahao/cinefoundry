@@ -1,0 +1,807 @@
+{
+  "_note": "Cinefoundry casting library. Every voice is designed from its written description with Qwen3-TTS VoiceDesign - nobody's recording. scripts/voice-design.py makes the takes, scripts/voice-qc.py scores them (Whisper pronunciation, pitch against gender and age, level) and keeps the best as <voices dir>/<id>.wav. Adults only. Agents cast by language, use, gender and age.",
+  "referenceText": {
+    "English": "Light falls across the table. Some things don't need to be said out loud. When time slows down, you hear it, and you remember it.",
+    "Chinese": "光，落在桌面上。有些东西，不必大声说出来。时间慢下来的时候，你会听见它，也会记住它。"
+  },
+  "pitchHz": {
+    "female": [
+      150,
+      300
+    ],
+    "male": [
+      80,
+      180
+    ]
+  },
+  "voices": [
+    {
+      "id": "en-f1825-bright",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "18-25",
+      "age": 21,
+      "timbre": "bright",
+      "uses": [
+        "presenter",
+        "announcer",
+        "character"
+      ],
+      "design": "A young American woman about twenty-one with a bright, clear, smiling voice, quick and light on her feet but never shrill, natural and friendly like a favourite creator talking to camera.",
+      "description": "female, about 21, bright, clear, smiling; lifestyle presenter, youthful brands, drinks and snacks"
+    },
+    {
+      "id": "zh-f1825-bright",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "18-25",
+      "age": 21,
+      "timbre": "bright",
+      "uses": [
+        "presenter",
+        "announcer",
+        "character"
+      ],
+      "design": "二十一岁左右的年轻女声，明亮清透，带着自然的笑意，语速轻快但不尖细，像受欢迎的生活类博主对着镜头聊天，亲切、真实。",
+      "description": "female, about 21, bright, clear, smiling; lifestyle presenter, youthful brands, drinks and snacks (Mandarin)"
+    },
+    {
+      "id": "en-f1825-soft-sweet",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "18-25",
+      "age": 23,
+      "timbre": "soft-sweet",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "A young American woman about twenty-three with a soft, sweet, slightly breathy voice, gentle and a little shy, warm in the low notes, the voice of a romantic lead in a modern drama.",
+      "description": "female, about 23, soft, sweet, a little shy; romantic lead, gentle characters, beauty"
+    },
+    {
+      "id": "zh-f1825-soft-sweet",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "18-25",
+      "age": 23,
+      "timbre": "soft-sweet",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "二十三岁左右的女声，柔和甜美，略带气声，温柔里有一点羞涩，低音区温暖，像现代都市剧里的女主角。",
+      "description": "female, about 23, soft, sweet, a little shy; romantic lead, gentle characters, beauty (Mandarin)"
+    },
+    {
+      "id": "en-f1825-energetic",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "18-25",
+      "age": 24,
+      "timbre": "energetic",
+      "uses": [
+        "presenter",
+        "announcer"
+      ],
+      "design": "A young American woman about twenty-four with an energetic, confident, punchy voice, crisp consonants and a forward rhythm, the voice of a sports and tech reviewer who knows her stuff.",
+      "description": "female, about 24, energetic, punchy, confident; reviews, sports, tech shorts"
+    },
+    {
+      "id": "zh-f1825-energetic",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "18-25",
+      "age": 24,
+      "timbre": "energetic",
+      "uses": [
+        "presenter",
+        "announcer"
+      ],
+      "design": "二十四岁左右的女声，活力自信，咬字干脆，节奏向前推进，像懂行的运动与数码测评博主。",
+      "description": "female, about 24, energetic, punchy, confident; reviews, sports, tech shorts (Mandarin)"
+    },
+    {
+      "id": "en-f2635-warm-velvet",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "26-35",
+      "age": 30,
+      "timbre": "warm-velvet",
+      "uses": [
+        "announcer",
+        "narrator"
+      ],
+      "design": "An American woman about thirty with a warm, velvety mid-range voice and steady breath, elegant and unhurried, leaving space between phrases, like the narrator of a luxury skincare or jewellery commercial.",
+      "description": "female, about 30, warm, velvety, elegant; premium announcer, skincare, jewellery, home"
+    },
+    {
+      "id": "zh-f2635-warm-velvet",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "26-35",
+      "age": 30,
+      "timbre": "warm-velvet",
+      "uses": [
+        "announcer",
+        "narrator"
+      ],
+      "design": "三十岁左右的女声，温润如丝绒的中音，气息平稳，优雅从容，句与句之间留白，像高端护肤与珠宝广告的旁白。",
+      "description": "female, about 30, warm, velvety, elegant; premium announcer, skincare, jewellery, home (Mandarin)"
+    },
+    {
+      "id": "en-f2635-crisp-confident",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "26-35",
+      "age": 31,
+      "timbre": "crisp-confident",
+      "uses": [
+        "presenter",
+        "narrator",
+        "announcer"
+      ],
+      "design": "An American woman about thirty-one with a crisp, articulate, confident voice, clear as a newsreader but conversational, the voice of a smart explainer channel host.",
+      "description": "female, about 31, crisp, articulate, confident; explainer host, finance, tech"
+    },
+    {
+      "id": "zh-f2635-crisp-confident",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "26-35",
+      "age": 31,
+      "timbre": "crisp-confident",
+      "uses": [
+        "presenter",
+        "narrator",
+        "announcer"
+      ],
+      "design": "三十一岁左右的女声，干练清晰，口齿利落，自信大方，像新闻主播一样清楚却又是聊天的语气，适合知识类频道主持。",
+      "description": "female, about 31, crisp, articulate, confident; explainer host, finance, tech (Mandarin)"
+    },
+    {
+      "id": "en-f2635-breathy-intimate",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "26-35",
+      "age": 33,
+      "timbre": "breathy-intimate",
+      "uses": [
+        "announcer",
+        "character"
+      ],
+      "design": "An American woman about thirty-three with a low, breathy, intimate voice, close to the microphone, slow and sensual without exaggeration, like the whisper in a fragrance commercial.",
+      "description": "female, about 33, breathy, intimate, low; fragrance, night-time, luxury"
+    },
+    {
+      "id": "zh-f2635-breathy-intimate",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "26-35",
+      "age": 33,
+      "timbre": "breathy-intimate",
+      "uses": [
+        "announcer",
+        "character"
+      ],
+      "design": "三十三岁左右的女声，低沉带气声，贴近话筒，缓慢、私密而克制，像香水广告里的耳语。",
+      "description": "female, about 33, breathy, intimate, low; fragrance, night-time, luxury (Mandarin)"
+    },
+    {
+      "id": "en-f3650-rich-authoritative",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "36-50",
+      "age": 42,
+      "timbre": "rich-authoritative",
+      "uses": [
+        "narrator",
+        "announcer",
+        "presenter"
+      ],
+      "design": "An American woman about forty-two with a rich, grounded, authoritative voice, calm and certain, warm but never soft, like the narrator of a prestige documentary or a corporate brand film.",
+      "description": "female, about 42, rich, grounded, authoritative; documentary narrator, corporate, finance"
+    },
+    {
+      "id": "zh-f3650-rich-authoritative",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "36-50",
+      "age": 42,
+      "timbre": "rich-authoritative",
+      "uses": [
+        "narrator",
+        "announcer",
+        "presenter"
+      ],
+      "design": "四十二岁左右的女声，饱满沉稳，有权威感，冷静笃定，温暖却不绵软，像高品质纪录片或企业形象片的旁白。",
+      "description": "female, about 42, rich, grounded, authoritative; documentary narrator, corporate, finance (Mandarin)"
+    },
+    {
+      "id": "en-f3650-warm-maternal",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "36-50",
+      "age": 45,
+      "timbre": "warm-maternal",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "An American woman about forty-five with a warm, kind, maternal voice, a smile you can hear, natural and reassuring, the mother in a family drama or a home brand's voice.",
+      "description": "female, about 45, warm, kind, reassuring; mother roles, family and home brands"
+    },
+    {
+      "id": "zh-f3650-warm-maternal",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "36-50",
+      "age": 45,
+      "timbre": "warm-maternal",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "四十五岁左右的女声，温暖和善，带着听得见的笑意，自然、让人安心，像家庭剧里的母亲或家居品牌的声音。",
+      "description": "female, about 45, warm, kind, reassuring; mother roles, family and home brands (Mandarin)"
+    },
+    {
+      "id": "en-f3650-husky",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "36-50",
+      "age": 48,
+      "timbre": "husky",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "An American woman about forty-eight with a husky, smoky, textured voice, worldly and dry-humoured, a little gravel at the edges, a strong-willed businesswoman in a drama.",
+      "description": "female, about 48, husky, smoky, worldly; strong-willed characters, spirits, cars"
+    },
+    {
+      "id": "zh-f3650-husky",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "36-50",
+      "age": 48,
+      "timbre": "husky",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "四十八岁左右的女声，略带沙哑与烟嗓质感，阅历丰富，带点冷幽默，像剧中意志坚定的女企业家。",
+      "description": "female, about 48, husky, smoky, worldly; strong-willed characters, spirits, cars (Mandarin)"
+    },
+    {
+      "id": "en-f5165-elegant-mature",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "51-65",
+      "age": 58,
+      "timbre": "elegant-mature",
+      "uses": [
+        "narrator",
+        "announcer",
+        "character"
+      ],
+      "design": "An American woman about fifty-eight with an elegant, poised, mature voice, precise diction and a gentle warmth, like a grande dame narrating a heritage brand film.",
+      "description": "female, about 58, elegant, poised, mature; heritage brands, narrator, matriarch roles"
+    },
+    {
+      "id": "zh-f5165-elegant-mature",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "51-65",
+      "age": 58,
+      "timbre": "elegant-mature",
+      "uses": [
+        "narrator",
+        "announcer",
+        "character"
+      ],
+      "design": "五十八岁左右的女声，优雅端庄，咬字精准，温和而有分量，像老牌传承品牌影片的女性讲述者。",
+      "description": "female, about 58, elegant, poised, mature; heritage brands, narrator, matriarch roles (Mandarin)"
+    },
+    {
+      "id": "en-f5165-gentle-wise",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "51-65",
+      "age": 62,
+      "timbre": "gentle-wise",
+      "uses": [
+        "character",
+        "narrator"
+      ],
+      "design": "An American woman about sixty-two with a gentle, wise, slightly slower voice, soft edges and a lived-in warmth, the mentor or aunt in a drama.",
+      "description": "female, about 62, gentle, wise; mentor and aunt roles, warm narration"
+    },
+    {
+      "id": "zh-f5165-gentle-wise",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "51-65",
+      "age": 62,
+      "timbre": "gentle-wise",
+      "uses": [
+        "character",
+        "narrator"
+      ],
+      "design": "六十二岁左右的女声，温和睿智，语速稍慢，棱角柔和，带着岁月的温度，像剧中的长辈或导师。",
+      "description": "female, about 62, gentle, wise; mentor and aunt roles, warm narration (Mandarin)"
+    },
+    {
+      "id": "en-f66p-warm-grandmother",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "66+",
+      "age": 72,
+      "timbre": "warm-grandmother",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "An American woman about seventy-two with a warm, crinkly, affectionate grandmother's voice, a little thin with age but bright-eyed and funny.",
+      "description": "female, about 72, affectionate grandmother; family stories, food, heritage"
+    },
+    {
+      "id": "zh-f66p-warm-grandmother",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "66+",
+      "age": 72,
+      "timbre": "warm-grandmother",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "七十二岁左右的女声，慈祥温暖，因年纪略显单薄，却精神矍铄、风趣可爱，像疼爱孙辈的外婆。",
+      "description": "female, about 72, affectionate grandmother; family stories, food, heritage (Mandarin)"
+    },
+    {
+      "id": "en-f66p-dry-witty",
+      "language": "English",
+      "accent": "General American",
+      "gender": "female",
+      "ageBand": "66+",
+      "age": 76,
+      "timbre": "dry-witty",
+      "uses": [
+        "character"
+      ],
+      "design": "An American woman about seventy-six with a dry, sharp, witty voice, slow and deliberate, every word landing, the formidable matriarch who sees through everyone.",
+      "description": "female, about 76, sharp, witty matriarch; drama characters"
+    },
+    {
+      "id": "zh-f66p-dry-witty",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "female",
+      "ageBand": "66+",
+      "age": 76,
+      "timbre": "dry-witty",
+      "uses": [
+        "character"
+      ],
+      "design": "七十六岁左右的女声，干脆犀利，语速缓慢而字字有力，像一眼看穿所有人的家族老太太。",
+      "description": "female, about 76, sharp, witty matriarch; drama characters (Mandarin)"
+    },
+    {
+      "id": "en-m1825-bright-casual",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "18-25",
+      "age": 21,
+      "timbre": "bright-casual",
+      "uses": [
+        "presenter",
+        "character"
+      ],
+      "design": "A young American man about twenty-one with a bright, casual, friendly voice, relaxed and quick, the easygoing creator or the best friend in a drama.",
+      "description": "male, about 21, bright, casual, friendly; creator presenter, best-friend roles"
+    },
+    {
+      "id": "zh-m1825-bright-casual",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "18-25",
+      "age": 21,
+      "timbre": "bright-casual",
+      "uses": [
+        "presenter",
+        "character"
+      ],
+      "design": "二十一岁左右的年轻男声，明亮随性，轻松友好，语速偏快，像随和的生活博主或剧中的好朋友。",
+      "description": "male, about 21, bright, casual, friendly; creator presenter, best-friend roles (Mandarin)"
+    },
+    {
+      "id": "en-m1825-earnest-soft",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "18-25",
+      "age": 23,
+      "timbre": "earnest-soft",
+      "uses": [
+        "character"
+      ],
+      "design": "A young American man about twenty-three with a soft, earnest, slightly hesitant voice, sincere and warm, a shy student or a gentle romantic lead.",
+      "description": "male, about 23, soft, earnest; gentle lead, student roles"
+    },
+    {
+      "id": "zh-m1825-earnest-soft",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "18-25",
+      "age": 23,
+      "timbre": "earnest-soft",
+      "uses": [
+        "character"
+      ],
+      "design": "二十三岁左右的男声，柔和真诚，略带迟疑，温暖干净，像腼腆的学生或温柔的男主角。",
+      "description": "male, about 23, soft, earnest; gentle lead, student roles (Mandarin)"
+    },
+    {
+      "id": "en-m1825-energetic-sporty",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "18-25",
+      "age": 24,
+      "timbre": "energetic-sporty",
+      "uses": [
+        "announcer",
+        "presenter"
+      ],
+      "design": "A young American man about twenty-four with an energetic, athletic, driving voice, breath in the delivery, the voice of a sports drink or sneaker commercial.",
+      "description": "male, about 24, energetic, athletic; sports, sneakers, fitness"
+    },
+    {
+      "id": "zh-m1825-energetic-sporty",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "18-25",
+      "age": 24,
+      "timbre": "energetic-sporty",
+      "uses": [
+        "announcer",
+        "presenter"
+      ],
+      "design": "二十四岁左右的男声，充满活力与运动感，推进有力，带着呼吸感，像运动饮料或球鞋广告的声音。",
+      "description": "male, about 24, energetic, athletic; sports, sneakers, fitness (Mandarin)"
+    },
+    {
+      "id": "en-m2635-warm-baritone",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "26-35",
+      "age": 30,
+      "timbre": "warm-baritone",
+      "uses": [
+        "announcer",
+        "narrator",
+        "character"
+      ],
+      "design": "An American man about thirty with a warm, smooth baritone, relaxed confidence and clean diction, the trusted voice of a modern premium brand.",
+      "description": "male, about 30, warm, smooth baritone; premium announcer, tech, coffee"
+    },
+    {
+      "id": "zh-m2635-warm-baritone",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "26-35",
+      "age": 30,
+      "timbre": "warm-baritone",
+      "uses": [
+        "announcer",
+        "narrator",
+        "character"
+      ],
+      "design": "三十岁左右的男声，温暖顺滑的男中音，自信放松，吐字干净，像现代高端品牌值得信赖的声音。",
+      "description": "male, about 30, warm, smooth baritone; premium announcer, tech, coffee (Mandarin)"
+    },
+    {
+      "id": "en-m2635-clear-tenor",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "26-35",
+      "age": 31,
+      "timbre": "clear-tenor",
+      "uses": [
+        "presenter",
+        "announcer"
+      ],
+      "design": "An American man about thirty-one with a clear, bright tenor, articulate and upbeat, the voice of a sharp tech reviewer or product explainer.",
+      "description": "male, about 31, clear tenor, upbeat; tech reviews, explainers"
+    },
+    {
+      "id": "zh-m2635-clear-tenor",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "26-35",
+      "age": 31,
+      "timbre": "clear-tenor",
+      "uses": [
+        "presenter",
+        "announcer"
+      ],
+      "design": "三十一岁左右的男声，清亮的男高音，口齿清楚，积极明快，像犀利的数码测评或产品讲解主持。",
+      "description": "male, about 31, clear tenor, upbeat; tech reviews, explainers (Mandarin)"
+    },
+    {
+      "id": "en-m2635-smooth-confident",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "26-35",
+      "age": 33,
+      "timbre": "smooth-confident",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "An American man about thirty-three with a smooth, low, self-assured voice, a hint of dry humour and quiet charm, the confident male lead of a romantic drama.",
+      "description": "male, about 33, smooth, confident, charming; romantic male lead, luxury"
+    },
+    {
+      "id": "zh-m2635-smooth-confident",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "26-35",
+      "age": 33,
+      "timbre": "smooth-confident",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "三十三岁左右的男声，低沉顺滑，笃定自信，带一点冷幽默和不动声色的魅力，像都市爱情剧里自信的男主角。",
+      "description": "male, about 33, smooth, confident, charming; romantic male lead, luxury (Mandarin)"
+    },
+    {
+      "id": "en-m3650-deep-bass",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "36-50",
+      "age": 42,
+      "timbre": "deep-bass",
+      "uses": [
+        "announcer",
+        "narrator"
+      ],
+      "design": "An American man about forty-two with a deep, resonant bass voice and slow, weighty delivery, cinematic and commanding, the voice of a film trailer or a flagship car launch.",
+      "description": "male, about 42, deep, resonant bass; trailers, cars, watches, flagship launches"
+    },
+    {
+      "id": "zh-m3650-deep-bass",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "36-50",
+      "age": 42,
+      "timbre": "deep-bass",
+      "uses": [
+        "announcer",
+        "narrator"
+      ],
+      "design": "四十二岁左右的男声，深沉浑厚的低音，语速缓慢、分量十足，有电影感和统帅力，像电影预告片或旗舰车型发布的声音。",
+      "description": "male, about 42, deep, resonant bass; trailers, cars, watches, flagship launches (Mandarin)"
+    },
+    {
+      "id": "en-m3650-gravelly-rugged",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "36-50",
+      "age": 45,
+      "timbre": "gravelly-rugged",
+      "uses": [
+        "announcer",
+        "character"
+      ],
+      "design": "An American man about forty-five with a gravelly, rugged, weathered voice, outdoorsy and honest, like the voice of a truck or whiskey commercial.",
+      "description": "male, about 45, gravelly, rugged; trucks, outdoor, spirits, tough characters"
+    },
+    {
+      "id": "zh-m3650-gravelly-rugged",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "36-50",
+      "age": 45,
+      "timbre": "gravelly-rugged",
+      "uses": [
+        "announcer",
+        "character"
+      ],
+      "design": "四十五岁左右的男声，粗粝沙哑，硬朗而有风霜感，真诚踏实，像越野车或威士忌广告的声音。",
+      "description": "male, about 45, gravelly, rugged; trucks, outdoor, spirits, tough characters (Mandarin)"
+    },
+    {
+      "id": "en-m3650-authoritative",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "36-50",
+      "age": 48,
+      "timbre": "authoritative",
+      "uses": [
+        "narrator",
+        "announcer",
+        "presenter"
+      ],
+      "design": "An American man about forty-eight with a calm, measured, authoritative voice, precise and trustworthy, the narrator of a technology keynote or a financial brand film.",
+      "description": "male, about 48, calm, authoritative; keynotes, finance, corporate narrator"
+    },
+    {
+      "id": "zh-m3650-authoritative",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "36-50",
+      "age": 48,
+      "timbre": "authoritative",
+      "uses": [
+        "narrator",
+        "announcer",
+        "presenter"
+      ],
+      "design": "四十八岁左右的男声，冷静克制，权威可信，表达精准，像科技发布会或金融品牌影片的讲述者。",
+      "description": "male, about 48, calm, authoritative; keynotes, finance, corporate narrator (Mandarin)"
+    },
+    {
+      "id": "en-m5165-seasoned-narrator",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "51-65",
+      "age": 57,
+      "timbre": "seasoned-narrator",
+      "uses": [
+        "narrator",
+        "announcer"
+      ],
+      "design": "An American man about fifty-seven with a seasoned, warm, slightly textured narrator's voice, unhurried storytelling with gravitas, like a nature documentary narrator.",
+      "description": "male, about 57, seasoned storyteller; documentary narration, heritage brands"
+    },
+    {
+      "id": "zh-m5165-seasoned-narrator",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "51-65",
+      "age": 57,
+      "timbre": "seasoned-narrator",
+      "uses": [
+        "narrator",
+        "announcer"
+      ],
+      "design": "五十七岁左右的男声，阅历深厚，温暖中带一点颗粒感，从容讲述、厚重有力，像自然纪录片的讲述者。",
+      "description": "male, about 57, seasoned storyteller; documentary narration, heritage brands (Mandarin)"
+    },
+    {
+      "id": "en-m5165-warm-fatherly",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "51-65",
+      "age": 62,
+      "timbre": "warm-fatherly",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "An American man about sixty-two with a warm, kind, fatherly voice, gentle humour and steadiness, the father in a family drama or an insurance brand's voice.",
+      "description": "male, about 62, warm, fatherly; father roles, family, insurance"
+    },
+    {
+      "id": "zh-m5165-warm-fatherly",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "51-65",
+      "age": 62,
+      "timbre": "warm-fatherly",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "六十二岁左右的男声，温和慈爱，带着幽默与稳重，像家庭剧里的父亲或保险品牌的声音。",
+      "description": "male, about 62, warm, fatherly; father roles, family, insurance (Mandarin)"
+    },
+    {
+      "id": "en-m66p-weathered-elder",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "66+",
+      "age": 72,
+      "timbre": "weathered-elder",
+      "uses": [
+        "character",
+        "narrator"
+      ],
+      "design": "An American man about seventy-two with a weathered, deep, slow voice, a little raspy, full of memory, the patriarch or the old craftsman in a drama.",
+      "description": "male, about 72, weathered elder; patriarch, craftsman roles"
+    },
+    {
+      "id": "zh-m66p-weathered-elder",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "66+",
+      "age": 72,
+      "timbre": "weathered-elder",
+      "uses": [
+        "character",
+        "narrator"
+      ],
+      "design": "七十二岁左右的男声，饱经风霜，低沉缓慢，略带沙哑，满是回忆，像剧中的老族长或老匠人。",
+      "description": "male, about 72, weathered elder; patriarch, craftsman roles (Mandarin)"
+    },
+    {
+      "id": "en-m66p-gentle-grandfather",
+      "language": "English",
+      "accent": "General American",
+      "gender": "male",
+      "ageBand": "66+",
+      "age": 77,
+      "timbre": "gentle-grandfather",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "An American man about seventy-seven with a gentle, soft, smiling grandfather's voice, a little frail but bright, telling a story to a grandchild.",
+      "description": "male, about 77, gentle grandfather; family stories, heritage, food"
+    },
+    {
+      "id": "zh-m66p-gentle-grandfather",
+      "language": "Chinese",
+      "accent": "标准普通话",
+      "gender": "male",
+      "ageBand": "66+",
+      "age": 77,
+      "timbre": "gentle-grandfather",
+      "uses": [
+        "character",
+        "announcer"
+      ],
+      "design": "七十七岁左右的男声，温和柔软，带着笑意，略显年迈却很有精神，像给孙辈讲故事的爷爷。",
+      "description": "male, about 77, gentle grandfather; family stories, heritage, food (Mandarin)"
+    }
+  ]
+}

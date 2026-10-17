@@ -11,6 +11,8 @@ import { deliverySize, generationResolution } from '../../lib/formats.js'
 import { generateImage, generateVideo, interpolateVideo, interpolationMultiplier, videoFps, videoSize, VIDEO_NEGATIVE } from '../../lib/media.js'
 import { addAsset } from '../../lib/project.js'
 import { audioWork, designVoices, generateSfx, scoreSpeech, speakChecked } from '../../lib/speech.js'
+import { loadVoiceLibrary, voiceReference, voicesDir, type LibraryVoice } from '../../lib/voices.js'
+import { existsSync } from 'node:fs'
 import { buildAss, type TitleCue } from '../../lib/titles.js'
 import { produced, key, type NarrativeContext } from './context.js'
 import { sheetGate, shotGate } from './gate.js'
@@ -51,17 +53,31 @@ export async function castingStage(ctx: NarrativeContext): Promise<string> {
     await addAsset(ctx.projectId!, { id: `cast-${character.id}`, kind: 'image', stage: 'casting', path: `cast/${character.id}.sheet.png`, execution: 'local-dgx-spark', model: 'qwen_image_lightning', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (best of 3, not passed)'}` })
   }
   await comfy.free()
-  // Voices: designed from each character's written voice, three takes each; Whisper keeps the cleanest.
-  const reference = "I didn't think you'd come back tonight. But here you are, and honestly, I'm glad."
-  const outDir = join(audioWork(), 'cast', ctx.projectId!)
-  const takes = await designVoices(bible.characters.map((c) => ({ id: c.id, design: `${c.voice}. A ${c.age}-year-old ${c.gender === 'female' ? 'woman' : 'man'}, natural American English, speaking like a real actor in a television drama, not an announcer.`, text: reference, language: 'English' as const, outDir })))
-  const scores = await scoreSpeech(takes.map((t) => ({ path: t.path, text: t.text })))
+  // Voices: a character is cast from the library when a QC-passed voice fits (same gender, within twelve years, the
+  // timbre the bible asks for); only a character no library voice fits gets a voice designed for them alone.
+  const library = loadVoiceLibrary()
+  const unmatched: Character[] = []
   for (const character of bible.characters) {
-    const mine = takes.map((t, i) => ({ ...t, cer: scores[i]?.cer ?? 1 })).filter((t) => t.id === character.id).sort((a, b) => a.cer - b.cer)
-    const wav = join(outDir, `${character.id}.wav`)
-    await copyFile(mine[0]!.path, wav)
-    ctx.voices.set(character.id, { wav, text: reference })
-    await ctx.record('casting', 'voice', undefined, { character: character.id, takes: mine.map((t) => ({ cer: t.cer, seconds: t.seconds })) })
+    const match = castFromLibrary(character, library.voices.filter((v) => existsSync(join(voicesDir(), `${v.id}.wav`))))
+    if (match) {
+      ctx.voices.set(character.id, voiceReference(match.id))
+      await ctx.record('casting', 'voice', undefined, { character: character.id, library: match.id })
+      ctx.log(`▸ voice ${character.id.padEnd(10)} ${match.id} (casting library)`)
+    } else unmatched.push(character)
+  }
+  if (unmatched.length) {
+    const reference = "I didn't think you'd come back tonight. But here you are, and honestly, I'm glad."
+    const outDir = join(audioWork(), 'cast', ctx.projectId!)
+    const takes = await designVoices(unmatched.map((c) => ({ id: c.id, design: `${c.voice}. A ${c.age}-year-old ${c.gender === 'female' ? 'woman' : 'man'}, natural American English, speaking like a real actor in a television drama, not an announcer.`, text: reference, language: 'English' as const, outDir })), 4)
+    const scores = await scoreSpeech(takes.map((t) => ({ path: t.path, text: t.text })))
+    for (const character of unmatched) {
+      const mine = takes.map((t, i) => ({ ...t, cer: scores[i]?.cer ?? 1 })).filter((t) => t.id === character.id).sort((a, b) => a.cer - b.cer)
+      const wav = join(outDir, `${character.id}.wav`)
+      await copyFile(mine[0]!.path, wav)
+      ctx.voices.set(character.id, { wav, text: reference })
+      await ctx.record('casting', 'voice', undefined, { character: character.id, designed: true, takes: mine.map((t) => ({ cer: t.cer, seconds: t.seconds })) })
+      ctx.log(`▸ voice ${character.id.padEnd(10)} designed for this character (error ${(mine[0]!.cer * 100).toFixed(0)}%)`)
+    }
   }
   return `${bible.characters.length} characters cast`
 }
@@ -262,4 +278,17 @@ export async function narrativeCutStage(ctx: NarrativeContext): Promise<string> 
     ctx.log(`▸ cut          episode ${episode}: ${output}`)
   }
   return `${ctx.outputs.size} episode(s)`
+}
+
+/**
+ * The library voice that fits a character: English, cast for characters, the same gender, within twelve years of the
+ * character's age, and sharing the most timbre words with the bible's description of how they sound. None fits -> undefined.
+ */
+export function castFromLibrary(character: Character, voices: LibraryVoice[]): LibraryVoice | undefined {
+  const wanted = new Set(character.voice.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3))
+  const scored = voices
+    .filter((v) => v.language === 'English' && v.uses.includes('character') && v.gender === character.gender && Math.abs(v.age - character.age) <= 12)
+    .map((v) => ({ v, score: `${v.timbre} ${v.design}`.toLowerCase().split(/[^a-z]+/).filter((w) => wanted.has(w)).length * 3 - Math.abs(v.age - character.age) / 4 }))
+    .sort((a, b) => b.score - a.score)
+  return scored[0]?.v
 }

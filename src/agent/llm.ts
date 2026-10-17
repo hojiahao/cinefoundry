@@ -133,6 +133,9 @@ export async function chatJson<T>(
   let seconds = 0
   let completionTokens = 0
   const rejected: string[][] = []
+  // The parsed answer with the fewest problems so far: a reasoning attempt that spends its whole budget and returns
+  // nothing must not throw away an earlier draft that was one subtitle away from passing.
+  let best: { value: T; problems: string[]; finishReason?: string } | undefined
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     // The last attempts get the model's reasoning mode: a small model that has been told the same
     // rule three times usually needs to think, not to be told a fourth time.
@@ -161,13 +164,16 @@ export async function chatJson<T>(
     const finishReason = result.finishReason
     if (problems.length === 0) return { value: value!, unresolved: [], attempts: attempt, seconds, completionTokens, rejected, finishReason }
     rejected.push(problems)
+    if (value !== undefined && (!best || problems.length <= best.problems.length)) best = { value, problems, finishReason }
     if (attempt === maxAttempts) {
-      if (value !== undefined) return { value, unresolved: problems, attempts: attempt, seconds, completionTokens, rejected, finishReason }
-      throw new JsonReplyError(`${endpoint.name} did not return usable JSON after ${maxAttempts} attempts: ${problems.join('; ')}`, seconds, completionTokens, finishReason, rejected)
+      if (best) return { value: best.value, unresolved: best.problems, attempts: attempt, seconds, completionTokens, rejected, finishReason: best.finishReason }
+      throw new JsonReplyError(`${endpoint.name} did not return usable JSON after ${maxAttempts} attempts: ${rejected.map((r, i) => `#${i + 1} ${r.join('; ').slice(0, 200)}`).join(' | ')}`, seconds, completionTokens, finishReason, rejected)
     }
     // Send the rejected answer back with the problems, so the model edits it instead of starting over
     // (a fresh rewrite drifted: fewer shots, new mistakes).
-    user = `${options.user}\n\nYour previous answer:\n${result.content.trim().slice(0, 6000)}\n\nIt was rejected for these reasons:\n${problems.map((problem) => `- ${problem}`).join('\n')}\nFix exactly these points, keep everything else, and return the corrected JSON only.`
+    // An empty reply has nothing to edit: send the best draft so far back instead.
+    const previous = result.content.trim() || (best ? JSON.stringify(best.value) : '')
+    user = `${options.user}\n\nYour previous answer:\n${previous.slice(0, 8000)}\n\nIt was rejected for these reasons:\n${problems.map((problem) => `- ${problem}`).join('\n')}\nFix exactly these points, keep everything else, and return the corrected JSON only.`
   }
   throw new Error('unreachable')
 }

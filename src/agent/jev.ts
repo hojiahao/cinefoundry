@@ -63,7 +63,7 @@ export async function judgeCopy(config: JevConfig, brief: Brief, script: Script)
   let inputTokens = 0
   let model = config.model
   for (const beat of script.beats) {
-    const state = { product: brief.product, product_category: CATEGORY_LABEL[brief.category] ?? brief.category, voiceover_line_chinese: beat.vo, on_screen_title_chinese: beat.text }
+    const state = { product: brief.product, product_category: CATEGORY_LABEL[brief.category] ?? brief.category, voiceover_line_chinese: beat.zh, on_screen_title_chinese: beat.text }
     const result = await evaluate(config, state, {
       absolute_claim: { type: 'noul', instructions: 'Does the voiceover line or title use an absolute or superlative claim (the best, number one, the only, 100%, forever, never), explicitly or by clear implication?', criteria: { true: 'Claims to be best / first / only / 100% / 永不, or clearly implies superiority over all competitors', false: 'Describes taste, feel, a moment, or a plain product fact' } },
       health_effect: { type: 'noul', instructions: 'Does the copy state an effect on the body or health as a fact?', criteria: { true: 'A claimed physiological or medical effect: 提神醒脑, 消除疲劳, 解暑降火, 增强免疫, 减肥瘦身, 修复肌肤, 治疗/缓解 a condition', false: 'Taste, feel, mood, scenery or a figurative phrase (唤醒晨光, 唤醒一天, 清爽一刻, 温暖时光) with no claimed effect on the body' } },
@@ -77,7 +77,7 @@ export async function judgeCopy(config: JevConfig, brief: Brief, script: Script)
     const a = result.answers
     const noul = (id: string) => (a[id]?.type === 'noul' ? (a[id] as { noul: number }).noul : 0)
     const push = (issue: string, probability: number) => {
-      if (probability >= REVIEW_AT) findings.push({ beat: beat.beat, line: beat.vo, issue, probability, severity: probability >= BLOCK_AT ? 'block' : 'review' })
+      if (probability >= REVIEW_AT) findings.push({ beat: beat.beat, line: beat.zh, issue, probability, severity: probability >= BLOCK_AT ? 'block' : 'review' })
     }
     push('absolute or superlative claim', noul('absolute_claim'))
     if (brief.category !== 'medical') push('claims a bodily or health effect', noul('health_effect'))
@@ -89,7 +89,7 @@ export async function judgeCopy(config: JevConfig, brief: Brief, script: Script)
       if (allowed.length && !allowed.includes(register.choice) && register.confidence >= 0.6) push(`vocabulary reads as ${register.choice}, not ${CATEGORY_LABEL[brief.category]}`, register.confidence)
     }
     const natural = a.naturalness
-    if (natural?.type === 'score' && natural.score < 1.0) findings.push({ beat: beat.beat, line: beat.vo, issue: 'sounds unnatural when read aloud', probability: Math.round((1 - natural.score) * 100) / 100, severity: 'review' })
+    if (natural?.type === 'score' && natural.score < 1.0) findings.push({ beat: beat.beat, line: beat.zh, issue: 'sounds unnatural when read aloud', probability: Math.round((1 - natural.score) * 100) / 100, severity: 'review' })
   }
   return { findings, seconds, inputTokens, model }
 }

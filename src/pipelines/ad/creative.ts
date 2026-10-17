@@ -12,7 +12,8 @@ import { need, type AdContext } from './context.js'
 export async function creativeStage(ctx: AdContext): Promise<string> {
   const brief = need(ctx.brief, 'brief')
   ctx.log('▸ creative     creative director · nemotron')
-  const voices = castableVoices()
+  // The announcer reads English: cast from the library's English announcers that passed voice QC on this machine.
+  const voices = castableVoices({ language: 'English', use: 'announcer' })
   const casting = voices.length ? voices : [{ id: 'default', description: 'the configured narrator' }]
   const run = await chatJson<Treatment>(
     ctx.planner,

@@ -5,6 +5,7 @@ import { ComfyClient } from '../comfy/client.js'
 import { loadWorkflow, renderWorkflow } from '../comfy/workflow.js'
 import { exec } from './exec.js'
 import { probeDuration } from './ffmpeg.js'
+import { speakChecked } from './speech.js'
 
 const TTS_PYTHON = () => resolve(process.env.CINEFOUNDRY_TTS_PYTHON ?? 'runtime-data/tts-venv/bin/python')
 const TTS_SCRIPT = () => resolve(process.env.CINEFOUNDRY_TTS_SCRIPT ?? 'scripts/tts.py')
@@ -26,7 +27,7 @@ export async function synthesizeVoice(text: string, output: string, maxSeconds: 
 }
 
 export interface VoiceLine { text: string; output: string; maxSeconds: number }
-export interface VoiceResult { seconds: number; speed: number; model: string }
+export interface VoiceResult { seconds: number; speed: number; model: string; /** Whisper's error rate on the kept take, when the line was checked. */ errorRate?: number }
 
 /**
  * Which offline voice engine the film uses: Kokoro (default), StepFun's Step-Audio-EditX, or Qwen3-TTS.
@@ -50,8 +51,9 @@ export const BROADCAST_VOICE_CHAIN = 'highpass=f=70,acompressor=threshold=-22dB:
  * CINEFOUNDRY_TTS_REF_WAV / CINEFOUNDRY_TTS_REF_TEXT and, with CINEFOUNDRY_TTS_STYLE, re-voicing each line in
  * that style. A line that overruns its slot is time-stretched, at most 1.25x, never cut.
  */
-export async function synthesizeVoices(lines: VoiceLine[], voice?: { wav: string; text: string }): Promise<VoiceResult[]> {
-  const engine = ttsEngine()
+export async function synthesizeVoices(lines: VoiceLine[], voice?: { wav: string; text: string; language?: 'English' | 'Chinese' }): Promise<VoiceResult[]> {
+  // A voice cast from the library is always the designed Qwen3-TTS voice, whatever the default engine is.
+  const engine = voice ? 'qwen-tts' : ttsEngine()
   if (engine === 'kokoro') {
     const results: VoiceResult[] = []
     for (const line of lines) results.push({ ...(await synthesizeVoice(line.text, line.output, line.maxSeconds)), model: 'Kokoro-82M-v1.1-zh' })
@@ -66,10 +68,14 @@ export async function synthesizeVoices(lines: VoiceLine[], voice?: { wav: string
   const inside = (path: string) => `/work/${relative(work, path)}`
   const jobDir = join(work, 'jobs', `${Date.now().toString(36)}`)
   await mkdir(jobDir, { recursive: true })
-  const jobs = { prompt_audio: inside(reference), prompt_text: referenceText, style: process.env.CINEFOUNDRY_TTS_STYLE || null,
+  const jobs = { prompt_audio: inside(reference), prompt_text: referenceText, language: voice?.language ?? 'Chinese', style: process.env.CINEFOUNDRY_TTS_STYLE || null,
     lines: lines.map((line, index) => ({ text: line.text, output: inside(join(jobDir, `vo_${index + 1}.wav`)) })) }
   await writeFile(join(jobDir, 'jobs.json'), JSON.stringify(jobs, null, 2))
-  if (engine === 'qwen-tts') {
+  const errors: number[] = []
+  if (engine === 'qwen-tts' && voice) {
+    // Every line is checked by ear (Whisper) and retaken until it is heard right; a line no retake fixes is reported.
+    errors.push(...(await speakChecked({ wav: reference, text: referenceText }, lines.map((line, index) => ({ text: line.text, output: join(jobDir, `vo_${index + 1}.wav`) })), voice.language ?? 'Chinese')))
+  } else if (engine === 'qwen-tts') {
     await exec('docker', ['run', '--rm', '--device', 'nvidia.com/gpu=all', '--ipc=host', '-v', `${resolve('.')}:/repo:ro`, '-v', `${resolve(process.env.CINEFOUNDRY_TTS_MODEL_DIR ?? join(process.env.SPARK_MODEL_DIR ?? join(homedir(), 'models'), 'tts'))}:/models:ro`, '-v', `${work}:/work`,
       process.env.CINEFOUNDRY_QWEN_TTS_IMAGE ?? 'cinefoundry/qwen-tts:local', '/repo/scripts/qwen-clone.py', '--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(join(jobDir, 'jobs.json'))])
   } else await exec('bash', [resolve(process.env.CINEFOUNDRY_STEP_AUDIO_SCRIPT ?? 'scripts/step-audio.sh'), 'batch', inside(join(jobDir, 'jobs.json'))])
@@ -86,7 +92,7 @@ export async function synthesizeVoices(lines: VoiceLine[], voice?: { wav: string
     if (chain) await exec('ffmpeg', ['-y', '-v', 'error', '-i', trimmed, '-af', chain, line.output])
     else await copyFile(trimmed, line.output)
     seconds = await probeDuration(line.output)
-    results.push({ seconds, speed, model: engine === 'qwen-tts' ? 'Qwen3-TTS-1.7B (designed voice)' : `Step-Audio-EditX${jobs.style ? ` (${jobs.style})` : ''}` })
+    results.push({ seconds, speed, model: engine === 'qwen-tts' ? 'Qwen3-TTS-1.7B (designed voice)' : `Step-Audio-EditX${jobs.style ? ` (${jobs.style})` : ''}`, ...(errors[index] !== undefined ? { errorRate: errors[index] } : {}) })
   }
   return results
 }

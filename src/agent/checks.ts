@@ -42,7 +42,11 @@ export interface Beat {
   beat: number
   job: string
   see: string
+  /** The announcer's line, in English: spoken by the cast voice. */
   vo: string
+  /** Its Chinese subtitle, set large over the English: a translation an audience reads, not a gloss. */
+  zh: string
+  /** The beat's title on screen, in Chinese (typeset in the cut, never drawn by the model). */
   text: string
 }
 
@@ -69,6 +73,15 @@ export interface Storyboard {
   shots: Shot[]
 }
 
+/** An English line spoken inside a 5-second beat with a breath around it: a broadcast announcer reads about 2.5 words a second. */
+export const VO_MIN_WORDS = 4
+export const VO_MAX_WORDS = 13
+/** Chinese subtitle width: 16 characters on 16:9 (Netflix timed-text style guide), 12 on the narrower 9:16 line. */
+export const subtitleMax = (ratio: string) => (ratio === '9:16' ? 12 : 16)
+/** Absolute claims are restricted in any language the ad speaks (广告法 第九条): "the best" is "最好". */
+export const EN_ABSOLUTES = /\b(the best|best[- ]ever|number one|no\.\s?1|world'?s (first|best)|the only|perfect|flawless|guaranteed|100\s?%|ultimate|unbeatable|revolutionary)\b|#1\b/i
+/** English stock ad-speak: the words that mark copy as templated. */
+export const EN_CLICHES = /\b(elevate|unleash|game[- ]changer|seamless(ly)?|next[- ]level|redefin(e|es|ing)|unlock (your|the)|experience the|like never before|take it to the next|empower|cutting[- ]edge|state[- ]of[- ]the[- ]art|immerse yourself|embark|journey of)\b/i
 export const VO_MAX_CHARS = 18
 /** Below this a 5-second beat is mostly silence, which is how a model 'passes' a length limit without writing copy. */
 export const VO_MIN_CHARS = 8
@@ -136,26 +149,35 @@ export function checkScript(script: Script, brief: Brief): string[] {
     if (!beat.see?.trim()) problems.push(`${label}: "see" is empty`)
     if (!beat.vo?.trim()) problems.push(`${label}: "vo" is empty`)
     else {
-      const cliche = AI_CLICHES.exec(`${beat.vo} ${beat.text ?? ''}`)?.[0]
-      if (cliche) problems.push(`${label}: "${cliche}" is stock ad-speak that marks the copy as templated; write the crafted line a top agency would - one precise image of what the viewer sees, tastes or feels, in the brand's own voice`)
-      if (!CJK.test(beat.vo)) problems.push(`${label}: voiceover must be in Chinese`)
-      else if (/[A-Za-z]{3,}/.test(beat.vo.replace(brief.brandText, ''))) problems.push(`${label}: voiceover mixes an English word into Chinese (${/[A-Za-z]{3,}/.exec(beat.vo)?.[0]}); write it in Chinese`)
-      if (spokenLength(beat.vo) < VO_MIN_CHARS) problems.push(`${label}: voiceover has only ${spokenLength(beat.vo)} characters; write ${VO_MIN_CHARS}-${VO_MAX_CHARS} so the beat is not mostly silence`)
-      if (spokenLength(beat.vo) > VO_MAX_CHARS) problems.push(`${label}: voiceover has ${spokenLength(beat.vo)} characters; at most ${VO_MAX_CHARS} fit in 5 seconds`)
+      if (CJK.test(beat.vo.replace(brief.brandText, ''))) problems.push(`${label}: "vo" is the English announcer line; the Chinese goes in "zh"`)
+      const words = beat.vo.trim().split(/\s+/).filter(Boolean).length
+      if (words < VO_MIN_WORDS) problems.push(`${label}: the voiceover has ${words} words; write ${VO_MIN_WORDS}-${VO_MAX_WORDS} so the beat is not mostly silence`)
+      if (words > VO_MAX_WORDS) problems.push(`${label}: the voiceover has ${words} words; at most ${VO_MAX_WORDS} are read inside 5 seconds`)
+      const cliche = EN_CLICHES.exec(beat.vo)?.[0]
+      if (cliche) problems.push(`${label}: "${cliche}" is stock ad-speak; write the crafted line a top agency would - one precise image of what the viewer sees, tastes or feels`)
+      const absolute = EN_ABSOLUTES.exec(beat.vo)?.[0]
+      if (absolute) problems.push(`restricted wording "${absolute}" (广告法 absolute claim, in English): ${label}`)
     }
-    problems.push(...captionProblems(`${label} voiceover`, beat.vo ?? '', false), ...captionProblems(`${label} on-screen text`, beat.text ?? '', true))
+    if (!beat.zh?.trim() || !CJK.test(beat.zh)) problems.push(`${label}: "zh" must be the Chinese subtitle of the voiceover`)
+    else {
+      const cliche = AI_CLICHES.exec(`${beat.zh} ${beat.text ?? ''}`)?.[0]
+      if (cliche) problems.push(`${label}: "${cliche}" is stock ad-speak that marks the copy as templated; write the crafted line a top agency would - one precise image of what the viewer sees, tastes or feels, in the brand's own voice`)
+      if (spokenLength(beat.zh) > subtitleMax(brief.ratio)) problems.push(`${label}: the subtitle "${beat.zh}" has ${spokenLength(beat.zh)} characters; at most ${subtitleMax(brief.ratio)} on a ${brief.ratio} frame`)
+      if (/[，。,.]/.test(beat.zh)) problems.push(`${label}: Chinese subtitles use a space instead of commas and full stops`)
+    }
+    problems.push(...captionProblems(`${label} subtitle`, beat.zh ?? '', false), ...captionProblems(`${label} on-screen text`, beat.text ?? '', true))
     // "一口咬下" for a sparkling water: a drink is sipped, not bitten.
-    if (briefIndustry(brief) === 'drink' && /咬|嚼/.test(beat.vo ?? '')) problems.push(`${label}: a drink is not bitten or chewed ("${beat.vo}"); write 喝 / 入口 / 一口`)
+    if (briefIndustry(brief) === 'drink' && (/咬|嚼/.test(beat.zh ?? '') || /\b(bite|chew)/i.test(beat.vo ?? ''))) problems.push(`${label}: a drink is not bitten or chewed ("${beat.zh}" / "${beat.vo}"); it is sipped`)
     if (spokenLength(beat.text ?? '') > TEXT_MAX_CHARS) problems.push(`${label}: on-screen text has ${spokenLength(beat.text)} characters; at most ${TEXT_MAX_CHARS}`)
     // "开罐" on a drip-bag coffee: the title of the skill's example was copied onto a product that has no can.
     const productText = `${brief.product} ${brief.message} ${brief.title}`
     for (const word of CONTAINER_WORDS) if ((beat.text ?? '').includes(word) && !productText.includes(word) && !CANNED_DRINK.test(productText))
       problems.push(`${label}: "${beat.text}" talks about a container (${word}) that this product does not have (${brief.product}); write a title about this product`)
     // "指尖落下，青轴一声清响" for a desktop AI computer: the skill's keyboard example, copied onto a product with no keys.
-    const keys = KEYBOARD_WORDS.exec(`${beat.vo ?? ''} ${beat.text ?? ''}`)?.[0]
+    const keys = KEYBOARD_WORDS.exec(`${beat.zh ?? ''} ${beat.text ?? ''}`)?.[0]
     if (keys && !KEYBOARD_PRODUCT.test(productText)) problems.push(`${label}: "${keys}" belongs to a keyboard, not to this product (${brief.product}); write about what this product does`)
   }
-  const copy = beats.map((beat) => `${beat.vo}\n${beat.text ?? ''}`).join('\n')
+  const copy = beats.map((beat) => `${beat.zh ?? ''}\n${beat.text ?? ''}`).join('\n')
   for (const finding of scanCopy(copy, brief.category).filter((item) => item.severity === 'block'))
     problems.push(`restricted wording "${finding.text}" (${finding.rule}): ${finding.reason}`)
   return problems

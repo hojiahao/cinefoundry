@@ -84,7 +84,8 @@ export async function finishFilm(input: FinishInput): Promise<string> {
     start: clipStart(index, durations, overlaps),
     end: clipStart(index, durations, overlaps) + durations[index]!,
     title: beat.text,
-    subtitle: beat.vo,
+    subtitle: beat.zh,
+    subtitleEn: beat.vo,
   }))
   const endStart = clipStart(durations.length - 1, durations, overlaps)
   // The hero still already carries the brand on its label, so the end card adds only the message,
