@@ -11,7 +11,8 @@ import { sleepService, wakeService } from '../lib/rest.js'
 import { addAsset, createProject, loadProject, projectDir, setStage, STAGES, type Stage, type StageStatus } from '../lib/project.js'
 import { buildShots } from '../lib/shots.js'
 import type { Brief, Script, Storyboard } from '../agent/checks.js'
-import { CROSSFADE_SECONDS, FINAL_SIZE, finishFilm, type Recorder } from '../agent/finish.js'
+import { CROSSFADE_SECONDS, finishFilm, type Recorder } from '../agent/finish.js'
+import { DEFAULT_RATIO, DEFAULT_RESOLUTION, checkFps, deliverySize, isRatio } from '../lib/formats.js'
 import { qualityGate } from '../agent/gate.js'
 import { runHarness } from '../agent/harness.js'
 import { endpoints, type ModelEndpoint } from '../agent/llm.js'
@@ -81,7 +82,7 @@ async function video(args: ParsedArgs): Promise<number> {
   const result = await generateVideo(new ComfyClient(), {
     prompt: requireFlag(args, 'prompt'),
     output,
-    resolution: flag(args, 'resolution', '720p')!,
+    resolution: flag(args, 'resolution', DEFAULT_RESOLUTION)!,
     ratio: flag(args, 'ratio', '9:16')!,
     durationSeconds: numberFlag(args, 'duration', 5),
     firstFrame: flag(args, 'first-frame'),
@@ -191,7 +192,7 @@ async function cut(args: ParsedArgs): Promise<number> {
     if (clips.length === 0) throw new Error('No clips in this project yet.')
     const paths = clips.map((clip) => join(dir, clip.path))
     const durations = await Promise.all(paths.map(async (path) => Math.max(0.5, Math.floor((await probeDuration(path)) * 10) / 10)))
-    const [width, height] = FINAL_SIZE[state.ratio] ?? FINAL_SIZE['9:16']!
+    const [width, height] = deliverySize(DEFAULT_RESOLUTION, isRatio(state.ratio) ? state.ratio : DEFAULT_RATIO)
     const simple = join(dir, 'cut', 'final.mp4')
     await mkdir(join(dir, 'cut'), { recursive: true })
     await assembleFilm(paths, simple, { width, height, fps: 24, durations, crossfadeSeconds: Math.min(CROSSFADE_SECONDS, Math.min(...durations) / 3), audio: flag(args, 'audio') })
@@ -246,7 +247,7 @@ async function studio(args: ParsedArgs): Promise<number> {
 /** Brief in, finished film out: Spotfoundry Harness runs every stage with its agents and skills. */
 async function harnessCommand(args: ParsedArgs): Promise<number> {
   const brief = args.positionals.join(' ').trim()
-  if (!brief) throw new UsageError('usage: spotfoundry harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
+  if (!brief) throw new UsageError('usage: spotfoundry harness "<brief>" [--id id] [--ratio 16:9|9:16|1:1] [--duration 15] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
   const result = await runHarness({
     brief,
     id: flag(args, 'id'),
@@ -255,6 +256,7 @@ async function harnessCommand(args: ParsedArgs): Promise<number> {
     planOnly: flag(args, 'plan-only') === 'true',
     withoutSkills: flag(args, 'without-skills') === 'true',
     resolution: flag(args, 'resolution'),
+    fps: flag(args, 'fps') ? checkFps(numberFlag(args, 'fps', 60)) : undefined,
     videoModel: flag(args, 'video-model') as never,
     audio: flag(args, 'audio'),
     silent: flag(args, 'silent') === 'true',

@@ -86,7 +86,8 @@ describe('Spotfoundry Harness', () => {
     delete process.env.STEPFUN_API_KEY
     const { runHarness } = await import('../src/agent/harness.js')
     const log: string[] = []
-    const result = await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'soda-test', silent: true, candidates: 1, log: (line) => log.push(line) })
+    // 720p keeps the real ffmpeg steps fast in tests; 60 fps exercises the RIFE interpolation path.
+    const result = await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'soda-test', silent: true, candidates: 1, resolution: '720p', fps: 60, log: (line) => log.push(line) })
 
     // Stage order, and the first script (absolute claim, 1-character voiceover) was sent back.
     expect(seen.filter((name) => name !== 'gate' && name !== 'repair')).toEqual(['brief', 'script', 'script', 'review', 'storyboard'])
@@ -96,6 +97,9 @@ describe('Spotfoundry Harness', () => {
     // Gate: hero passes, shot 1 is rejected once and repaired, shot 2 passes.
     expect(seen.filter((name) => name === 'repair')).toHaveLength(1)
     expect(result.qaRegenerations).toBe(1)
+    // 60 fps: every clip is interpolated by RIFE (x5) after the video model is freed.
+    expect(comfy.graphs.filter((graph) => Object.values(graph).some((node: any) => node.class_type === 'FrameInterpolate'))).toHaveLength(2)
+    expect(log.some((line) => line.startsWith('▸ interpolate'))).toBe(true)
 
     // The hero still is generated first without references; every frame after it is anchored to it.
     const graphs = comfy.graphs
@@ -129,7 +133,7 @@ describe('Spotfoundry Harness', () => {
     const { runHarness } = await import('../src/agent/harness.js')
     const before = comfy.graphs.length
     const log: string[] = []
-    await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'photo-test', silent: true, candidates: 1, productImage: photo, log: (line) => log.push(line) })
+    await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'photo-test', silent: true, candidates: 1, productImage: photo, resolution: '720p', fps: 24, log: (line) => log.push(line) })
 
     // No text-to-image graph: the first picture job is already an edit anchored to the photo.
     const graphs = comfy.graphs.slice(before)

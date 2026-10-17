@@ -2,14 +2,22 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { ComfyClient } from '../comfy/client.js'
 import { generateMusic, mixSoundtrack, synthesizeVoices } from '../lib/audio.js'
-import { assembleFilm, clipStart, filmLength, fontCovers, stillToClip } from '../lib/ffmpeg.js'
+import { existsSync } from 'node:fs'
+import { assembleFilm, clipStart, filmLength, fontCovers, GRADES, stillToClip } from '../lib/ffmpeg.js'
+import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
 import { memoryStatus } from '../lib/memory.js'
 import { buildAss } from '../lib/titles.js'
-import type { Brief, Script, Storyboard } from './checks.js'
+import { industryOf, type Brief, type Script, type Storyboard } from './checks.js'
 import { writeDeliveryReport } from './delivery.js'
 
-export const FINAL_SIZE: Record<string, [number, number]> = { '9:16': [1080, 1920], '16:9': [1920, 1080], '1:1': [1080, 1080] }
+/** Overlap into the end card. Between shots the film cuts hard: commercials cut on action and dissolve only to close. */
+export const END_DISSOLVE_SECONDS = 0.5
+/** Kept for hand-assembled projects (`spotfoundry cut` without a script), which still crossfade every join. */
 export const CROSSFADE_SECONDS = 0.4
+/** Explicit label required for AI-generated video (人工智能生成合成内容标识办法, in force 2025-09-01). */
+export const AI_LABEL = '内容由 AI 生成'
+/** The opening seconds that carry the label besides the end card. */
+const AI_LABEL_OPENING_SECONDS = 3
 export const END_CARD_SECONDS = 3
 export const TITLE_FONT = 'Noto Sans CJK SC'
 
@@ -48,30 +56,41 @@ export async function finishFilm(input: FinishInput): Promise<string> {
   const hero = { path: input.heroPath }
   const options = { audio: input.audio, silent: input.silent }
   await mkdir(join(dir, 'cut'), { recursive: true })
-  const [width, height] = FINAL_SIZE[brief.ratio]!
-  const clipPaths = storyboard.shots.map((shot) => join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}.mp4`))
+  const resolution = brief.resolution ?? DEFAULT_RESOLUTION
+  const fps = brief.fps ?? DEFAULT_FPS
+  const [width, height] = deliverySize(resolution, brief.ratio)
+  // Above 24 fps the clips stage has written RIFE-interpolated 120 fps masters next to the 24 fps clips.
+  const clipPaths = storyboard.shots.map((shot) => {
+    const base = join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}`)
+    return fps > 24 && existsSync(`${base}.hfr.mp4`) ? `${base}.hfr.mp4` : `${base}.mp4`
+  })
   const durations = storyboard.shots.map(() => 5)
+  // Hard cuts between shots, one dissolve into the end card.
+  const overlaps = [...storyboard.shots.slice(1).map(() => 0), END_DISSOLVE_SECONDS]
 
   // End card: the approved hero still with the brand and the single message. It guarantees the
   // film closes on the product, and that the brand text on screen is typeset, not generated.
   const endCard = join(dir, 'clips', 'endcard.mp4')
-  await stillToClip(input.endStill ?? hero.path, endCard, { width, height, fps: 24, seconds: END_CARD_SECONDS })
+  await stillToClip(input.endStill ?? hero.path, endCard, { width, height, fps, seconds: END_CARD_SECONDS })
   clipPaths.push(endCard)
   durations.push(END_CARD_SECONDS)
 
   // Titles and subtitles are typeset here in a real font; the image model is never asked to draw them.
   const cues = script.beats.map((beat, index) => ({
-    start: clipStart(index, durations, CROSSFADE_SECONDS),
-    end: clipStart(index, durations, CROSSFADE_SECONDS) + durations[index]!,
+    start: clipStart(index, durations, overlaps),
+    end: clipStart(index, durations, overlaps) + durations[index]!,
     title: beat.text,
     subtitle: beat.vo,
   }))
-  const endStart = clipStart(durations.length - 1, durations, CROSSFADE_SECONDS)
+  const endStart = clipStart(durations.length - 1, durations, overlaps)
   // The hero still already carries the brand on its label, so the end card adds only the message,
   // or the client's own closing line when the request quoted one.
   const closing = brief.tagline?.trim() || brief.message
   cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', closing } as (typeof cues)[number] & { closing: string })
-  const onScreen = cues.map((cue) => `${cue.title ?? ''}${cue.subtitle ?? ''}`).join('') + closing
+  // The explicit AI label: on the opening seconds and on the end card.
+  cues.push({ start: 0, end: AI_LABEL_OPENING_SECONDS, title: '', subtitle: '', label: AI_LABEL } as (typeof cues)[number] & { label: string })
+  cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', label: AI_LABEL } as (typeof cues)[number] & { label: string })
+  const onScreen = cues.map((cue) => `${cue.title ?? ''}${cue.subtitle ?? ''}`).join('') + closing + AI_LABEL
   const coverage = await fontCovers(TITLE_FONT, onScreen)
   if (!coverage.ok) throw new Error(`The title font ${TITLE_FONT} has no glyph for: ${coverage.missing.join(' ')}. Refusing to render boxes on screen.`)
   const ass = join(dir, 'cut', 'titles.ass')
@@ -80,7 +99,7 @@ export async function finishFilm(input: FinishInput): Promise<string> {
   // Sound: offline voiceover per beat over a generated instrumental bed that ducks under the voice.
   let soundtrack: string | undefined
   if (!options.silent) {
-    const total = filmLength(durations, CROSSFADE_SECONDS)
+    const total = filmLength(durations, overlaps)
     const voices: Array<{ path: string; start: number }> = []
     const lines = script.beats.map((beat, index) => ({ text: beat.vo, output: join(dir, 'audio', `vo_${index + 1}.wav`), maxSeconds: durations[index]! - 0.9 }))
     // The voice model runs in its own container on the same memory pool. Free what the video phase left in ComfyUI
@@ -96,7 +115,7 @@ export async function finishFilm(input: FinishInput): Promise<string> {
       return synthesizeVoices(lines)
     })
     for (const [index, beat] of script.beats.entries()) {
-      voices.push({ path: lines[index]!.output, start: clipStart(index, durations, CROSSFADE_SECONDS) + 0.45 })
+      voices.push({ path: lines[index]!.output, start: clipStart(index, durations, overlaps) + 0.45 })
       await record('cut', 'voiceover', undefined, { beat: beat.beat, seconds: spoken[index]!.seconds, speed: spoken[index]!.speed, model: spoken[index]!.model })
     }
     let music = options.audio
@@ -113,7 +132,14 @@ export async function finishFilm(input: FinishInput): Promise<string> {
   }
 
   const finalCut = join(dir, 'cut', 'final.mp4')
-  await assembleFilm(clipPaths, finalCut, { width, height, fps: 24, durations, crossfadeSeconds: CROSSFADE_SECONDS, ass, audio: soundtrack })
+  const industry = brief.industry ?? industryOf(`${brief.product} ${brief.title}`)
+  // Implicit label (GB 45438-2025 style AIGC metadata) next to the explicit one burned into the picture.
+  const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Spotfoundry', ProduceID: brief.id, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
+  await assembleFilm(clipPaths, finalCut, {
+    width, height, fps, durations, crossfadeSeconds: overlaps, ass, audio: soundtrack, grade: GRADES[industry] ?? GRADES.neutral,
+    metadata: { AIGC: aigc, comment: `${AI_LABEL} · Spotfoundry · ${brief.id}`, title: brief.title },
+  })
+  if (isUpscaled(resolution)) await record('cut', 'conform', undefined, { resolution, width, height, upscaled: true, note: 'generated at native 1080p, upscaled to the delivery size' })
   await writeDeliveryReport(dir, brief, script, storyboard, finalCut)
   return finalCut
 }

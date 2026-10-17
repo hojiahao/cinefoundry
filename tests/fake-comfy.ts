@@ -33,9 +33,11 @@ export function startFakeComfy(): Promise<{ url: string; graphs: Array<Record<st
       if (url.pathname === '/view') {
         const filename = url.searchParams.get('filename')!
         const graph = jobs.get(filename.split('.')[0]!)!
-        const size = Object.values(graph).map((node: any) => node.inputs).find((inputs: any) => 'width' in inputs)!
+        // A graph without a size (frame interpolation works on an uploaded clip) renders a small clip at the graph's frame rate.
+        const size = Object.values(graph).map((node: any) => node.inputs).find((inputs: any) => 'width' in inputs) ?? { width: 352, height: 640 }
+        const rate = Object.values(graph).find((node: any) => node.class_type === 'CreateVideo')?.inputs?.fps ?? 24
         const output = join(scratch, filename)
-        const source = filename.endsWith('.mp4') ? `testsrc=s=${size.width}x${size.height}:d=1:r=24` : `color=c=teal:s=${size.width}x${size.height}`
+        const source = filename.endsWith('.mp4') ? `testsrc=s=${size.width}x${size.height}:d=1:r=${rate}` : `color=c=teal:s=${size.width}x${size.height}`
         execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', source, ...(filename.endsWith('.mp4') ? ['-pix_fmt', 'yuv420p'] : ['-frames:v', '1']), output])
         response.writeHead(200); response.end(readFileSync(output))
         return

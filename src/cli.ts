@@ -7,7 +7,7 @@ const HELP = `Spotfoundry - agentic ad-film studio for a single DGX Spark
 
   Spotfoundry Harness: one brief in, one finished film out
 
-  spotfoundry harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--proof "facts"] [--plan-only] [--video-model ltx25-fast|ltx25-fast-nvfp4|wan22-14b|wan22-5b|seedance]
+  spotfoundry harness "<brief>" [--id id] [--ratio 16:9|9:16|1:1] [--duration 15] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts"] [--plan-only] [--video-model ltx25-fast|ltx25-fast-nvfp4|wan22-14b|wan22-5b|seedance]
 
   Individual tools, as the skills call them
   spotfoundry eval [--briefs eval/briefs.json] [--repeats 2]      with/without-skill comparison
@@ -17,7 +17,7 @@ const HELP = `Spotfoundry - agentic ad-film studio for a single DGX Spark
   spotfoundry copy-check <file|-> [--category general|food|health_food|cosmetics|medical]
   spotfoundry shots <video> [--out dir] [--threshold 0.30]
   spotfoundry image --prompt <text> [--size 1328x1328] [--ref img ...] [--project id --shot n | --out file]
-  spotfoundry video --prompt <text> [--first-frame img] [--duration 5] [--ratio 9:16] [--resolution 720p] [--project id --shot n | --out file]
+  spotfoundry video --prompt <text> [--first-frame img] [--duration 5] [--ratio 16:9] [--resolution 1080p] [--project id --shot n | --out file]
   spotfoundry qa --frame <img> [--ref img ...] [--expect text] [--project id --shot n]
   spotfoundry cut --project <id> [--audio file] [--silent] [--end-still img] re-run end card, titles, sound and grade
   spotfoundry mem <status|plan|free> [--need name=GB ...]

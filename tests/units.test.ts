@@ -475,3 +475,25 @@ describe('health effect claims', () => {
     expect(scanCopy('主要香调雪松薰衣草', 'general')).toEqual([])
   })
 })
+
+describe('delivery formats', () => {
+  it('defaults to landscape 1080p at 60 fps and scales presets up to 6K', async () => {
+    const f = await import('../src/lib/formats.js')
+    expect([f.DEFAULT_RATIO, f.DEFAULT_RESOLUTION, f.DEFAULT_FPS]).toEqual(['16:9', '1080p', 60])
+    expect(f.deliverySize('1080p', '16:9')).toEqual([1920, 1080])
+    expect(f.deliverySize('4k', '16:9')).toEqual([3840, 2160])
+    expect(f.deliverySize('6k', '16:9')).toEqual([6144, 3456])
+    expect(f.deliverySize('2k', '9:16')).toEqual([1440, 2560])
+    expect(f.deliverySize('1080p', '1:1')).toEqual([1080, 1080])
+    expect(f.generationResolution('4k')).toBe('1080p')
+    expect(f.isUpscaled('1080p')).toBe(false)
+    expect(f.isUpscaled('4k')).toBe(true)
+    expect(() => f.deliverySize('8k', '16:9')).toThrow('Unknown resolution')
+    expect(() => f.checkFps(50)).toThrow('Unsupported frame rate')
+  })
+  it('times hard cuts and a closing dissolve', () => {
+    // three 5 s shots cut hard, a 0.5 s dissolve into a 3 s end card
+    expect(clipStart(3, [5, 5, 5, 3], [0, 0, 0.5])).toBeCloseTo(14.5)
+    expect(filmLength([5, 5, 5, 3], [0, 0, 0.5])).toBeCloseTo(17.5)
+  })
+})

@@ -175,3 +175,23 @@ export async function generateVideo(
     detail: { model: modelName, fps: model.fps, segments: segmentCount, durationSeconds: segmentCount * VIDEO_SEGMENT_SECONDS, firstFrame: Boolean(request.firstFrame) },
   }
 }
+
+/** Frame interpolation model in ComfyUI's models/frame_interpolation (RIFE 4.26, MIT). */
+export const INTERPOLATION_MODEL = process.env.SPOTFOUNDRY_RIFE_MODEL ?? 'rife426.pth'
+
+/**
+ * Raise a clip's frame rate with RIFE: 24 fps x5 = 120 fps, which the cut conforms to 60 by dropping every other
+ * frame, so 60 fps lands exactly on the 24 fps motion. Runs as its own ComfyUI job after the video model is freed:
+ * 121 frames at 1088x1920 become 601 float frames, about 15 GB.
+ */
+export async function interpolateVideo(comfy: ComfyClient, request: { input: string; output: string; multiplier: number; sourceFps?: number }): Promise<{ seconds: number; fps: number }> {
+  const started = Date.now()
+  const fps = (request.sourceFps ?? VIDEO_FPS) * request.multiplier
+  const uploaded = await comfy.uploadImage(await readFile(request.input), `interp_${Date.now()}_${request.input.split('/').pop()}`)
+  const outputs = await comfy.run(renderWorkflow(await loadWorkflow('rife_interpolate'), {
+    video: uploaded, model: INTERPOLATION_MODEL, multiplier: request.multiplier, fps, filename_prefix: `spotfoundry/${Date.now()}_hfr`,
+  }))
+  await mkdir(dirname(request.output), { recursive: true })
+  await writeFile(request.output, await comfy.download(outputs[0]!))
+  return { seconds: (Date.now() - started) / 1000, fps }
+}

@@ -1,0 +1,18 @@
+{
+  "1": { "class_type": "LoadVideo", "inputs": { "file": "{{video}}" } },
+  "2": { "class_type": "GetVideoComponents", "inputs": { "video": ["1", 0] } },
+  "3": { "class_type": "FrameInterpolationModelLoader", "inputs": { "model_name": "{{model}}" } },
+  "4": { "class_type": "FrameInterpolate", "inputs": { "interp_model": ["3", 0], "images": ["2", 0], "multiplier": "{{multiplier}}" } },
+  "5": { "class_type": "CreateVideo", "inputs": { "images": ["4", 0], "fps": "{{fps}}" } },
+  "6": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": ["5", 0],
+      "filename_prefix": "{{filename_prefix}}",
+      "format": "mp4",
+      "format.codec": "h264",
+      "format.codec.encoding": "re-encode",
+      "format.codec.encoding.crf": 12
+    }
+  }
+}

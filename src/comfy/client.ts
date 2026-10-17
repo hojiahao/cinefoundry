@@ -51,7 +51,8 @@ export class ComfyClient {
       const entry = history[promptId]
       if (entry) {
         if (entry.status?.status_str === 'error') throw new ComfyError(`ComfyUI workflow failed: ${JSON.stringify(entry.status).slice(0, 2000)}`)
-        if (entry.status?.completed || Object.keys(entry.outputs ?? {}).length > 0) return outputFiles(entry.outputs ?? {})
+        // Wait for the whole graph: a LoadVideo/LoadImage preview shows up in `outputs` long before the saving node runs.
+        if (entry.status?.completed || (entry.status === undefined && Object.keys(entry.outputs ?? {}).length > 0)) return outputFiles(entry.outputs ?? {})
       }
       await new Promise((resolve) => setTimeout(resolve, this.pollMs))
     }
@@ -89,7 +90,8 @@ function outputFiles(outputs: Record<string, Record<string, unknown>>): ComfyOut
   for (const nodeOutput of Object.values(outputs)) {
     for (const key of ['images', 'gifs', 'videos', 'video', 'audio']) {
       for (const record of (nodeOutput[key] as ComfyOutputFile[] | undefined) ?? []) {
-        if (record?.filename) files.push(record)
+        // Previews of loaded inputs (type 'input') are not results.
+        if (record?.filename && record.type !== 'input') files.push(record)
       }
     }
   }

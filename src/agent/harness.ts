@@ -3,7 +3,8 @@ import { join } from 'node:path'
 import { ComfyClient } from '../comfy/client.js'
 import { scanCopy } from '../lib/compliance.js'
 import { normalizeImage, probeDuration } from '../lib/ffmpeg.js'
-import { generateImage, generateVideo, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
+import { generateImage, generateVideo, interpolateVideo, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
+import { DEFAULT_FPS, DEFAULT_RATIO, DEFAULT_RESOLUTION, checkFps, generationResolution } from '../lib/formats.js'
 import { sleepService, wakeService } from '../lib/rest.js'
 import { memoryStatus } from '../lib/memory.js'
 import { addAsset, createProject, projectDir, projectsRoot, setStage as saveStage, type Stage } from '../lib/project.js'
@@ -25,7 +26,10 @@ export interface HarnessOptions {
   planOnly?: boolean
   /** Run the agents without their skills. Exists for the with/without-skill comparison only. */
   withoutSkills?: boolean
+  /** Delivery resolution preset: 1080p (default), 2k, 4k, 6k; generation runs at most at native 1080p. */
   resolution?: string
+  /** Delivery frame rate: 60 (default, RIFE-interpolated from 24), 24, 30 or 120. */
+  fps?: number
   videoModel?: VideoModel
   /** Use this music file instead of generating a bed. Only a file the user supplied or has rights to. */
   audio?: string
@@ -158,7 +162,7 @@ Return JSON only:
   // What the request states outright is not the model's to decide: the coffee brief asked for
   // 横版 and the intake agent still chose 9:16. Explicit user words win over the agent's choice.
   const stated = statedFormat(options.brief)
-  const brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ...(options.ratio ? { ratio: options.ratio as Brief['ratio'] } : stated.ratio ? { ratio: stated.ratio } : {}), ...(options.durationSeconds ? { durationSeconds: options.durationSeconds } : stated.durationSeconds ? { durationSeconds: stated.durationSeconds } : {}) }
+  const brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ratio: (options.ratio as Brief['ratio'] | undefined) ?? stated.ratio ?? DEFAULT_RATIO, ...(options.durationSeconds ? { durationSeconds: options.durationSeconds } : stated.durationSeconds ? { durationSeconds: stated.durationSeconds } : {}) }
   // A closing line the client quoted is theirs, word for word: the copywriter never saw the request, so
   // "DGX Spark，把 AI 超算放上你的桌面" became "AI supercomputing on your desk". The model's copy counts only if it is in the request.
   const modelTagline = briefRun.value.tagline?.trim()
@@ -171,6 +175,9 @@ Return JSON only:
   }
   if (brief.appearance) brief.appearance = faithfulLabel(brief.appearance, options.brief, brief.brandText)
   if (options.proof?.trim()) brief.proof = options.proof.trim()
+  brief.resolution = (options.resolution ?? DEFAULT_RESOLUTION).toLowerCase()
+  generationResolution(brief.resolution) // throws on an unknown preset before any model runs
+  brief.fps = checkFps(options.fps ?? DEFAULT_FPS)
   rejectedAttempts.brief = briefRun.rejected.length
   await createProject({ id: brief.id, title: brief.title, brief: options.brief, ratio: brief.ratio, durationSeconds: brief.durationSeconds })
   const dir = projectDir(brief.id)
@@ -458,7 +465,7 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
 
   await enterPhase(comfy, 'frames (Qwen-Image-Edit)', record)
   const frames = new Map<number, string>()
-  const frameSizeFor = frameSize(options.resolution ?? '720p', brief.ratio)
+  const frameSizeFor = frameSize(generationResolution(brief.resolution!), brief.ratio)
   const framePath = (shot: Shot, suffix: string) => join(dir, 'frames', `shot_${String(shot.shot).padStart(3, '0')}${suffix}.png`)
   const render = (shot: Shot, prompt: string, suffix: string) => {
     const path = framePath(shot, suffix)
@@ -533,19 +540,31 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
 
   // ---- clips -----------------------------------------------------------------------------
   await setStage(brief.id, 'clips', 'running')
-  const videoModel = options.videoModel ?? 'ltx25-fast'
+  const videoModel = options.videoModel ?? 'ltx25-fast-nvfp4'
   const clipsPhase = `clips (${videoModel.startsWith('ltx25') ? 'LTX-2.5 Fast' : videoModel === 'seedance' ? 'Seedance' : 'Wan2.2'})`
   await rest(clipsPhase, [planner, reviewer])
   await enterPhase(comfy, clipsPhase, record)
   for (const [index, shot] of storyboard.shots.entries()) {
     const output = join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}.mp4`)
     const clip = await generateVideo(comfy, {
-      prompt: composeVideoPrompt(shot, industry), negative: composeVideoNegative(VIDEO_NEGATIVE, industry), output, resolution: options.resolution ?? '720p', ratio: brief.ratio, durationSeconds: shot.seconds || 5,
+      prompt: composeVideoPrompt(shot, industry), negative: composeVideoNegative(VIDEO_NEGATIVE, industry), output, resolution: generationResolution(brief.resolution!), ratio: brief.ratio, durationSeconds: shot.seconds || 5,
       firstFrame: frames.get(shot.shot), freeAfter: index === storyboard.shots.length - 1, model: videoModel,
     })
     log(`▸ clip ${shot.shot}       ${clip.seconds.toFixed(1)}s`)
     await record('clips', 'video', undefined, { shot: shot.shot, seconds: clip.seconds })
     await addAsset(brief.id, { id: `clip-${shot.shot}`, kind: 'video', stage: 'clips', path: `clips/shot_${String(shot.shot).padStart(3, '0')}.mp4`, shot: shot.shot, execution: clip.workflow.startsWith('cloud:') ? 'cloud' : 'local-dgx-spark', model: clip.workflow, seconds: clip.seconds })
+  }
+  // Frame rate: RIFE x5 turns the 24 fps clips into 120 fps masters while both language models still sleep
+  // (601 frames at 1080p is about 15 GB); the cut conforms them to the delivery rate by dropping frames evenly.
+  if ((brief.fps ?? DEFAULT_FPS) > 24 && !videoModel.startsWith('seedance')) {
+    await enterPhase(comfy, 'interpolate (RIFE)', record)
+    for (const shot of storyboard.shots) {
+      const base = join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}`)
+      const hfr = await interpolateVideo(comfy, { input: `${base}.mp4`, output: `${base}.hfr.mp4`, multiplier: 5 })
+      log(`▸ interpolate ${shot.shot}  ${hfr.seconds.toFixed(1)}s · ${hfr.fps} fps master`)
+      await record('clips', 'interpolate', undefined, { shot: shot.shot, seconds: hfr.seconds, fps: hfr.fps, model: 'rife-4.26' })
+    }
+    await comfy.free()
   }
   await setStage(brief.id, 'clips', 'done')
 
@@ -616,7 +635,7 @@ export function statedTagline(request: string): string | undefined {
 const closingLine = (text: string) => text.trim().replace(/[。！？.!?，,]+$/, '')
 
 export function statedFormat(request: string): { ratio?: Brief['ratio']; durationSeconds?: number } {
-  const ratio = /横版|横屏|16:9|16：9/.test(request) ? '16:9' : /竖版|竖屏|9:16|9：16/.test(request) ? '9:16' : /方形|方版|1:1|1：1/.test(request) ? '1:1' : undefined
+  const ratio = /横版|横屏|16:9|16：9/.test(request) ? '16:9' : /竖版|竖屏|9:16|9：16|抖音|快手|小红书|视频号|TikTok|Reels|Shorts/i.test(request) ? '9:16' : /方形|方版|1:1|1：1/.test(request) ? '1:1' : undefined
   const seconds = /(\d+)\s*秒/.exec(request)?.[1]
   const durationSeconds = seconds && Number(seconds) % 5 === 0 && Number(seconds) >= 5 && Number(seconds) <= 30 ? Number(seconds) : undefined
   return { ratio, durationSeconds }

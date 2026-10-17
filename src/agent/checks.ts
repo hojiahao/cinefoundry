@@ -26,6 +26,10 @@ export interface Brief {
   tagline?: string
   /** Facts the client can substantiate (specs, figures). Only these may back a claim in the copy. */
   proof?: string
+  /** Delivery resolution preset (src/lib/formats.ts); 1080p when missing. */
+  resolution?: string
+  /** Delivery frame rate; 60 when missing. */
+  fps?: number
 }
 
 /** The vision model's reading of a user-supplied product photo: the product's look only, never its placement, light or background. */
