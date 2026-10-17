@@ -2,6 +2,7 @@ import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../li
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Brief, Script, Storyboard } from './checks.js'
+import { revisionHistoryMarkdown } from '../engine/revise.js'
 
 interface Row { ts: string; stage: string; agent: string; execution?: string; model?: string; [key: string]: unknown }
 
@@ -14,7 +15,10 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const all = (await readFile(join(dir, 'reports', 'run.jsonl'), 'utf8')).split('\n').filter(Boolean).map((line) => JSON.parse(line) as Row)
   // One run only: run.jsonl is appended to, and a re-run or a re-cut must not mix its numbers with an earlier run's.
   const runId = [...all].reverse().find((row) => row.stage === 'brief' && row.agent === 'intake')?.runId
-  const thisRun = runId ? all.filter((row) => row.runId === runId) : all
+  // Revisions of this run (kind "revision", baseRunId = the run) belong to it: a redone shot or a changed line is part of
+  // what was delivered, and each shot's rows below are taken from the latest run that made it.
+  const thisRun = runId ? all.filter((row) => row.runId === runId || row.baseRunId === runId) : all
+  const baseRun = runId ? thisRun.filter((row) => row.runId === runId) : thisRun
   // A re-cut appends new voice and music rows: keep the latest per beat.
   // Cutdowns voice their own beats: the key carries the version so a cutdown's beat 1 never hides the master's.
   const audioKey = (row: Row) => `${row.agent}:${row.version ?? ''}:${row.beat ?? ''}`
@@ -28,22 +32,25 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const unverified = gates.filter((row) => row.score === -1)
   const userPhoto = rows.find((row) => row.agent === 'product-hero' && row.source === 'user photo')
   // The frame the harness kept: the highest score, the later attempt on a tie (harness.ts, consider).
-  const keptGate = (shot: number) => gates.filter((row) => row.shot === shot)
+  const latestRunOf = (list: Row[], shot: number) => [...list].reverse().find((row) => row.shot === shot)?.runId
+  const shotGates = (shot: number) => gates.filter((row) => row.shot === shot && row.runId === latestRunOf(gates.filter((g) => g.agent === 'quality-gate'), shot))
+  const shotClip = (shot: number) => [...clips].reverse().find((row) => row.shot === shot)
+  const keptGate = (shot: number) => shotGates(shot)
     .reduce<Row | undefined>((top, row) => (!top || (row.pass && !top.pass) || (!!row.pass === !!top.pass && (row.score as number) >= (top.score as number)) ? row : top), undefined)
   const keptAfterFail = storyboard.shots.filter((shot) => {
-    const attempts = gates.filter((row) => row.shot === shot.shot)
+    const attempts = shotGates(shot.shot)
     return attempts.length > 0 && !attempts.some((row) => row.pass)
   })
   const seconds = (value: unknown) => (typeof value === 'number' ? `${value.toFixed(1)} s` : '-')
   const shotRows = storyboard.shots.map((shot) => {
-    const attempts = gates.filter((row) => row.shot === shot.shot)
+    const attempts = shotGates(shot.shot)
     const best = keptGate(shot.shot)
-    const clip = clips.find((row) => row.shot === shot.shot)
+    const clip = shotClip(shot.shot)
     const frameSeconds = attempts.reduce((sum, row) => sum + ((row.imageSeconds as number) || 0), 0)
     return `| ${shot.shot} | ${shot.framing} · ${shot.camera} | ${attempts.length} | ${best ? `${best.pass ? 'pass' : 'kept after fail'} ${best.score}` : '-'} | ${frameSeconds.toFixed(1)} s | ${seconds(clip?.seconds)} |`
   }).join('\n')
-  const stageSeconds = (stage: string) => rows.filter((row) => row.stage === stage && typeof row.seconds === 'number').reduce((sum, row) => sum + (row.seconds as number), 0)
-  const memory = rows.filter((row) => row.agent === 'scheduler' && typeof row.availableBeforeGb === 'number').map((row) => `| ${row.phase} | ${row.availableBeforeGb} GB | ${row.availableAfterFreeGb} GB |`).join('\n')
+  const stageSeconds = (stage: string) => baseRun.filter((row) => row.stage === stage && typeof row.seconds === 'number').reduce((sum, row) => sum + (row.seconds as number), 0)
+  const memory = baseRun.filter((row) => row.agent === 'scheduler' && typeof row.availableBeforeGb === 'number').map((row) => `| ${row.phase} | ${row.availableBeforeGb} GB | ${row.availableAfterFreeGb} GB |`).join('\n')
   const audio = rows.filter((row) => (row.agent === 'voiceover' || row.agent === 'music') && row.version === undefined)
   // The latest cut of each version, and the latest QC of the run.
   const versionCuts = [...new Map(rows.filter((row) => row.stage === 'versions' && row.agent === 'cut').map((row) => [row.version as string, row])).values()]
@@ -83,7 +90,7 @@ ${shotRows}
 | 需求 → 分镜（模型调用） | ${(stageSeconds('brief') + stageSeconds('script') + stageSeconds('compliance') + stageSeconds('storyboard')).toFixed(1)} s |
 | 定妆图 | ${userPhoto ? `用户提供的产品照片，质检 ${userPhoto.pass ? 'pass' : 'reject'} ${userPhoto.score}` : `${gates.filter((row) => row.agent === 'product-hero').length} 次生成与质检`} |
 | 首帧与质检 | ${gates.filter((row) => row.agent === 'quality-gate').length} 次质检，${director?.qaRegenerations ?? new Set(gates.filter((row) => row.agent === 'quality-gate' && (row.attempt as number) > 0).map((row) => `${row.shot}/${row.attempt}`)).size} 次重生成 |
-| 视频 | ${clips.map((row) => `${(row.seconds as number).toFixed(0)} s`).join(' / ')} |
+| 视频 | ${storyboard.shots.map((shot) => shotClip(shot.shot)).filter((row): row is Row => !!row).map((row) => `${(row.seconds as number).toFixed(0)} s`).join(' / ')} |
 | 配音 · 音乐 | ${audio.map((row) => `${row.agent} ${seconds(row.seconds)}${row.model ? ` (${row.model})` : ''}`).join(' · ') || '无声'} |
 | 总耗时 | ${director ? `${(director.wallSeconds as number).toFixed(0)} s` : '-'} |
 
@@ -113,6 +120,10 @@ ${memory || '| - | - | - |'}
 
 - 本地（DGX Spark）：${rows.filter((row) => row.execution !== 'cloud' && row.model).length} 次模型调用
 - 云端：${cloud.length ? cloud.map((row) => `${row.stage}/${row.agent} (${row.model})`).join('，') : '无'}
+
+## 修订记录
+
+${await revisionHistoryMarkdown(dir)}
 
 ## 待确认事项
 

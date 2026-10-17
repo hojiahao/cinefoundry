@@ -38,6 +38,8 @@ export interface ProjectState {
   updatedAt: string
   stages: Record<Stage, { status: StageStatus; note?: string; updatedAt?: string }>
   assets: Asset[]
+  /** The options the project was made with (ratio, fps, video model, silent...): a revision runs with the same ones. */
+  options?: Record<string, unknown>
 }
 
 export function projectsRoot(): string {
@@ -49,7 +51,7 @@ export function projectDir(id: string): string {
   return join(projectsRoot(), id)
 }
 
-export async function createProject(input: Pick<ProjectState, 'id' | 'title' | 'brief' | 'ratio' | 'durationSeconds'> & { runId?: string; format?: string; stages?: readonly string[]; folders?: readonly string[] }): Promise<ProjectState> {
+export async function createProject(input: Pick<ProjectState, 'id' | 'title' | 'brief' | 'ratio' | 'durationSeconds'> & { runId?: string; format?: string; stages?: readonly string[]; folders?: readonly string[]; options?: Record<string, unknown> }): Promise<ProjectState> {
   const { stages = STAGES, folders = ['creative', 'script', 'storyboard', 'frames', 'clips', 'cut', 'reports'], ...fields } = input
   const now = new Date().toISOString()
   const state: ProjectState = {

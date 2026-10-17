@@ -84,3 +84,8 @@ export async function wakeService(baseUrl: string): Promise<{ wokeSeconds?: numb
   if (state.get(baseUrl) !== 'none') state.delete(baseUrl)
   return ensureAwake(baseUrl)
 }
+
+/** Wake the language models a GPU phase put to sleep, underneath whatever runs next (finishing needs neither). */
+export function wakeAll(targets: Array<{ baseUrl: string }>): Promise<unknown> {
+  return Promise.all(targets.map((target) => wakeService(target.baseUrl).catch(() => undefined)))
+}

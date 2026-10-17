@@ -9,7 +9,7 @@ import { DEFAULT_FPS } from '../../lib/formats.js'
 import { probeDuration } from '../../lib/ffmpeg.js'
 import { addAsset } from '../../lib/project.js'
 import { reviewCopy } from './compliance.js'
-import { need, type AdContext } from './context.js'
+import { need, type AdContext, type VersionCut } from './context.js'
 
 /** The versioning editor's attempts at a plan whose edit and copy pass every check. */
 const PLAN_ATTEMPTS = 4
@@ -61,7 +61,7 @@ export async function versionsStage(ctx: AdContext): Promise<string> {
   const brief = need(ctx.brief, 'brief')
   const script = need(ctx.script, 'script')
   const storyboard = need(ctx.storyboard, 'storyboard')
-  const master = need(ctx.masterCut, 'master cut')
+  need(ctx.masterCut, 'master cut')
   const dir = ctx.dir!
   const fps = brief.fps ?? DEFAULT_FPS
   const specs = cutdownsFor(brief.durationSeconds, storyboard.shots.length)
@@ -69,7 +69,6 @@ export async function versionsStage(ctx: AdContext): Promise<string> {
     await ctx.record('versions', 'versioning-editor', undefined, { skipped: `no cutdown of a ${brief.durationSeconds} s master: a version is at most half the master's length` })
     return `no cutdowns of a ${brief.durationSeconds} s master`
   }
-  const clips = shotClipPaths(dir, storyboard, fps)
   const scores = await gateScores(dir, ctx.runId)
   const made: string[] = []
   for (const spec of specs) {
@@ -103,22 +102,35 @@ export async function versionsStage(ctx: AdContext): Promise<string> {
     if (review.blocked.length) { await openItem({ blocked: review.blocked.map((f) => f.text) }, `compliance blocked the copy (${review.blocked.map((f) => f.text).join(', ')})`); continue }
     plan = { ...plan, script: review.script }
     await writeFile(join(dir, 'cut', `version_${spec.id}.json`), JSON.stringify({ ...plan, fps, compliance: { scan: review.findings, reviewer: review.reviewer } }, null, 2))
-
-    const length = versionLength(plan.shots)
-    // The score is back-timed: the version takes the last `length` seconds of the master's bed, so it resolves on its end card.
-    const music = master.music ? { kind: 'file' as const, path: master.music.path, offset: master.music.offset + Math.max(0, master.seconds - length) } : undefined
-    const cut: CutResult = await cutFilm({
-      dir, brief, script: plan.script, shots: plan.shots.map((shot) => ({ clip: clips[storyboard.shots.findIndex((s) => s.shot === shot.shot)]!, seconds: shot.seconds })),
-      endCard: endCardPath(dir), output: join(dir, 'cut', `final_${spec.id}.mp4`), ass: join(dir, 'cut', `titles_${spec.id}.ass`), voicePrefix: `v${spec.id}_vo`,
-      music, silent: ctx.options.silent || !master.music, comfy: need(ctx.comfy, 'comfy'), record: ctx.record, log: ctx.log, treatment: ctx.treatment,
-      stage: 'versions', recordTags: { version: spec.id }, produceId: `${brief.id}-${spec.id}`,
-    })
-    const measured = await probeDuration(cut.path)
-    await addAsset(brief.id, { id: `final-${spec.id}`, kind: 'video', stage: 'versions', path: `cut/final_${spec.id}.mp4`, execution: 'local-dgx-spark', model: 'ffmpeg', seconds: measured, note: `${spec.seconds} s cutdown of the master` })
-    await ctx.record('versions', 'cut', undefined, { version: spec.id, path: `cut/final_${spec.id}.mp4`, editSeconds: cut.seconds, fileSeconds: measured, shots: plan.shots.map((s) => ({ shot: s.shot, seconds: s.seconds, why: s.why })), copy: plan.script.beats.map((b) => b.zh), voice: cut.voice ?? null, musicOffset: cut.music?.offset ?? null })
-    ctx.log(`▸ version ${spec.id}  ${cut.path} (${measured.toFixed(2)} s)`)
-    ctx.versions.push({ spec, plan, cut })
+    ctx.versions.push(await cutVersion(ctx, spec, plan))
     made.push(spec.id)
   }
   return made.length ? `${made.join(' · ')} cut` : 'no version cut (see open items)'
+}
+
+/**
+ * Cut one approved version plan from the master's clips, end card and score (back-timed so it resolves on the end card).
+ * The versions stage cuts each new plan with it; a revision re-cuts a version from its saved plan when a shot it uses,
+ * the grade or the score changed, keeping its voice lines (`reuseVoices`).
+ */
+export async function cutVersion(ctx: AdContext, spec: VersionSpec, plan: VersionPlan, options: { reuseVoices?: boolean; grade?: string } = {}): Promise<VersionCut> {
+  const brief = need(ctx.brief, 'brief')
+  const storyboard = need(ctx.storyboard, 'storyboard')
+  const master = need(ctx.masterCut, 'master cut')
+  const dir = ctx.dir!
+  const clips = shotClipPaths(dir, storyboard, brief.fps ?? DEFAULT_FPS)
+  const length = versionLength(plan.shots)
+  // The score is back-timed: the version takes the last `length` seconds of the master's bed, so it resolves on its end card.
+  const music = master.music ? { kind: 'file' as const, path: master.music.path, offset: master.music.offset + Math.max(0, master.seconds - length) } : undefined
+  const cut: CutResult = await cutFilm({
+    dir, brief, script: plan.script, shots: plan.shots.map((shot) => ({ clip: clips[storyboard.shots.findIndex((s) => s.shot === shot.shot)]!, seconds: shot.seconds, shot: shot.shot })),
+    endCard: endCardPath(dir), output: join(dir, 'cut', `final_${spec.id}.mp4`), ass: join(dir, 'cut', `titles_${spec.id}.ass`), voicePrefix: `v${spec.id}_vo`,
+    music, silent: ctx.options.silent || !master.music, comfy: need(ctx.comfy, 'comfy'), record: ctx.record, log: ctx.log, treatment: ctx.treatment,
+    stage: 'versions', recordTags: { version: spec.id }, produceId: `${brief.id}-${spec.id}`, label: spec.id, reuseVoices: options.reuseVoices, grade: options.grade,
+  })
+  const measured = await probeDuration(cut.path)
+  await addAsset(brief.id, { id: `final-${spec.id}`, kind: 'video', stage: 'versions', path: `cut/final_${spec.id}.mp4`, execution: 'local-dgx-spark', model: 'ffmpeg', seconds: measured, note: `${spec.seconds} s cutdown of the master` })
+  await ctx.record('versions', 'cut', undefined, { version: spec.id, path: `cut/final_${spec.id}.mp4`, editSeconds: cut.seconds, fileSeconds: measured, shots: plan.shots.map((s) => ({ shot: s.shot, seconds: s.seconds, why: s.why })), copy: plan.script.beats.map((b) => b.zh), voice: cut.voice ?? null, musicOffset: cut.music?.offset ?? null })
+  ctx.log(`▸ version ${spec.id}  ${cut.path} (${measured.toFixed(2)} s)`)
+  return { spec, plan, cut }
 }

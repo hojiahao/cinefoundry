@@ -1,9 +1,11 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { ComfyClient } from '../comfy/client.js'
-import { generateMusic, mixSoundtrack, synthesizeVoices } from '../lib/audio.js'
+import { generateMusic, mixSoundtrack, synthesizeVoices, type VoiceResult } from '../lib/audio.js'
 import { existsSync } from 'node:fs'
-import { assembleFilm, clipStart, filmLength, fontCovers, GRADES, stillToClip } from '../lib/ffmpeg.js'
+import { assembleFilm, clipStart, filmLength, fontCovers, GRADES, probeDuration, stillToClip } from '../lib/ffmpeg.js'
+import { gradeWith } from '../crafts/finishing.js'
+import { pictureTrack, stored, writeTimeline } from '../crafts/timeline.js'
 import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
 import { memoryStatus, modelRoots, releaseFileCache } from '../lib/memory.js'
 import { buildAss, type TitleCue } from '../lib/titles.js'
@@ -60,10 +62,19 @@ export interface FinishInput {
   log: (line: string) => void
   /** The creative director's treatment: the cast voice and the score direction. */
   treatment?: Treatment
+  /** The score to use instead of `audio` or a new bed (a revision keeps the master's). */
+  music?: CutMusic
+  /** Keep voice lines already spoken for this cut (audio/vo_<n>.wav) instead of voicing them again; `revoice` beats are voiced anew. */
+  reuseVoices?: boolean
+  revoice?: number[]
+  /** Keep the end card already made (clips/endcard.mp4). */
+  reuseEndCard?: boolean
+  /** Grade adjustment by name (src/crafts/finishing.ts), laid over the industry's grade. */
+  grade?: string
 }
 
 /** One shot of an edit: the clip file and the seconds it occupies, taken from the clip's head. */
-export interface CutShot { clip: string; seconds: number }
+export interface CutShot { clip: string; seconds: number; /** The storyboard shot it is. */ shot?: number }
 
 /** Where the score of a cut comes from: generated for this edit, or an existing bed starting `offset` seconds in. */
 export type CutMusic = { kind: 'generate' } | { kind: 'file'; path: string; offset: number }
@@ -93,6 +104,13 @@ export interface CutInput {
   recordTags?: Record<string, unknown>
   /** ProduceID of the implicit AIGC label. */
   produceId: string
+  /** The deliverable this cut is ("master", "15s", "06s"): its timeline is cut/<label>.timeline.json. */
+  label: string
+  /** Keep voice lines already spoken for this cut instead of voicing them again; `revoice` beats are voiced anew. */
+  reuseVoices?: boolean
+  revoice?: number[]
+  /** Grade adjustment by name (src/crafts/finishing.ts), laid over the industry's grade. */
+  grade?: string
 }
 
 export interface CutResult {
@@ -145,12 +163,13 @@ export async function finishMaster(input: FinishInput): Promise<CutResult> {
   const { dir, brief, storyboard } = input
   await mkdir(join(dir, 'cut'), { recursive: true })
   // The end card guarantees the film closes on the product, and that the brand text on screen is typeset, not generated.
-  const endCard = await makeEndCard(dir, brief, input.endStill ?? input.heroPath)
+  const endCard = input.reuseEndCard && existsSync(endCardPath(dir)) ? endCardPath(dir) : await makeEndCard(dir, brief, input.endStill ?? input.heroPath)
   return cutFilm({
-    dir, brief, script: input.script, shots: shotClipPaths(dir, storyboard, brief.fps ?? DEFAULT_FPS).map((clip) => ({ clip, seconds: 5 })), endCard,
+    dir, brief, script: input.script, shots: shotClipPaths(dir, storyboard, brief.fps ?? DEFAULT_FPS).map((clip, index) => ({ clip, seconds: 5, shot: storyboard.shots[index]!.shot })), endCard,
     output: join(dir, 'cut', 'final.mp4'), ass: join(dir, 'cut', 'titles.ass'), voicePrefix: 'vo',
-    music: input.audio ? { kind: 'file', path: input.audio, offset: 0 } : { kind: 'generate' }, silent: input.silent,
+    music: input.music ?? (input.audio ? { kind: 'file', path: input.audio, offset: 0 } : { kind: 'generate' }), silent: input.silent,
     comfy: input.comfy, record: input.record, log: input.log, treatment: input.treatment, stage: 'cut', produceId: brief.id,
+    label: 'master', reuseVoices: input.reuseVoices, revoice: input.revoice, grade: input.grade,
   })
 }
 
@@ -198,36 +217,43 @@ export async function cutFilm(input: CutInput): Promise<CutResult> {
   const speech: CutResult['speech'] = []
   let music: CutResult['music']
   let voice: string | undefined
+  const voices: Array<{ path: string; start: number; seconds: number; beat: number }> = []
   if (!input.silent) {
-    const voices: Array<{ path: string; start: number }> = []
     const lines = script.beats.map((beat, index) => ({ text: beat.vo, output: join(dir, 'audio', `${input.voicePrefix}_${index + 1}.wav`), maxSeconds: durations[index]! - VOICE_SLOT_MARGIN_SECONDS }))
-    // The voice model runs in its own container on the same memory pool. Free what the video phase left in ComfyUI
-    // first: the nuts film died here with "CUDA error: out of memory" after all three clips were done. One retry
-    // after another free covers a model that was still releasing.
-    await enterPhase(comfy, 'voiceover (TTS)', record)
+    // A re-cut keeps the lines already spoken (the same take, the same timing) and voices only what changed.
+    const kept = lines.map((line, index) => !!input.reuseVoices && !input.revoice?.includes(script.beats[index]!.beat) && existsSync(line.output))
+    const toSpeak = lines.filter((_, index) => !kept[index])
     // The announcer the creative director cast, when that voice has been designed on this machine.
     const cast = input.treatment && castableVoices().some((v) => v.id === input.treatment!.sound.voice) ? voiceReference(input.treatment.sound.voice) : undefined
     if (cast) {
       voice = input.treatment!.sound.voice
-      log(`  voice        ${voice} (cast by the creative director)`)
+      log(`  voice        ${voice} (cast by the creative director)${toSpeak.length < lines.length ? ` · ${lines.length - toSpeak.length} line(s) kept` : ''}`)
     }
-    const spoken = await synthesizeVoices(lines, cast).catch(async (error: Error) => {
-      if (!/out of memory|CUDA error/i.test(error.message)) throw error
-      log('  voiceover ran out of memory; freeing ComfyUI and retrying once')
-      await comfy.free()
-      await new Promise((resolve) => setTimeout(resolve, 20000))
-      await record('run', 'scheduler', undefined, { phase: 'voiceover retry', availableBeforeGb: (await memoryStatus()).availableGb })
-      return synthesizeVoices(lines, cast)
-    })
+    let fresh: VoiceResult[] = []
+    if (toSpeak.length) {
+      // The voice model runs in its own container on the same memory pool. Free what the video phase left in ComfyUI
+      // first: the nuts film died here with "CUDA error: out of memory" after all three clips were done. One retry
+      // after another free covers a model that was still releasing.
+      await enterPhase(comfy, 'voiceover (TTS)', record)
+      fresh = await synthesizeVoices(toSpeak, cast).catch(async (error: Error) => {
+        if (!/out of memory|CUDA error/i.test(error.message)) throw error
+        log('  voiceover ran out of memory; freeing ComfyUI and retrying once')
+        await comfy.free()
+        await new Promise((resolve) => setTimeout(resolve, 20000))
+        await record('run', 'scheduler', undefined, { phase: 'voiceover retry', availableBeforeGb: (await memoryStatus()).availableGb })
+        return synthesizeVoices(toSpeak, cast)
+      })
+    }
     for (const [index, beat] of script.beats.entries()) {
+      const spoken = kept[index] ? { seconds: await probeDuration(lines[index]!.output) } : fresh[toSpeak.indexOf(lines[index]!)]!
       const voiceStart = clipStart(index, durations, overlaps) + VOICE_LEAD_SECONDS
-      voices.push({ path: lines[index]!.output, start: voiceStart })
-      speech.push({ start: voiceStart, end: voiceStart + spoken[index]!.seconds })
+      voices.push({ path: lines[index]!.output, start: voiceStart, seconds: spoken.seconds, beat: beat.beat })
+      speech.push({ start: voiceStart, end: voiceStart + spoken.seconds })
       // Subtitles follow the voice: on when the line starts, off a breath after it ends - never on screen in silence.
       const cue = cues[index]!
       cue.subtitleStart = voiceStart
-      cue.subtitleEnd = Math.min(voiceStart + spoken[index]!.seconds + 0.25, cue.end - 0.1)
-      await record(stage, 'voiceover', undefined, { ...tags, beat: beat.beat, seconds: spoken[index]!.seconds, speed: spoken[index]!.speed, model: spoken[index]!.model, ...(voice ? { voice } : {}) })
+      cue.subtitleEnd = Math.min(voiceStart + spoken.seconds + 0.25, cue.end - 0.1)
+      if ('model' in spoken) await record(stage, 'voiceover', undefined, { ...tags, beat: beat.beat, seconds: spoken.seconds, speed: spoken.speed, model: spoken.model, ...(spoken.errorRate !== undefined ? { errorRate: spoken.errorRate } : {}), ...(voice ? { voice } : {}) })
     }
     const source: CutMusic = input.music ?? { kind: 'generate' }
     if (source.kind === 'file') music = { path: source.path, offset: source.offset }
@@ -250,9 +276,23 @@ export async function cutFilm(input: CutInput): Promise<CutResult> {
   // Implicit label (GB 45438-2025 style AIGC metadata) next to the explicit one burned into the picture.
   const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Cinefoundry', ProduceID: input.produceId, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
   await assembleFilm(clipPaths, input.output, {
-    width, height, fps, durations, crossfadeSeconds: overlaps, ass: input.ass, audio: soundtrack, grade: GRADES[industry] ?? GRADES.neutral, loudness: AD_LOUDNESS_LUFS,
+    width, height, fps, durations, crossfadeSeconds: overlaps, ass: input.ass, audio: soundtrack, grade: gradeWith(GRADES[industry] ?? GRADES.neutral!, input.grade), loudness: AD_LOUDNESS_LUFS,
     metadata: { AIGC: aigc, comment: `${AI_LABEL} · Cinefoundry · ${input.produceId}`, title: brief.title },
   })
   if (isUpscaled(resolution)) await record(stage, 'conform', undefined, { ...tags, resolution, width, height, upscaled: true, note: 'generated at native 1080p, upscaled to the delivery size' })
+  // The edit decision record: what a revision re-cuts from and what `cinefoundry export` hands to an online editor.
+  await writeTimeline(dir, {
+    version: 1, label: input.label, format: 'ad', projectId: brief.id, title: brief.title, fps, width, height, seconds: total,
+    file: stored(dir, input.output), ass: stored(dir, input.ass), ...(soundtrack ? { mix: { file: stored(dir, soundtrack), kind: 'voice-over-music' as const } } : {}),
+    picture: pictureTrack([...input.shots.map((shot, index) => ({ kind: 'shot' as const, shot: shot.shot ?? index + 1, source: stored(dir, shot.clip) })), { kind: 'endcard' as const, source: stored(dir, input.endCard) }], durations, overlaps),
+    audio: {
+      dialogue: voices.map((line) => ({ source: stored(dir, line.path), start: line.start, in: 0, duration: line.seconds, beat: line.beat })),
+      music: music ? [{ source: stored(dir, music.path), start: 0, in: music.offset, duration: total }] : [], effects: [], ambience: [],
+    },
+    subtitles: cues.filter((cue) => cue.subtitle?.trim() || cue.subtitleEn?.trim()).map((cue) => ({ start: cue.subtitleStart ?? cue.start + 0.25, end: cue.subtitleEnd ?? cue.end - 0.15, zh: cue.subtitle, en: cue.subtitleEn })),
+    endCard: { start: endStart, end: endStart + END_CARD_SECONDS, text: closing },
+    markers: [...input.shots.map((shot, index) => ({ at: clipStart(index, durations, overlaps), name: `Shot ${shot.shot ?? index + 1}`, kind: 'shot' as const })), { at: endStart, name: `End card: ${closing}`, kind: 'endcard' as const }],
+    ...(input.grade ? { grade: input.grade } : {}),
+  })
   return { path: input.output, ass: input.ass, produceId: input.produceId, seconds: total, durations, overlaps, speech, endCard: { start: endStart, end: endStart + END_CARD_SECONDS }, ...(music ? { music } : {}), ...(voice ? { voice } : {}) }
 }

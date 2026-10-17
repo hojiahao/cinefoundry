@@ -25,7 +25,6 @@ export async function framesStage(ctx: AdContext): Promise<string> {
   const dir = ctx.dir!
   const photoPath = join(dir, 'refs', 'product.png')
   const comfy = (ctx.comfy ??= new ComfyClient())
-  const frames = ctx.frames
   // The planner is not needed while pictures are made (a prompt repair wakes it on demand);
   // releasing its memory lets ComfyUI keep the image model resident between frames.
   await ctx.rest('product hero (Qwen-Image)', [planner])
@@ -65,80 +64,102 @@ export async function framesStage(ctx: AdContext): Promise<string> {
   await addAsset(brief.id, { id: 'product-hero', kind: 'image', stage: 'frames', path: hero!.path.slice(dir.length + 1), execution: ctx.options.productImage ? 'user-supplied' : 'local-dgx-spark', model: ctx.options.productImage ? 'user photo' : imageWorkflow(0).workflow, note: `gate ${hero!.verdict.score}` })
 
   await enterPhase(comfy, 'frames (Qwen-Image-Edit)', ctx.record)
-  const frameSizeFor = frameSize(generationResolution(brief.resolution!), brief.ratio)
-  const framePath = (shot: Shot, suffix: string) => join(dir, 'frames', `shot_${String(shot.shot).padStart(3, '0')}${suffix}.png`)
-  const render = (shot: Shot, prompt: string, suffix: string) => {
-    const path = framePath(shot, suffix)
-    // imageSeconds counts from the request, so it includes any wait in ComfyUI's queue.
-    const renderStartedAt = new Date().toISOString()
-    return generateImage(comfy, { prompt, size: frameSizeFor, output: path, references: [hero!.path] }).then((image) => ({ path, image, renderStartedAt }))
-  }
-  type Rendered = { path: string; image: { seconds: number }; renderStartedAt: string }
-  /** One shot's whole gate loop: first candidate, further seeds, then prompt repairs. */
-  const makeFrame = async (shot: Shot, first: Promise<Rendered>, onFirstJudging?: () => void) => {
-    let prompt = composeImagePrompt(shot, storyboard, true, industry)
-    let best: { path: string; verdict: QaVerdict; attempt: number } | undefined
-    // On a tied score the later repair wins: it was written against the gate's issues, and the
-    // gate's coarse scores (most rejects land on 30) used to keep the untouched first frame.
-    const consider = (path: string, verdict: QaVerdict, attempt: number) => {
-      const better = (top: NonNullable<typeof best>) => verdict.score > top.verdict.score || (verdict.score === top.verdict.score && attempt > top.attempt)
-      if (!best || (verdict.pass && !best.verdict.pass) || (verdict.pass === best.verdict.pass && better(best))) best = { path, verdict, attempt }
-    }
-    const judge = async (rendered: Rendered, suffix: string, attempt: number) => {
-      const gateStarted = Date.now()
-      const verdict = await qualityGate(reviewer, rendered.path, shot, hero!.path, industry)
-      const gateSeconds = (Date.now() - gateStarted) / 1000
-      ctx.log(`▸ frame ${shot.shot}${suffix.padEnd(5)} ${rendered.image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
-      await ctx.record('qa', 'quality-gate', reviewer, { shot: shot.shot, attempt, candidate: suffix || '_a', renderStartedAt: rendered.renderStartedAt, imageSeconds: rendered.image.seconds, gateSeconds, ...verdict })
-      consider(rendered.path, verdict, attempt)
-    }
-    const shoot = async (suffix: string, attempt: number) => judge(await render(shot, prompt, suffix), suffix, attempt)
-    const judging = judge(await first, '', 0)
-    onFirstJudging?.()
-    await judging
-    // Best of N: the same prompt with different seeds. A diffusion model's spread between
-    // seeds is often larger than what a prompt edit buys, and the gate can rank the results.
-    // By default the next seed is only spent when the previous one failed the gate (a frame that
-    // passed is a frame); `bestOf` generates every candidate and keeps the highest score.
-    const candidates = Math.max(1, ctx.options.candidates ?? 2)
-    for (let candidate = 1; candidate < candidates; candidate++) {
-      if (!ctx.options.bestOf && best?.verdict.pass) break
-      await shoot(`_c${candidate + 1}`, 0)
-    }
-    for (let attempt = 1; attempt <= MAX_QA_REGENERATIONS && !best!.verdict.pass; attempt++) {
-      ctx.qaRegenerations++
-      prompt = await repairPrompt(planner, await ctx.agentPrompt('storyboard artist', 'shot-quality-gate'), shot, prompt, best!.verdict.issues)
-      await shoot(`_r${attempt}`, attempt)
-    }
-    frames.set(shot.shot, best!.path)
-    await addAsset(brief.id, {
-      id: `frame-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(dir.length + 1), shot: shot.shot,
-      execution: 'local-dgx-spark', model: imageWorkflow(1).workflow, note: best!.verdict.score < 0 ? 'unverified: the reviewer never concluded' : `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}`,
-    })
-  }
-  const firstRender = (shot: Shot) => render(shot, composeImagePrompt(shot, storyboard, true, industry), '')
+  ctx.hero = hero!
+  const firstRender = (shot: Shot) => renderFrame(ctx, shot, composeImagePrompt(shot, storyboard, true, industry), '')
   if ((ctx.options.frameScheduling ?? 'queue') === 'queue') {
     // Every shot runs its own gate loop at once. ComfyUI renders its queue in order and the
     // reviewer judges whatever is ready, so a shot that keeps failing no longer holds the image
     // model idle while the others wait their turn. Same prompts, gate, seeds rule and limits.
-    await Promise.all(storyboard.shots.map((shot) => makeFrame(shot, firstRender(shot))))
+    await Promise.all(storyboard.shots.map((shot) => shotFrame(ctx, shot, { first: firstRender(shot) })))
   } else {
     // Serial: while the reviewer judges this shot's first candidate, the next shot's first
     // candidate is already rendering.
-    let prefetched: Promise<Rendered> | undefined
+    let prefetched: Promise<RenderedFrame> | undefined
     for (const [index, shot] of storyboard.shots.entries()) {
       const next = storyboard.shots[index + 1]
       const first = prefetched ?? firstRender(shot)
       prefetched = undefined
-      await makeFrame(shot, first, () => {
-        if (next && ctx.options.prefetch !== false) {
-          prefetched = firstRender(next)
-          // If this shot fails, the loop ends and nobody awaits the prefetch: a rejection there would exit the process.
-          prefetched.catch(() => undefined)
-        }
+      await shotFrame(ctx, shot, {
+        first,
+        onFirstJudging: () => {
+          if (next && ctx.options.prefetch !== false) {
+            prefetched = firstRender(next)
+            // If this shot fails, the loop ends and nobody awaits the prefetch: a rejection there would exit the process.
+            prefetched.catch(() => undefined)
+          }
+        },
       })
     }
   }
-  ctx.hero = hero!
   return `${ctx.qaRegenerations} regenerations`
+}
+
+export interface RenderedFrame { path: string; image: { seconds: number }; renderStartedAt: string }
+
+const framePath = (dir: string, shot: Shot, suffix: string) => join(dir, 'frames', `shot_${String(shot.shot).padStart(3, '0')}${suffix}.png`)
+
+/** One candidate first frame, edited from the approved hero still at the video model's working size. */
+export function renderFrame(ctx: AdContext, shot: Shot, prompt: string, suffix: string): Promise<RenderedFrame> {
+  const brief = need(ctx.brief, 'brief')
+  const path = framePath(ctx.dir!, shot, suffix)
+  // imageSeconds counts from the request, so it includes any wait in ComfyUI's queue.
+  const renderStartedAt = new Date().toISOString()
+  return generateImage(need(ctx.comfy, 'comfy'), { prompt, size: frameSize(generationResolution(brief.resolution!), brief.ratio), output: path, references: [need(ctx.hero, 'hero').path] })
+    .then((image) => ({ path, image, renderStartedAt }))
+}
+
+/**
+ * One shot's whole gate loop - first candidate, further seeds, then prompt repairs - and the kept frame recorded as the
+ * shot's asset. The frames stage runs it for every shot; a revision runs it for the one shot the client asked to redo,
+ * with `tag` in the file names (frames/shot_003.rev1.png) so the frames it replaces stay on disk.
+ */
+export async function shotFrame(ctx: AdContext, shot: Shot, options: { tag?: string; first?: Promise<RenderedFrame>; onFirstJudging?: () => void } = {}): Promise<{ path: string; verdict: QaVerdict }> {
+  const brief = need(ctx.brief, 'brief')
+  const storyboard = need(ctx.storyboard, 'storyboard')
+  const hero = need(ctx.hero, 'hero')
+  const industry = brief.industry!
+  const { planner, reviewer } = ctx
+  const dir = ctx.dir!
+  const tag = options.tag ?? ''
+  let prompt = composeImagePrompt(shot, storyboard, true, industry)
+  let best: { path: string; verdict: QaVerdict; attempt: number } | undefined
+  // On a tied score the later repair wins: it was written against the gate's issues, and the
+  // gate's coarse scores (most rejects land on 30) used to keep the untouched first frame.
+  const consider = (path: string, verdict: QaVerdict, attempt: number) => {
+    const better = (top: NonNullable<typeof best>) => verdict.score > top.verdict.score || (verdict.score === top.verdict.score && attempt > top.attempt)
+    if (!best || (verdict.pass && !best.verdict.pass) || (verdict.pass === best.verdict.pass && better(best))) best = { path, verdict, attempt }
+  }
+  const judge = async (rendered: RenderedFrame, suffix: string, attempt: number) => {
+    const gateStarted = Date.now()
+    const verdict = await qualityGate(reviewer, rendered.path, shot, hero.path, industry)
+    const gateSeconds = (Date.now() - gateStarted) / 1000
+    ctx.log(`▸ frame ${shot.shot}${suffix.padEnd(5)} ${rendered.image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
+    await ctx.record('qa', 'quality-gate', reviewer, { shot: shot.shot, attempt, candidate: suffix || '_a', renderStartedAt: rendered.renderStartedAt, imageSeconds: rendered.image.seconds, gateSeconds, ...verdict })
+    consider(rendered.path, verdict, attempt)
+  }
+  const shoot = async (suffix: string, attempt: number) => judge(await renderFrame(ctx, shot, prompt, suffix), suffix, attempt)
+  const judging = judge(await (options.first ?? renderFrame(ctx, shot, prompt, tag)), tag, 0)
+  options.onFirstJudging?.()
+  await judging
+  // Best of N: the same prompt with different seeds. A diffusion model's spread between
+  // seeds is often larger than what a prompt edit buys, and the gate can rank the results.
+  // By default the next seed is only spent when the previous one failed the gate (a frame that
+  // passed is a frame); `bestOf` generates every candidate and keeps the highest score.
+  const candidates = Math.max(1, ctx.options.candidates ?? 2)
+  for (let candidate = 1; candidate < candidates; candidate++) {
+    if (!ctx.options.bestOf && best?.verdict.pass) break
+    await shoot(`${tag}_c${candidate + 1}`, 0)
+  }
+  for (let attempt = 1; attempt <= MAX_QA_REGENERATIONS && !best!.verdict.pass; attempt++) {
+    ctx.qaRegenerations++
+    prompt = await repairPrompt(planner, await ctx.agentPrompt('storyboard artist', 'shot-quality-gate'), shot, prompt, best!.verdict.issues)
+    await shoot(`${tag}_r${attempt}`, attempt)
+  }
+  const kept = best!
+  ctx.frames.set(shot.shot, kept.path)
+  await addAsset(brief.id, {
+    id: `frame-${shot.shot}`, kind: 'image', stage: 'frames', path: kept.path.slice(dir.length + 1), shot: shot.shot,
+    execution: 'local-dgx-spark', model: imageWorkflow(1).workflow, note: kept.verdict.score < 0 ? 'unverified: the reviewer never concluded' : `gate ${kept.verdict.score}${kept.verdict.pass ? '' : ' (kept after failed gate)'}`,
+  })
+  return { path: kept.path, verdict: kept.verdict }
 }

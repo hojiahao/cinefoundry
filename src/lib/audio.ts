@@ -119,31 +119,45 @@ export async function generateMusic(comfy: ComfyClient, request: { tags: string;
  * `musicOffset` starts the bed that many seconds in: a cutdown back-times the master's score so it ends on the same
  * resolution as the master instead of being faded out mid-phrase.
  */
-export async function mixSoundtrack(request: { voices: Array<{ path: string; start: number }>; music?: string; musicOffset?: number; totalSeconds: number; output: string }): Promise<void> {
+export async function mixSoundtrack(request: { voices: Array<{ path: string; start: number }>; music?: string; musicOffset?: number; totalSeconds: number; output: string; stems?: Partial<Record<'dialogue' | 'music', string>> }): Promise<void> {
   const { voices, music, totalSeconds, output } = request
   const offset = Math.max(0, request.musicOffset ?? 0)
   if (voices.length === 0 && !music) throw new Error('Nothing to mix: no voice lines and no music.')
   const args = ['-hide_banner', '-loglevel', 'error', '-y', ...voices.flatMap((voice) => ['-i', voice.path])]
   const parts: string[] = []
+  const stemOutputs: string[] = []
   voices.forEach((voice, index) => {
     const delay = Math.round(voice.start * 1000)
     parts.push(`[${index}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${delay}|${delay},volume=1.6[v${index}]`)
   })
-  let voiceLabel = ''
+  let voiceBus = ''
   if (voices.length > 0) {
     parts.push(`${voices.map((_, index) => `[v${index}]`).join('')}amix=inputs=${voices.length}:normalize=0:duration=longest,apad=whole_dur=${totalSeconds}[voice]`)
-    voiceLabel = '[voice]'
+    voiceBus = tapStem(parts, stemOutputs, 'voice', request.stems?.dialogue, totalSeconds)
   }
   if (music) {
     args.push('-i', music)
     parts.push(`[${voices.length}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=start=${offset.toFixed(3)}:duration=${totalSeconds},asetpts=PTS-STARTPTS,volume=0.55[bed]`)
-    if (voiceLabel) {
-      parts.push('[voice]asplit=2[voiceMix][voiceKey]')
+    if (voiceBus) {
+      parts.push(`[${voiceBus}]asplit=2[voiceMix][voiceKey]`)
       parts.push('[bed][voiceKey]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[ducked]')
-      parts.push('[voiceMix][ducked]amix=inputs=2:normalize=0:duration=longest[mix]')
-    } else parts.push('[bed]anull[mix]')
-  } else parts.push('[voice]anull[mix]')
+      parts.push(`[voiceMix][${tapStem(parts, stemOutputs, 'ducked', request.stems?.music, totalSeconds)}]amix=inputs=2:normalize=0:duration=longest[mix]`)
+    } else parts.push(`[${tapStem(parts, stemOutputs, 'bed', request.stems?.music, totalSeconds)}]anull[mix]`)
+  } else parts.push(`[${voiceBus}]anull[mix]`)
   parts.push(`[mix]atrim=duration=${totalSeconds},alimiter=limit=0.95[out]`)
   await mkdir(dirname(output), { recursive: true })
-  await exec('ffmpeg', [...args, '-filter_complex', parts.join(';'), '-map', '[out]', '-ar', '48000', output])
+  for (const path of Object.values(request.stems ?? {})) if (path) await mkdir(dirname(path), { recursive: true })
+  await exec('ffmpeg', [...args, '-filter_complex', parts.join(';'), '-map', '[out]', '-ar', '48000', output, ...stemOutputs])
+}
+
+/**
+ * A stem: the bus `label` also goes, unchanged and trimmed to the film's length, to its own WAV - the same ffmpeg pass as
+ * the mix, so the stems are exactly the buses the mix summed (before its limiter). Returns the label the mix goes on with.
+ */
+export function tapStem(parts: string[], outputs: string[], label: string, path: string | undefined, totalSeconds: number): string {
+  if (!path) return label
+  const n = outputs.filter((arg) => arg === '-map').length
+  parts.push(`[${label}]asplit=2[${label}_mix][${label}_stem]`, `[${label}_stem]apad=whole_dur=${totalSeconds},atrim=duration=${totalSeconds}[stem${n}]`)
+  outputs.push('-map', `[stem${n}]`, '-ar', '48000', '-c:a', 'pcm_s24le', path)
+  return `${label}_mix`
 }
