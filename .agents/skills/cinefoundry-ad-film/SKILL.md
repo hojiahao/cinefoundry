@@ -1,7 +1,7 @@
 ---
 name: cinefoundry-ad-film
-version: "0.3.0"
-description: Produce a finished advertising film - a 30-second master by default, with an English announcer cast from the voice library, Chinese subtitles over the English line, typeset Chinese titles, a generated score and compliance-checked copy - from one sentence of creative brief, locally on a DGX Spark, by running the Cinefoundry ad pipeline (`cinefoundry ad`). Use when the user asks for an ad, a commercial, a product video, a 30-second spot or a shorter one, "给某个产品做条广告", or wants to re-cut or re-voice an existing Cinefoundry ad project.
+version: "0.4.0"
+description: Produce a finished advertising film - a 30-second master by default, with an English announcer cast from the voice library, Chinese subtitles over the English line, typeset Chinese titles, a generated score and compliance-checked copy - from one sentence of creative brief, locally on a DGX Spark, by running the Cinefoundry ad pipeline (`cinefoundry ad`). Use when the user asks for an ad, a commercial, a product video, a 30-second spot or a shorter one, "给某个产品做条广告", or wants to revise a delivered Cinefoundry ad (redo a shot, change a line, regrade, rescore) or hand it to an editor as EDL, FCPXML or OTIO.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
@@ -59,6 +59,22 @@ Nothing to set for a normal run. The creative director casts the announcer from 
 A fresh machine has no QC-passed voices; then the only option is the configured default narrator, which is not an English announcer. Design and QC the library first (`scripts/voice-design.py --language English`, then `scripts/voice-qc.py`, both inside their containers; see `dialogue-and-voice`). Every voice is designed from a written description; never use a recording of a real person.
 
 To re-cut a finished project without regenerating pictures: `node dist/cli.js cut --project <id>` (titles, subtitles, end card, sound and grade), or with a supplied score `--audio projects/<id>/audio/music.mp3`.
+
+## Client changes after delivery
+
+Never re-run the whole film for a change. Revise the finished project; only what depends on the change is re-made and the rest stays byte for byte (`editing-and-versioning`, `docs/revisions.md`):
+
+```bash
+node dist/cli.js revise <id> --shot 3 [--note "soft morning light from the left"]   # frame, gate, clip; master + cutdowns using shot 3
+node dist/cli.js revise <id> --line 2 --text "New English line." [--zh "新字幕"]      # compliance, re-voice, master
+node dist/cli.js revise <id> --grade warmer                                          # finishing only, every deliverable
+node dist/cli.js revise <id> --music "sparse piano, slower, resolves warmly"          # new score, every deliverable
+```
+
+- Run the same pre-flight check as a new film: a revision takes the GPU lock and is refused while another film generates.
+- A refused revision (a line that fails compliance, a shot that does not exist) changes nothing; relay its reason to the client, with the reviewer's suggested wording when there is one.
+- Report from `reports/revisions.json` and the 修订记录 section of `reports/delivery.md`: what changed, which deliverables were re-cut, their QC verdict, and the kept previous versions (`*.v1.*`).
+- For the client's post house: `node dist/cli.js export <id> --format fcpxml|edl|otio [--version master|15s|06s]` writes the interchange file, the four stems, SRT and ASS to `projects/<id>/exports/<label>/`.
 
 ## Common failures
 

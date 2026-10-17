@@ -99,8 +99,12 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 | Subtitles | Chinese over English | Chinese over English, inside the vertical safe zone | Chinese over English, inside the vertical safe zone |
 | Loudness | −16 LUFS, −1.5 dBTP | −14 LUFS | −14 LUFS |
 | AI labels | Explicit label on the opening and the end card, implicit AIGC metadata | Same, plus the disclosure in the description | Same, on every episode |
+| Revisions | `cinefoundry revise`: redo a shot, change a line, regrade or rescore; only the master and the cutdowns that depend on it are re-made | Same; the episode is re-cut, a changed line re-voiced and re-lip-synced | Same, per episode |
+| Interchange | `cinefoundry export`: EDL, FCPXML (and FCP 7 XML), OpenTimelineIO, four stems, SRT | Same | Same, per episode |
 
 Subtitles follow the Netflix timed-text style guide per language: at most 16 Chinese characters a line on 16:9 and 12 on 9:16, spaces instead of commas and full stops, English under it at 60 % of the size, each line on screen while it is spoken.
+
+Revisions take the run lock, refuse a line that fails compliance before touching anything, keep every replaced file under a versioned name and are recorded in the run log and the delivery report: see [docs/revisions.md](docs/revisions.md).
 
 ## Quality system
 

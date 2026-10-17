@@ -14,7 +14,9 @@ works on or with this repository. The `## Rules` section at the end is also inje
 | Micro-drama | `cinefoundry drama "<story>"` | development → screenplay → compliance → shots → casting → frames + gate → dialogue → clips → sound → cut + qc | 2-minute episodes, 9:16, 1080p, 24 fps, −14 LUFS |
 
 Entry skills: `cinefoundry-ad-film`, `cinefoundry-short-video`, `cinefoundry-micro-drama`. Each project records its
-stages in `projects/<id>/state.json`; the studio board reads it.
+stages in `projects/<id>/state.json`; the studio board reads it. A client's change to a delivered film is a revision
+(`cinefoundry revise`: a shot, a line, the grade or the score; only what depends on it is re-made), and a cut goes to
+an online editor with `cinefoundry export` (EDL, FCPXML, OTIO, stems, SRT): see `docs/revisions.md`.
 
 ## The standard
 

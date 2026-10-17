@@ -1,7 +1,7 @@
 ---
 name: cinefoundry-micro-drama
-version: "0.2.0"
-description: Produce a vertical micro-drama (微短剧) - series bible, a cast with locked faces and designed voices, and finished episodes with lip-synced English dialogue, bilingual subtitles, sound design and score - locally on a DGX Spark, by running the Cinefoundry drama pipeline. Use when the user asks for a short drama, a web series, 短剧 / 微短剧, a pilot episode, or wants more episodes of an existing Cinefoundry series.
+version: "0.3.0"
+description: Produce a vertical micro-drama (微短剧) - series bible, a cast with locked faces and designed voices, and finished episodes with lip-synced English dialogue, bilingual subtitles, sound design and score - locally on a DGX Spark, by running the Cinefoundry drama pipeline. Use when the user asks for a short drama, a web series, 短剧 / 微短剧, a pilot episode, or wants more episodes of an existing Cinefoundry series, changes to a delivered episode (redo a shot, change a line, regrade, rescore) or an episode exported as EDL, FCPXML or OTIO.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
@@ -55,6 +55,20 @@ pgrep -af "cli.js (ad|short|drama|harness)"; curl -sf 127.0.0.1:8001/v1/models >
 - Every line fits one 5-second shot (at most 12 English words) and carries its Chinese subtitle (at most 12 characters on 9:16, no commas or full stops).
 - Every episode opens on its hook, ends on its cliffhanger, and carries the explicit AI label at the start and the implicit AIGC metadata (标识办法, GB 45438-2025). Labels are never removed.
 - Stories stay out of the genres regulators are cleaning up (violent revenge, flaunting wealth, distorted romance, 霸总-style titles); `content-compliance` has the current list.
+
+## Changes to a delivered episode
+
+Revise the episode instead of re-running the series; only what depends on the change is re-made (`editing-and-versioning`, `docs/revisions.md`):
+
+```bash
+node dist/cli.js revise <id> --episode 2 --shot 7 [--note "she stands closer to the window"]   # frame, identity gate, lip-synced clip, episode 2
+node dist/cli.js revise <id> --episode 2 --line 3.1 --text "New English line." [--zh "新字幕"]   # compliance, same cast voice + Whisper, lip-sync shot, episode 2
+node dist/cli.js revise <id> --grade warmer [--episode 2]                                      # finishing only
+node dist/cli.js revise <id> --music "solo cello, ends unresolved" [--episode 2]
+node dist/cli.js export <id> --format fcpxml|edl|otio --episode 2                              # interchange, stems, SRT, ASS in exports/ep02/
+```
+
+Lines are numbered scene.line from 1, as the compliance reviewer numbers them. A new line passes the same content checks and independent review as the screenplay or the revision is refused and nothing changes. The character keeps the voice in their cast record. A revision takes the GPU lock like a run; report from `reports/revisions.json` and the 修订记录 in `reports/delivery.md`.
 
 ## Continuing a series
 
