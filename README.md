@@ -7,7 +7,7 @@
   <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A5%2022-5fa04e">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.8-3178c6">
   <img alt="Platform" src="https://img.shields.io/badge/platform-NVIDIA%20DGX%20Spark%20(GB10%20%C2%B7%20aarch64)-76b900">
-  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-12-d9b26a">
+  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-25-d9b26a">
 </p>
 
 <p align="center">
@@ -294,20 +294,62 @@ GB10 上的环境要点已写入配置：Docker 通过 CDI（`nvidia.com/gpu=all
 
 ## Agent Skills
 
-| Skill | 阶段 | 做什么 | 依赖的命令 / 模型 |
-|---|---|---|---|
-| [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | 需求 | 只问阻塞项，其余自己定并说明，立项 | `cinefoundry project init` |
-| [`creative-direction`](.agents/skills/creative-direction/SKILL.md) | 创意 | 洞察、单一主张、创意概念与导演阐述（光线、色板、质感、节奏、选定声线、配乐与环境声），文案与分镜都从它出发 | Nemotron |
-| [`ad-script-writing`](.agents/skills/ad-script-writing/SKILL.md) | 脚本 | 5 秒一个节拍，口播 8–18 字，标题 ≤8 字，品类语感 | Nemotron |
-| [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | 合规 | 《广告法》用词扫描 + 独立审稿智能体，`block` 级必须改写 | `cinefoundry copy-check` · Nemotron（另一个智能体） |
-| [`ad-reference-breakdown`](.agents/skills/ad-reference-breakdown/SKILL.md) | 拉片 | 参考片切镜、逐镜描述、映射到新产品 | `cinefoundry shots` · Step3-VL |
-| [`storyboard-design`](.agents/skills/storyboard-design/SKILL.md) | 分镜 | 产品只描述一次、风格行不带数字、画面无字、单镜单运镜、电影运镜语言 | Nemotron |
-| [`cinematography-and-art-direction`](.agents/skills/cinematography-and-art-direction/SKILL.md) | 分镜 | 摄影指导、美术、产品造型与选角：用画面语言写镜头、统一光线逻辑、置景与道具、人物外形与表演 | Nemotron |
-| [`spark-local-media-generation`](.agents/skills/spark-local-media-generation/SKILL.md) | 生图 / 生视频 | 定妆图 → 参考图首帧（2 候选）→ 首帧驱动视频 | `cinefoundry image` / `video` · Qwen-Image(-Edit) · Wan2.2 14B |
-| [`shot-quality-gate`](.agents/skills/shot-quality-gate/SKILL.md) | 质检 | 对照定妆图：产品不符、多余文字、乱码、不该有的人手一票否决；按问题类型改提示词重生成 | `cinefoundry qa` · Step3-VL |
-| [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | 成片 | 定版、真字体标题字幕（缺字即失败）、离线配音、本地音乐并自动压低、转场调色 | `cinefoundry cut` · ffmpeg · Qwen3-TTS / Kokoro · ACE-Step |
-| [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | 贯穿 | 统一内存先量后排，分阶段加载释放 | `cinefoundry mem` |
-| [`cinefoundry-ad-film`](.agents/skills/cinefoundry-ad-film/SKILL.md) | 入口 | 供外部智能体（Claude Code、Codex 等）调用整条 Harness：一句创意到成片，读交付报告如实汇报 | `cinefoundry harness` |
+25 个 Skill，一个 Skill 对应真实制作中的一个岗位，按六类组织；三类片型共用视觉、声音与后期岗位，编剧与合规按片型分工。
+
+**制片统筹**
+
+| Skill | 岗位 | 做什么 |
+|---|---|---|
+| [`cinefoundry-ad-film`](.agents/skills/cinefoundry-ad-film/SKILL.md) | 广告片制片人 | 外部智能体（Claude Code、Codex、DSH 等）的广告片入口：一句创意到成片，读交付报告如实汇报 |
+| [`cinefoundry-short-video`](.agents/skills/cinefoundry-short-video/SKILL.md) | 短视频制片人 | 短视频入口：选题到成片与平台包装 |
+| [`cinefoundry-micro-drama`](.agents/skills/cinefoundry-micro-drama/SKILL.md) | 短剧监制 | 微短剧入口：剧集圣经、选角定妆到逐集成片 |
+| [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | 客户经理 / 策划 | 解读简报，只问阻塞项，其余自己定并说明 |
+| [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | 广告法务 | 《广告法》用词扫描 + 独立审稿智能体，`block` 级必须改写 |
+| [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | 内容审核 | 广电微短剧管理办法、内容红线、AI 生成内容标识、平台 AIGC 申报、肖像与声音权利 |
+| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | 技术质检与交付 | 时长、帧率、码率、响度与真峰值、黑帧静音、字幕越界、显式与隐式 AI 标识 |
+| [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | 技术统筹 | 统一内存先量后排，分阶段加载与释放 |
+
+**编剧创作**
+
+| Skill | 岗位 | 做什么 |
+|---|---|---|
+| [`creative-direction`](.agents/skills/creative-direction/SKILL.md) | 创意总监 | 洞察、单一主张、创意概念与导演阐述，文案、分镜与声音都从它出发 |
+| [`ad-script-writing`](.agents/skills/ad-script-writing/SKILL.md) | 广告文案 | 顶级广告的文案工艺：节拍、口播、标题、品类语感 |
+| [`series-development`](.agents/skills/series-development/SKILL.md) | 剧集开发 | 剧集圣经：logline、世界观、人物、分集钩子与集尾悬念、付费卡点 |
+| [`screenwriting`](.agents/skills/screenwriting/SKILL.md) | 编剧 | 场次、动作、潜台词，美剧式英文对白与中文字幕 |
+| [`short-video-scripting`](.agents/skills/short-video-scripting/SKILL.md) | 短视频编剧 | 前三秒钩子、留存结构、口播 / 测评 / 科普 / 剧情等形态 |
+
+**视觉**
+
+| Skill | 岗位 | 做什么 |
+|---|---|---|
+| [`storyboard-design`](.agents/skills/storyboard-design/SKILL.md) | 导演 / 分镜 | 镜头设计与节奏：30 秒主片六个镜头各司其职 |
+| [`cinematography-and-art-direction`](.agents/skills/cinematography-and-art-direction/SKILL.md) | 摄影指导 / 美术 | 镜头语言、统一光线逻辑、置景道具、产品造型、选角与表演 |
+| [`character-and-continuity`](.agents/skills/character-and-continuity/SKILL.md) | 选角 / 服装 / 场记 | 角色定妆照、服装与道具连戏、轴线与视线、跨镜头跨集的长相一致 |
+| [`spark-local-media-generation`](.agents/skills/spark-local-media-generation/SKILL.md) | 拍摄执行 | 定妆图 → 参考图首帧 → 首帧驱动视频，原生 1080p、RIFE 插帧 |
+| [`shot-quality-gate`](.agents/skills/shot-quality-gate/SKILL.md) | 现场监看 / 质检 | 对照参考图逐帧质检：主体不符、多余文字、乱码、CG 感一票否决 |
+
+**声音**
+
+| Skill | 岗位 | 做什么 |
+|---|---|---|
+| [`dialogue-and-voice`](.agents/skills/dialogue-and-voice/SKILL.md) | 配音导演 / 对白 | 为每个角色设计声线，表演指导，Whisper 逐句校音与重录，口型同步镜头规则 |
+| [`sound-design-and-music`](.agents/skills/sound-design-and-music/SKILL.md) | 声音设计 / 作曲 | 逐镜音效、分场环境声、配乐方向，全部本地生成 |
+
+**后期**
+
+| Skill | 岗位 | 做什么 |
+|---|---|---|
+| [`editing-and-versioning`](.agents/skills/editing-and-versioning/SKILL.md) | 剪辑 | 节奏与叙事、动作剪辑点、短视频留存剪辑、30 / 15 / 6 秒版本、集尾悬念 |
+| [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | 后期合成 | 定版、真字体标题字幕、调色、配音与配乐混音 |
+| [`bilingual-subtitles`](.agents/skills/bilingual-subtitles/SKILL.md) | 字幕 | 中文大字在上、英文小字在下，字数、阅读速度、时长与安全区规范 |
+| [`platform-packaging`](.agents/skills/platform-packaging/SKILL.md) | 平台包装 | 三套标题测试、封面、简介、话题标签、AI 申报 |
+
+**研究**
+
+| Skill | 岗位 | 做什么 |
+|---|---|---|
+| [`ad-reference-breakdown`](.agents/skills/ad-reference-breakdown/SKILL.md) | 拉片研究 | 参考片切镜、逐镜描述、映射到新产品 |
 
 ### 带 Skill 与不带 Skill 的对比
 

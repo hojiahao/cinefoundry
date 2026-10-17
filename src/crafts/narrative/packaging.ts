@@ -1,0 +1,56 @@
+import { writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { chatJson } from '../../agent/llm.js'
+import { exec } from '../../lib/exec.js'
+import type { NarrativeContext } from './context.js'
+
+export interface Packaging {
+  /** Three title variants for the platform's A/B test (YouTube's Test & Compare takes three). */
+  titles: string[]
+  /** The shot whose frame becomes the cover, and the few words set on it. */
+  cover: { shot: number; text: string }
+  description: string
+  hashtags: string[]
+}
+
+const CJK = /[㐀-鿿]/
+
+export function checkPackaging(p: Packaging, shots: number): string[] {
+  const problems: string[] = []
+  if (!Array.isArray(p.titles) || p.titles.length !== 3 || p.titles.some((t) => !t?.trim())) problems.push('exactly three title variants')
+  else if (p.titles.some((t) => [...t].length > 30)) problems.push('titles at most 30 characters: they are cut off in the feed')
+  if (!p.cover || !Number.isInteger(p.cover.shot) || p.cover.shot < 1 || p.cover.shot > shots) problems.push(`cover.shot must be a shot number from 1 to ${shots}`)
+  else if (!p.cover.text?.trim() || [...p.cover.text].length > 12) problems.push('cover.text: a few words, at most 12 characters')
+  if (!p.description?.trim()) problems.push('description is empty')
+  else if (!/AI/.test(p.description)) problems.push('the description must disclose that the video is AI-generated (标识办法; YouTube altered or synthetic content)')
+  if (!Array.isArray(p.hashtags) || p.hashtags.length < 3 || p.hashtags.length > 8) problems.push('three to eight hashtags')
+  if (p.titles?.some((t) => /(震惊|惊呆|不看后悔|速看|必看)/.test(t))) problems.push('no clickbait formulas: the title must say what the video is')
+  if (p.titles?.length && !p.titles.some((t) => CJK.test(t))) problems.push('at least one title in Chinese for Douyin and Bilibili')
+  return problems
+}
+
+/** Packaging: titles to test, the cover frame and its words, description with the AI disclosure, hashtags. */
+export async function packagingStage(ctx: NarrativeContext): Promise<string> {
+  const play = ctx.plays[0]!
+  const shots = ctx.shots.get(play.episode) ?? []
+  const run = await chatJson<Packaging>(
+    ctx.planner,
+    {
+      system: await ctx.agentPrompt('packaging editor', 'platform-packaging'),
+      thinking: false, maxTokens: 1500, temperature: 0.6,
+      user: `Video: ${ctx.bible!.logline}
+Screenplay: ${play.scenes.map((s) => `${s.heading}: ${s.action} ${s.lines.map((l) => l.zh).join(' ')}`).join(' | ')}
+Shots: ${shots.map((s) => `${s.shot}. ${s.image_prompt.slice(0, 90)}`).join(' | ')}
+Return JSON only: {"titles": ["...", "...", "..."], "cover": {"shot": 1, "text": "..."}, "description": "...", "hashtags": ["#..."]}`,
+    },
+    (value) => checkPackaging(value, shots.length),
+    4,
+  )
+  const pack = run.value
+  await writeFile(join(ctx.dir!, 'reports', 'packaging.json'), JSON.stringify(pack, null, 2))
+  // The cover is the chosen shot's approved first frame, at full quality: what the feed shows before anyone presses play.
+  const frame = ctx.frames.get(`${play.episode}:${pack.cover.shot}`)
+  if (frame) await exec('ffmpeg', ['-y', '-v', 'error', '-i', frame, '-q:v', '2', join(ctx.dir!, 'cut', 'cover.jpg')])
+  await ctx.record('packaging', 'packaging-editor', ctx.planner, { seconds: run.seconds, attempts: run.attempts, titles: pack.titles })
+  return pack.titles[0]!
+}

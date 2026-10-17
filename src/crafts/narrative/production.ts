@@ -1,0 +1,265 @@
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { ComfyClient } from '../../comfy/client.js'
+import { chatJson } from '../../agent/llm.js'
+import { AI_LABEL, TITLE_FONT, enterPhase } from '../../agent/finish.js'
+import type { QaVerdict } from '../../agent/gate.js'
+import { generateMusic } from '../../lib/audio.js'
+import { exec } from '../../lib/exec.js'
+import { GRADES, assembleFilm, probeDuration } from '../../lib/ffmpeg.js'
+import { deliverySize, generationResolution } from '../../lib/formats.js'
+import { generateImage, generateVideo, interpolateVideo, interpolationMultiplier, videoFps, videoSize, VIDEO_NEGATIVE } from '../../lib/media.js'
+import { addAsset } from '../../lib/project.js'
+import { audioWork, designVoices, generateSfx, scoreSpeech, speakChecked } from '../../lib/speech.js'
+import { buildAss, type TitleCue } from '../../lib/titles.js'
+import { produced, key, type NarrativeContext } from './context.js'
+import { sheetGate, shotGate } from './gate.js'
+import { mixNarrative } from './mix.js'
+import type { Character, NarrativeShot } from './types.js'
+
+const pad = (n: number) => String(n).padStart(2, '0')
+const shotName = (episode: number, shot: number) => `ep${pad(episode)}_shot_${String(shot).padStart(3, '0')}`
+/** The breath before a line inside its shot; the lip-sync track and the subtitles both start here. */
+const LINE_OFFSET = 0.4
+const REALISM = 'Photorealistic frame from a modern American television drama shot on a cinema camera: natural skin with pores and fine texture, real hair, motivated light, shallow depth of field, subtle film grain. No text, captions or logos.'
+const castOf = (ctx: NarrativeContext, ids: string[]) => ids.map((id) => ctx.bible!.characters.find((c) => c.id === id)).filter((c): c is Character => !!c)
+
+/** Casting: a locked reference portrait and a designed voice for every character, both checked before anyone is shot. */
+export async function castingStage(ctx: NarrativeContext): Promise<string> {
+  const bible = ctx.bible!
+  const dir = ctx.dir!
+  const comfy = (ctx.comfy ??= new ComfyClient())
+  await mkdir(join(dir, 'cast'), { recursive: true })
+  await ctx.rest('casting (Qwen-Image)', [ctx.planner])
+  await enterPhase(comfy, 'casting (Qwen-Image)', ctx.record)
+  for (const character of bible.characters) {
+    let best: { path: string; verdict: QaVerdict } | undefined
+    for (let attempt = 0; attempt < 3 && !best?.verdict.pass; attempt++) {
+      const path = join(dir, 'cast', `${character.id}${attempt ? `_r${attempt}` : ''}.png`)
+      const image = await generateImage(comfy, {
+        size: '1328x1328', output: path,
+        prompt: `Casting reference portrait of ${character.look}, a ${character.gender === 'female' ? 'woman' : 'man'}, wearing ${character.wardrobe}. Chest-up, three-quarter view, looking just off camera with a relaxed natural expression, soft window key light, plain softly lit background. ${bible.look}. ${REALISM}`,
+      })
+      const verdict = await sheetGate(ctx.reviewer, path, character)
+      ctx.log(`▸ cast ${character.id.padEnd(10)} ${image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
+      await ctx.record('casting', 'sheet-gate', ctx.reviewer, { character: character.id, attempt, imageSeconds: image.seconds, ...verdict })
+      if (!best || verdict.score > best.verdict.score) best = { path, verdict }
+    }
+    const sheet = join(dir, 'cast', `${character.id}.sheet.png`)
+    await copyFile(best!.path, sheet)
+    ctx.sheets.set(character.id, sheet)
+    await addAsset(ctx.projectId!, { id: `cast-${character.id}`, kind: 'image', stage: 'casting', path: `cast/${character.id}.sheet.png`, execution: 'local-dgx-spark', model: 'qwen_image_lightning', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (best of 3, not passed)'}` })
+  }
+  await comfy.free()
+  // Voices: designed from each character's written voice, three takes each; Whisper keeps the cleanest.
+  const reference = "I didn't think you'd come back tonight. But here you are, and honestly, I'm glad."
+  const outDir = join(audioWork(), 'cast', ctx.projectId!)
+  const takes = await designVoices(bible.characters.map((c) => ({ id: c.id, design: `${c.voice}. A ${c.age}-year-old ${c.gender === 'female' ? 'woman' : 'man'}, natural American English, speaking like a real actor in a television drama, not an announcer.`, text: reference, language: 'English' as const, outDir })))
+  const scores = await scoreSpeech(takes.map((t) => ({ path: t.path, text: t.text })))
+  for (const character of bible.characters) {
+    const mine = takes.map((t, i) => ({ ...t, cer: scores[i]?.cer ?? 1 })).filter((t) => t.id === character.id).sort((a, b) => a.cer - b.cer)
+    const wav = join(outDir, `${character.id}.wav`)
+    await copyFile(mine[0]!.path, wav)
+    ctx.voices.set(character.id, { wav, text: reference })
+    await ctx.record('casting', 'voice', undefined, { character: character.id, takes: mine.map((t) => ({ cer: t.cer, seconds: t.seconds })) })
+  }
+  return `${bible.characters.length} characters cast`
+}
+
+/** First frames: edited from the reference portraits of the characters in the shot, judged for identity and realism. */
+export async function narrativeFramesStage(ctx: NarrativeContext): Promise<string> {
+  const bible = ctx.bible!
+  const comfy = (ctx.comfy ??= new ComfyClient())
+  const size = videoSize(generationResolution(ctx.options.resolution ?? '1080p'), ctx.ratio).join('x')
+  await ctx.rest('frames (Qwen-Image-Edit)', [ctx.planner])
+  await enterPhase(comfy, 'frames (Qwen-Image-Edit)', ctx.record)
+  let made = 0
+  for (const episode of produced(ctx)) {
+    const play = ctx.plays.find((p) => p.episode === episode)!
+    for (const shot of ctx.shots.get(episode) ?? []) {
+      const scene = play.scenes.find((s) => s.scene === shot.scene)!
+      const cast = castOf(ctx, shot.characters).slice(0, 3).map((character) => ({ character, sheet: ctx.sheets.get(character.id)! }))
+      const identity = cast.map((c, i) => `Image ${i + 1} is ${c.character.name}: the same person - keep the face, hair and build exactly; wearing ${c.character.wardrobe}.`).join(' ')
+      let prompt = `${shot.image_prompt}. ${scene.heading.replace(/^(INT|EXT)\.\s*/, '')}. ${bible.look}. ${identity} ${REALISM}`
+      let best: { path: string; verdict: QaVerdict } | undefined
+      const tries = Math.max(1, ctx.options.candidates ?? 2) + 1
+      for (let attempt = 0; attempt < tries && !best?.verdict.pass; attempt++) {
+        const path = join(ctx.dir!, 'frames', `${shotName(episode, shot.shot)}${attempt ? `_r${attempt}` : ''}.png`)
+        const image = await generateImage(comfy, { prompt, size, output: path, references: cast.map((c) => c.sheet) })
+        const verdict = await shotGate(ctx.reviewer, path, shot, cast)
+        ctx.log(`▸ frame ${episode}.${shot.shot}${attempt ? `_r${attempt}` : ''}  ${image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
+        await ctx.record('frames', 'shot-gate', ctx.reviewer, { episode, shot: shot.shot, attempt, imageSeconds: image.seconds, ...verdict })
+        if (!best || verdict.score > best.verdict.score) best = { path, verdict }
+        // The last try carries the gate's own words as fixes: a new seed alone repeats a systematic fault.
+        if (!verdict.pass && attempt === tries - 2 && verdict.issues.length) { prompt = `${prompt} Avoid: ${verdict.issues.slice(0, 3).join('; ')}.`; ctx.qaRegenerations++ }
+      }
+      ctx.frames.set(key(episode, shot.shot), best!.path)
+      await addAsset(ctx.projectId!, { id: `frame-${episode}-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(ctx.dir!.length + 1), shot: shot.shot, execution: 'local-dgx-spark', model: cast.length ? 'qwen_image_edit_lightning' : 'qwen_image_lightning', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}` })
+      made++
+    }
+  }
+  return `${made} frames · ${ctx.qaRegenerations} repairs`
+}
+
+/** Dialogue: every line cloned from its character's voice, checked by Whisper and retaken until it is heard right. */
+export async function dialogueStage(ctx: NarrativeContext): Promise<string> {
+  const lines: Array<{ k: string; speaker: string; text: string; output: string }> = []
+  for (const play of ctx.plays) play.scenes.forEach((scene) => scene.lines.forEach((line, n) => lines.push({ k: key(play.episode, scene.scene, n), speaker: line.speaker, text: line.en, output: join(audioWork(), 'lines', ctx.projectId!, `ep${pad(play.episode)}_s${scene.scene}_l${n}.wav`) })))
+  if (lines.some((l) => l.speaker === 'vo') && !ctx.voices.has('vo')) {
+    // The off-screen narrator: the casting library's warm baritone designed in English.
+    const outDir = join(audioWork(), 'cast', ctx.projectId!)
+    const text = 'Some stories begin quietly. This one began with a single letter.'
+    const takes = await designVoices([{ id: 'vo', design: 'A male narrator in his forties, warm deep baritone, natural American English, intimate and unhurried, like the narrator of a prestige television drama.', text, language: 'English', outDir }])
+    const scores = await scoreSpeech(takes.map((t) => ({ path: t.path, text })))
+    const bestTake = takes.map((t, i) => ({ ...t, cer: scores[i]?.cer ?? 1 })).sort((a, b) => a.cer - b.cer)[0]!
+    await copyFile(bestTake.path, join(outDir, 'vo.wav'))
+    ctx.voices.set('vo', { wav: join(outDir, 'vo.wav'), text })
+  }
+  for (const speaker of new Set(lines.map((l) => l.speaker))) {
+    const mine = lines.filter((l) => l.speaker === speaker)
+    for (const l of mine) await mkdir(join(l.output, '..'), { recursive: true })
+    const cer = await speakChecked(ctx.voices.get(speaker)!, mine.map((l) => ({ text: l.text, output: l.output })), 'English')
+    for (const [i, l] of mine.entries()) {
+      // Silence the model leaves around a line is trimmed: the shot's timing is for speech.
+      const trimmed = l.output.replace(/\.wav$/, '.trim.wav')
+      await exec('ffmpeg', ['-y', '-v', 'error', '-i', l.output, '-af', 'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse', trimmed])
+      let seconds = await probeDuration(trimmed)
+      const room = 5 - LINE_OFFSET - 0.2
+      if (seconds > room) {
+        // Slightly quicker rather than cut: at most 12 % faster, which still sounds like the actor.
+        const tempo = Math.min(1.12, seconds / room)
+        await exec('ffmpeg', ['-y', '-v', 'error', '-i', trimmed, '-af', `atempo=${tempo.toFixed(3)}`, `${trimmed}.fit.wav`])
+        await copyFile(`${trimmed}.fit.wav`, trimmed)
+        seconds = await probeDuration(trimmed)
+      }
+      ctx.lines.set(l.k, { wav: trimmed, seconds, cer: cer[i]! })
+      await ctx.record('dialogue', 'voice', undefined, { line: l.k, speaker, seconds, errorRate: cer[i] })
+    }
+  }
+  // A line that no retake got right stays in the film only as an open item: someone listens to it before release.
+  const unclear = [...ctx.lines].filter(([, l]) => l.cer > 0.08)
+  for (const [k, l] of unclear) ctx.log(`  open item: line ${k} still mis-heard after retakes (error ${(l.cer * 100).toFixed(0)}%); listen before release`)
+  if (unclear.length) await ctx.record('dialogue', 'voice', undefined, { openItems: unclear.map(([k, l]) => ({ line: k, errorRate: l.cer })) })
+  const worst = [...ctx.lines.values()].reduce((m, l) => Math.max(m, l.cer), 0)
+  return `${lines.length} lines · worst error ${(worst * 100).toFixed(0)}%`
+}
+
+/** Clips: dialogue shots are generated against their line so the mouth follows it; the rest animate from the frame. */
+export async function narrativeClipsStage(ctx: NarrativeContext): Promise<string> {
+  const comfy = ctx.comfy!
+  const model = ctx.options.videoModel ?? 'ltx25-fast-nvfp4'
+  const fps = ctx.options.fps ?? 24
+  await ctx.rest('clips (LTX-2.5)', [ctx.planner, ctx.reviewer])
+  await enterPhase(comfy, 'clips (LTX-2.5)', ctx.record)
+  let count = 0
+  for (const episode of produced(ctx)) {
+    const play = ctx.plays.find((p) => p.episode === episode)!
+    for (const shot of ctx.shots.get(episode) ?? []) {
+      const scene = play.scenes.find((s) => s.scene === shot.scene)!
+      const line = shot.line !== undefined ? scene.lines[shot.line] : undefined
+      const spoken = line && line.speaker !== 'vo' ? ctx.lines.get(key(episode, shot.scene, shot.line!)) : undefined
+      const speaker = spoken ? castOf(ctx, [line!.speaker])[0] : undefined
+      const prompt = `${shot.video_prompt} ${shot.camera}.${speaker ? ` ${speaker.name.split('/')[0]!.trim()} says: "${line!.en}"${line!.delivery ? ` (${line!.delivery})` : ''}, with natural lip and jaw movement, small head motion and natural blinking.` : ''} Photorealistic, natural motion, film grain.`
+      const output = join(ctx.dir!, 'clips', `${shotName(episode, shot.shot)}.mp4`)
+      const clip = await generateVideo(comfy, { prompt, negative: `${VIDEO_NEGATIVE}, mouth not moving, lips out of sync, frozen face, extra person`, output, resolution: generationResolution(ctx.options.resolution ?? '1080p'), ratio: ctx.ratio, durationSeconds: 5, firstFrame: ctx.frames.get(key(episode, shot.shot)), freeAfter: false, model, dialogue: spoken ? { audio: spoken.wav, offsetSeconds: LINE_OFFSET } : undefined })
+      ctx.log(`▸ clip ${episode}.${shot.shot}${spoken ? ' (lip-sync)' : ''}  ${clip.seconds.toFixed(1)}s`)
+      await ctx.record('clips', 'video', undefined, { episode, shot: shot.shot, seconds: clip.seconds, lipsync: !!spoken })
+      ctx.clips.set(key(episode, shot.shot), output)
+      count++
+    }
+  }
+  if (fps > 24) {
+    await enterPhase(comfy, 'interpolate (RIFE)', ctx.record)
+    for (const [k, path] of ctx.clips) {
+      const sourceFps = videoFps(model)
+      const hfr = await interpolateVideo(comfy, { input: path, output: path.replace(/\.mp4$/, '.hfr.mp4'), multiplier: interpolationMultiplier(sourceFps), sourceFps })
+      ctx.clips.set(k, path.replace(/\.mp4$/, '.hfr.mp4'))
+      await ctx.record('clips', 'interpolate', undefined, { clip: k, seconds: hfr.seconds, fps: hfr.fps, model: 'rife-4.26' })
+    }
+  }
+  await comfy.free()
+  return `${count} clips`
+}
+
+/** Sound: the sound designer writes ambience per scene and effects per shot; MOSS-SoundEffect and ACE-Step make them. */
+export async function soundStage(ctx: NarrativeContext): Promise<string> {
+  const bible = ctx.bible!
+  let made = 0
+  for (const episode of produced(ctx)) {
+    const play = ctx.plays.find((p) => p.episode === episode)!
+    const shots = ctx.shots.get(episode) ?? []
+    const plan = await chatJson<{ ambience: Array<{ scene: number; prompt: string }>; effects: Array<{ shot: number; prompt: string }>; music: string }>(
+      ctx.planner,
+      {
+        system: await ctx.agentPrompt('sound designer and composer', 'sound-design-and-music'),
+        thinking: false, maxTokens: 2500, temperature: 0.5,
+        user: `Series: ${bible.genre}; look ${bible.look}.
+Scenes: ${play.scenes.map((s) => `${s.scene}. ${s.heading}: ${s.action}`).join(' | ')}
+Shots: ${shots.map((s) => `${s.shot} (scene ${s.scene}): ${s.video_prompt}`).join(' | ')}
+Write one ambience bed per scene and a sync effect only for shots where something audible happens (a door, a cup set down, rain on glass) - at most half the shots. English, concrete, no music and no speech in effect prompts. Then the score direction for the episode (genre, instrumentation, tempo, how it ends on the cliffhanger; no artist names).
+Return JSON only: {"ambience": [{"scene": 1, "prompt": "..."}], "effects": [{"shot": 2, "prompt": "..."}], "music": "..."}`,
+      },
+      (v) => (Array.isArray(v.ambience) && Array.isArray(v.effects) && typeof v.music === 'string' && v.music.trim() ? [] : ['need "ambience", "effects" arrays and a "music" direction']),
+      3,
+    )
+    const base = join(audioWork(), 'sound', ctx.projectId!, `ep${pad(episode)}`)
+    const sceneSpan = (scene: number) => shots.filter((s) => s.scene === scene).length * 5
+    const ambience = plan.value.ambience.filter((a) => sceneSpan(a.scene) > 0).map((a) => ({ scene: a.scene, prompt: a.prompt, seconds: Math.min(30, sceneSpan(a.scene)), output: join(base, `amb_s${a.scene}.wav`) }))
+    const effects = plan.value.effects.filter((e) => shots.some((s) => s.shot === e.shot)).slice(0, Math.ceil(shots.length / 2)).map((e) => ({ shot: e.shot, prompt: e.prompt, seconds: 5, output: join(base, `fx_${e.shot}.wav`) }))
+    await generateSfx([...ambience, ...effects].map((j, i) => ({ prompt: j.prompt, seconds: j.seconds, output: j.output, seed: i + 1 })))
+    const sound: { ambience: Map<number, string>; sfx: Map<number, string>; music?: string } = { ambience: new Map(ambience.map((a) => [a.scene, a.output])), sfx: new Map(effects.map((e) => [e.shot, e.output])) }
+    const comfy = (ctx.comfy ??= new ComfyClient())
+    const music = join(ctx.dir!, 'audio', `ep${pad(episode)}_score.wav`)
+    await generateMusic(comfy, { tags: `instrumental, ${plan.value.music}, cinematic television score, clean modern production, no vocals`, seconds: shots.length * 5, output: music })
+    sound.music = music
+    ctx.sound.set(episode, sound)
+    made += ambience.length + effects.length + 1
+    await ctx.record('sound', 'sound-designer', ctx.planner, { episode, ambience: ambience.length, effects: effects.length, music: plan.value.music })
+  }
+  await ctx.comfy?.free()
+  return `${made} sound files`
+}
+
+/** Cut: hard cuts at 5 s, the four-bus mix, bilingual subtitles timed to the spoken lines, grade, AI labels, loudness. */
+export async function narrativeCutStage(ctx: NarrativeContext): Promise<string> {
+  const fps = ctx.options.fps ?? 24
+  const [width, height] = deliverySize(ctx.options.resolution ?? '1080p', ctx.ratio)
+  for (const episode of produced(ctx)) {
+    const play = ctx.plays.find((p) => p.episode === episode)!
+    const shots = ctx.shots.get(episode) ?? []
+    const total = shots.length * 5
+    const start = (shot: NarrativeShot) => (shot.shot - 1) * 5
+    const cues: TitleCue[] = [{ start: 0, end: 3, label: AI_LABEL }, { start: total - 3, end: total, label: AI_LABEL }]
+    const dialogue: Array<{ path: string; start: number }> = []
+    for (const shot of shots) {
+      if (shot.line === undefined) continue
+      const line = play.scenes.find((s) => s.scene === shot.scene)!.lines[shot.line]!
+      const spoken = ctx.lines.get(key(episode, shot.scene, shot.line))
+      if (!spoken) continue
+      const at = start(shot) + LINE_OFFSET
+      dialogue.push({ path: spoken.wav, start: at })
+      // On screen at least 5/6 s, at most 7 s, and never past the shot it belongs to.
+      cues.push({ start: start(shot), end: start(shot) + 5, subtitle: line.zh, subtitleEn: line.en, subtitleStart: at, subtitleEnd: Math.min(start(shot) + 5, at + Math.max(5 / 6, Math.min(7, spoken.seconds + 0.3))) })
+    }
+    const sound = ctx.sound.get(episode)
+    const ambience = [...(sound?.ambience ?? new Map())].map(([scene, path]) => {
+      const inScene = shots.filter((s) => s.scene === scene)
+      return { path, start: start(inScene[0]!), seconds: inScene.length * 5 }
+    })
+    const effects = [...(sound?.sfx ?? new Map())].map(([shot, path]) => ({ path, start: start(shots.find((s) => s.shot === shot)!) }))
+    const soundtrack = join(ctx.dir!, 'audio', `ep${pad(episode)}_mix.wav`)
+    await mixNarrative({ totalSeconds: total, dialogue, ambience, effects, music: sound?.music, output: soundtrack })
+    const ass = join(ctx.dir!, 'cut', `ep${pad(episode)}.ass`)
+    await writeFile(ass, buildAss(cues, width, height, TITLE_FONT))
+    const output = join(ctx.dir!, 'cut', `ep${pad(episode)}.mp4`)
+    const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Cinefoundry', ProduceID: `${ctx.projectId}-ep${pad(episode)}`, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
+    await assembleFilm(shots.map((s) => ctx.clips.get(key(episode, s.shot))!), output, {
+      width, height, fps, durations: shots.map(() => 5), crossfadeSeconds: 0, ass, audio: soundtrack, grade: GRADES.drama ?? GRADES.neutral, loudness: -14,
+      metadata: { AIGC: aigc, comment: `${AI_LABEL} · Cinefoundry · ${ctx.projectId} ep${episode}`, title: `${play.title}` },
+    })
+    ctx.outputs.set(episode, output)
+    await addAsset(ctx.projectId!, { id: `episode-${episode}`, kind: 'video', stage: 'cut', path: `cut/ep${pad(episode)}.mp4`, execution: 'local-dgx-spark', model: 'ffmpeg' })
+    ctx.log(`▸ cut          episode ${episode}: ${output}`)
+  }
+  return `${ctx.outputs.size} episode(s)`
+}

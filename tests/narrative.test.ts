@@ -1,0 +1,119 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { checkBible, checkScreenplay, checkShots } from '../src/crafts/narrative/checks.js'
+import { checkPackaging } from '../src/crafts/narrative/packaging.js'
+import { mixNarrative } from '../src/crafts/narrative/mix.js'
+import { buildAss } from '../src/lib/titles.js'
+import { exec } from '../src/lib/exec.js'
+import { probeDuration } from '../src/lib/ffmpeg.js'
+import type { NarrativeShot, Screenplay, SeriesBible } from '../src/crafts/narrative/types.js'
+
+const bible: SeriesBible = {
+  logline: '一位调香师在旧城重逢初恋', genre: 'urban romance, warm and witty', world: 'a quiet old quarter of Shanghai in early spring', look: 'soft window light, warm amber and sage, gentle film grain',
+  characters: [
+    { id: 'mia', name: 'Mia / 米娅', role: 'lead', age: 29, gender: 'female', look: 'a woman in her late twenties with shoulder-length dark hair and a calm gaze', wardrobe: 'cream linen shirt', arc: '她想重开香水店。她要先原谅自己。', voice: 'warm low alto, unhurried' },
+    { id: 'leo', name: 'Leo / 李奥', role: 'love interest', age: 31, gender: 'male', look: 'a man in his early thirties with short black hair and a soft stubble', wardrobe: 'navy wool coat', arc: '他回来卖掉老宅。他留了下来。', voice: 'clear baritone, dry humour' },
+  ],
+  episodes: [{ episode: 1, title: '重逢', synopsis: '米娅在店里遇见李奥。', hook: '一瓶摔碎的香水', cliffhanger: '他说他要卖掉这条街' }],
+}
+
+const play: Screenplay = {
+  episode: 1, title: '重逢',
+  scenes: [
+    { scene: 1, heading: 'INT. PERFUME SHOP - MORNING', characters: ['mia', 'leo'], action: 'A glass bottle shatters on the tiled floor; Mia looks up.', lines: [
+      { speaker: 'leo', en: 'I guess some things never change.', zh: '有些事真是一点没变' },
+      { speaker: 'mia', en: 'You still knock things over.', zh: '你还是这么毛手毛脚', delivery: 'dry, hiding a smile' },
+    ] },
+  ],
+}
+
+const shots: NarrativeShot[] = [
+  { shot: 1, scene: 1, framing: 'insert', camera: 'locked-off', characters: [], image_prompt: 'a perfume bottle shattering on old green tiles, liquid catching the morning light', video_prompt: 'glass fragments scatter and settle', seconds: 5 },
+  { shot: 2, scene: 1, framing: 'medium', camera: 'slow push-in', characters: ['leo'], image_prompt: 'a man in a navy coat in the doorway of a small perfume shop, morning light behind him', video_prompt: 'he smiles faintly', line: 0, seconds: 5 },
+  { shot: 3, scene: 1, framing: 'close-up', camera: 'locked-off', characters: ['mia'], image_prompt: 'a woman behind a wooden counter lined with amber bottles, window light on her face', video_prompt: 'she looks up from the counter', line: 1, seconds: 5 },
+]
+
+describe('narrative checks', () => {
+  it('accepts a sound bible and refuses minors, numbers in picture words and a wrong episode count', () => {
+    expect(checkBible(bible, { episodes: 1 })).toEqual([])
+    const bad = { ...bible, look: 'f/1.4 golden hour', characters: [{ ...bible.characters[0]!, age: 16 }], episodes: [] }
+    const problems = checkBible(bad, { episodes: 1 }).join(' | ')
+    expect(problems).toContain('minors are not cast')
+    expect(problems).toContain('look must be words only')
+    expect(problems).toContain('plan exactly 1 episode')
+  })
+
+  it('keeps every line inside one shot and every subtitle inside the line width', () => {
+    expect(checkScreenplay(play, bible, { seconds: 15, ratio: '9:16' })).toEqual([])
+    const long: Screenplay = { ...play, scenes: [{ ...play.scenes[0]!, lines: [{ speaker: 'mia', en: 'I never thought that after all these years you would actually walk back into this shop.', zh: '我从没想过这么多年以后你真的会再走进这家店。' }] }] }
+    const problems = checkScreenplay(long, bible, { seconds: 15, ratio: '9:16' }).join(' | ')
+    expect(problems).toContain('split it into two lines')
+    expect(problems).toContain('at most 12 on a 9:16 frame')
+    expect(problems).toContain('space instead of commas and full stops')
+  })
+
+  it('refuses more lines than the running time has shots', () => {
+    expect(checkScreenplay(play, bible, { seconds: 10, ratio: '16:9' })).toEqual([])
+    const crowded: Screenplay = { ...play, scenes: [{ ...play.scenes[0]!, lines: [...play.scenes[0]!.lines, ...play.scenes[0]!.lines] }] }
+    expect(checkScreenplay(crowded, bible, { seconds: 15, ratio: '16:9' }).join(' ')).toContain('do not fit 15 seconds')
+  })
+
+  it('shoots dialogue single: the speaker first, framed close enough to read the mouth, every line once', () => {
+    expect(checkShots(shots, play, { seconds: 15 })).toEqual([])
+    const twoShot = shots.map((s) => (s.shot === 2 ? { ...s, framing: 'wide', characters: ['mia', 'leo'] } : s))
+    const problems = checkShots(twoShot, play, { seconds: 15 }).join(' | ')
+    expect(problems).toContain('frames its speaker first')
+    expect(problems).toContain('so the mouth reads')
+    const missing = shots.map((s) => (s.shot === 3 ? { ...s, line: undefined } : s))
+    expect(checkShots(missing, play, { seconds: 15 }).join(' ')).toContain('line 1 has no shot')
+  })
+})
+
+describe('packaging', () => {
+  it('needs three titles, a cover from a real shot and the AI disclosure, and refuses clickbait', () => {
+    const good = { titles: ['旧城香水店的重逢', 'She Came Back for the Shop', '一瓶香水碎了 故事开始了'], cover: { shot: 2, text: '他回来了' }, description: '一段关于重逢的微短剧。本视频由 AI 生成。', hashtags: ['#微短剧', '#AI短剧', '#都市爱情'] }
+    expect(checkPackaging(good, 3)).toEqual([])
+    const problems = checkPackaging({ ...good, titles: ['震惊！他回来了', 'b', 'c'], cover: { shot: 9, text: '他回来了' }, description: '重逢' }, 3).join(' | ')
+    expect(problems).toContain('clickbait')
+    expect(problems).toContain('cover.shot')
+    expect(problems).toContain('AI-generated')
+  })
+})
+
+describe('bilingual subtitles', () => {
+  it('sets Chinese large on top and English small under it, inside the 9:16 safe zone', () => {
+    const ass = buildAss([{ start: 0, end: 5, subtitle: '有些事真是一点没变', subtitleEn: 'I guess some things never change.', subtitleStart: 0.4, subtitleEnd: 3 }], 1080, 1920)
+    const style = (name: string) => ass.split('\n').find((l) => l.startsWith(`Style: ${name},`))!.split(',')
+    const [zhSize, enSize] = [Number(style('Sub')[2]), Number(style('SubEn')[2])]
+    expect(zhSize).toBe(59)
+    expect(enSize).toBe(Math.round(zhSize * 0.6))
+    // MarginV is the last-but-one field: the Chinese sits above the English, and both clear the bottom 25 % of the frame.
+    const margin = (name: string) => Number(style(name).at(-2))
+    expect(margin('Sub')).toBeGreaterThan(margin('SubEn'))
+    expect(margin('SubEn')).toBeGreaterThanOrEqual(1920 * 0.25)
+    expect(ass).toContain(',SubEn,,0,0,0,,{\\fad(150,150)}I guess some things never change.')
+  })
+})
+
+describe('narrative mix', () => {
+  it('lays dialogue, ambience, effects and a ducked score into one track of the film length', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mix-'))
+    const tone = async (name: string, seconds: number, freq: number) => {
+      const path = join(dir, name)
+      await exec('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', `sine=frequency=${freq}:duration=${seconds}`, path])
+      return path
+    }
+    const output = join(dir, 'mix.wav')
+    await mixNarrative({
+      totalSeconds: 10,
+      dialogue: [{ path: await tone('line.wav', 2, 440), start: 0.4 }, { path: await tone('line2.wav', 2, 550), start: 5.4 }],
+      ambience: [{ path: await tone('amb.wav', 3, 120), start: 0, seconds: 10 }],
+      effects: [{ path: await tone('fx.wav', 1, 900), start: 5 }],
+      music: await tone('music.wav', 12, 220),
+      output,
+    })
+    expect(await probeDuration(output)).toBeCloseTo(10, 0)
+  })
+})

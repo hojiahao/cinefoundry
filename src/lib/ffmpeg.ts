@@ -101,6 +101,8 @@ export const filmLength = (durations: number[], overlaps: number | number[]) => 
 /** Picture looks, applied to the whole joined film so shots from different generations read as one. Kept restrained. */
 export const GRADES: Record<string, string> = {
   neutral: 'eq=contrast=1.05:saturation=1.04:gamma=0.99,unsharp=3:3:0.25:3:3:0.0,noise=alls=3:allf=t+u,vignette=PI/6',
+  // Drama: filmic and restrained - gentle contrast, slightly held-back saturation, warm skin, soft highlight roll-off, grain.
+  drama: 'eq=contrast=1.04:saturation=0.94:gamma=1.0,colorbalance=rs=0.015:gs=0.005:bs=-0.01:bh=0.01,curves=all=0/0 0.85/0.82 1/0.96,noise=alls=4:allf=t+u,vignette=PI/6',
   // Drinks: clean and cool in the highlights, crisp; keep whites white.
   drink: 'eq=contrast=1.07:saturation=1.06:gamma=0.98,colorbalance=rh=-0.02:bh=0.03:rs=0.01,unsharp=3:3:0.3:3:3:0.0,noise=alls=2:allf=t+u,vignette=PI/6.5',
   // Skincare: soft, low contrast, warm-neutral skin, gentle highlight bloom, no sharpening.

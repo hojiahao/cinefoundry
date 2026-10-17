@@ -5,6 +5,7 @@ description: Finish approved clips into the final advertisement at broadcast sta
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: post
   tags:
     - ffmpeg
     - editing

@@ -5,6 +5,7 @@ description: Decide the film before anyone writes or draws it - the insight, the
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: writing
   tags:
     - advertising
     - creative-direction

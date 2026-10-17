@@ -5,6 +5,7 @@ description: Write the script for a short advertisement - hook, beats, voiceover
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: writing
   tags:
     - advertising
     - copywriting

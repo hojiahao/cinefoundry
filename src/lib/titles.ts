@@ -29,13 +29,15 @@ const lineEms = (text: string) => [...text].reduce((sum, char) => sum + (/[\u300
 
 export function buildAss(cues: TitleCue[], width: number, height: number, font = 'Noto Sans CJK SC'): string {
   const portrait = height > width
+  const titleSize = Math.round(height * (portrait ? 0.058 : 0.085))
+  // Subtitles: about 4.5 % of the frame height on 16:9; on 9:16 sized from the width (about 59 px on a 1080-wide frame).
+  const subtitleSize = Math.round(portrait ? width * 0.055 : height * 0.045)
   // Bilingual: Chinese large on top, English small below it. On 9:16 both stay inside the platforms' safe zone
   // (above y = 1440 of 1920, clear of the caption, buttons and progress bar), on 16:9 in the lower title-safe area.
-  const enSize = Math.round(height * (portrait ? 0.019 : 0.03))
+  // English sits under the Chinese at about 60 % of its size.
+  const enSize = Math.round(subtitleSize * 0.6)
   const enMargin = Math.round(portrait ? height * 0.25 : height * 0.06)
   const bilingual = cues.some((cue) => cue.subtitleEn?.trim())
-  const titleSize = Math.round(height * (portrait ? 0.058 : 0.085))
-  const subtitleSize = Math.round(height * (portrait ? 0.026 : 0.042))
   const closingSize = Math.round(height * (portrait ? 0.04 : 0.064))
   const lines = [
     '[Script Info]', 'ScriptType: v4.00+', `PlayResX: ${width}`, `PlayResY: ${height}`, 'WrapStyle: 2', 'ScaledBorderAndShadow: yes', '',
@@ -45,7 +47,9 @@ export function buildAss(cues: TitleCue[], width: number, height: number, font =
     `Style: Title,${font},${titleSize},&H00FFFFFF,&H00FFFFFF,&H64000000,&H96000000,1,0,0,0,100,100,${Math.round(titleSize * 0.18)},0,1,0,${Math.round(titleSize * 0.06)},8,60,60,${Math.round(height * (portrait ? 0.14 : 0.1))},1`,
     `Style: Sub,${font},${subtitleSize},&H00FFFFFF,&H00FFFFFF,&HB4000000,&H00000000,0,0,0,0,100,100,${Math.round(subtitleSize * 0.06)},0,1,${Math.max(1, Math.round(subtitleSize * 0.07))},0,2,60,60,${bilingual ? enMargin + Math.round(enSize * 1.55) : Math.round(height * (portrait ? 0.09 : 0.07))},1`,
     `Style: SubEn,${font},${enSize},&H20FFFFFF,&H20FFFFFF,&HB4000000,&H00000000,0,0,0,0,100,100,0,0,1,${Math.max(1, Math.round(enSize * 0.07))},0,2,60,60,${enMargin},1`,
-    `Style: Label,${font},${Math.round(height * (portrait ? 0.016 : 0.024))},&H30FFFFFF,&H30FFFFFF,&H90000000,&H00000000,0,0,0,0,100,100,${Math.round(height * 0.002)},0,1,1,0,9,${Math.round(width * 0.03)},${Math.round(width * 0.03)},${Math.round(height * 0.035)},1`,
+    // The explicit AI label (标识办法 / GB 45438-2025): prominent - text 5 % of the frame's short side - and on 9:16 kept
+    // below the band the platform's own top bar covers, so the label is never hidden by the player.
+    `Style: Label,${font},${Math.round(Math.min(width, height) * 0.05)},&H10FFFFFF,&H10FFFFFF,&H90000000,&H00000000,0,0,0,0,100,100,${Math.round(height * 0.002)},0,1,2,0,9,${Math.round(width * 0.05)},${Math.round(width * 0.05)},${Math.round(portrait ? height * 0.2 : height * 0.04)},1`,
     `Style: Closing,${font},${closingSize},&H00FFFFFF,&H00FFFFFF,&H64000000,&H96000000,1,0,0,0,100,100,${Math.round(closingSize * 0.22)},0,1,0,${Math.round(closingSize * 0.07)},2,60,60,${Math.round(height * (portrait ? 0.085 : 0.075))},1`,
     '', '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
   ]

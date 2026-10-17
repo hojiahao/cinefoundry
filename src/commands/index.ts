@@ -15,6 +15,10 @@ import { CROSSFADE_SECONDS, finishFilm, type Recorder } from '../agent/finish.js
 import { DEFAULT_RATIO, DEFAULT_RESOLUTION, checkFps, deliverySize, isRatio } from '../lib/formats.js'
 import { qualityGate } from '../agent/gate.js'
 import { runHarness } from '../agent/harness.js'
+import { runPipeline } from '../engine/run.js'
+import { dramaPipeline } from '../pipelines/drama/index.js'
+import { shortPipeline } from '../pipelines/short/index.js'
+import type { NarrativeOptions } from '../crafts/narrative/context.js'
 import { endpoints, type ModelEndpoint } from '../agent/llm.js'
 import { runAblation, writeBenchmarks } from '../agent/evals.js'
 import { startStudio } from '../studio/server.js'
@@ -272,6 +276,39 @@ async function harnessCommand(args: ParsedArgs): Promise<number> {
   return 0
 }
 
+/** Options shared by the narrative formats (short video, micro-drama). */
+function narrativeOptions(args: ParsedArgs, usage: string): NarrativeOptions {
+  const brief = args.positionals.join(' ').trim()
+  if (!brief) throw new UsageError(usage)
+  return {
+    brief,
+    id: flag(args, 'id'),
+    episodes: flag(args, 'episodes') ? numberFlag(args, 'episodes', 1) : undefined,
+    produce: flag(args, 'produce') ? numberFlag(args, 'produce', 1) : undefined,
+    episodeSeconds: flag(args, 'seconds') ? numberFlag(args, 'seconds', 60) : undefined,
+    ratio: flag(args, 'ratio'),
+    resolution: flag(args, 'resolution'),
+    fps: flag(args, 'fps') ? checkFps(numberFlag(args, 'fps', 24)) : undefined,
+    videoModel: flag(args, 'video-model') as never,
+    candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
+    planOnly: flag(args, 'plan-only') === 'true',
+    withoutSkills: flag(args, 'without-skills') === 'true',
+  }
+}
+
+const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--id id] [--plan-only]'
+const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 45] [--ratio 9:16] [--fps 30] [--id id] [--plan-only]'
+
+async function dramaCommand(args: ParsedArgs): Promise<number> {
+  print(await runPipeline(dramaPipeline, narrativeOptions(args, DRAMA_USAGE)))
+  return 0
+}
+
+async function shortCommand(args: ParsedArgs): Promise<number> {
+  print(await runPipeline(shortPipeline, narrativeOptions(args, SHORT_USAGE)))
+  return 0
+}
+
 /** Same model, same briefs, with and without the skills; scored by the director's validators. */
 async function evalCommand(args: ParsedArgs): Promise<number> {
   if (flag(args, 'report-only') === 'true') {
@@ -282,4 +319,4 @@ async function evalCommand(args: ParsedArgs): Promise<number> {
   return 0
 }
 
-export const COMMANDS: Record<string, Command> = { harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }
+export const COMMANDS: Record<string, Command> = { ad: harnessCommand, short: shortCommand, drama: dramaCommand, harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }

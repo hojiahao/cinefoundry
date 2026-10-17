@@ -5,6 +5,7 @@ description: Produce a finished short advertising film (visuals, voiceover, musi
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: production
   tags:
     - advertising
     - video-generation

@@ -5,6 +5,7 @@ description: Break a reference advertisement video into shots and describe each 
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: research
   tags:
     - ffmpeg
     - stepfun

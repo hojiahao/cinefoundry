@@ -5,6 +5,7 @@ description: Review Chinese advertising copy (scripts, voiceover, on-screen text
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: production
   tags:
     - advertising
     - compliance

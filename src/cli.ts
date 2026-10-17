@@ -3,11 +3,14 @@ import { existsSync, readFileSync } from 'node:fs'
 import { COMMANDS } from './commands/index.js'
 import { parseArgs, UsageError } from './lib/args.js'
 
-const HELP = `Cinefoundry - agentic ad-film studio for a single DGX Spark
+const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
 
-  Cinefoundry Harness: one brief in, one finished film out
-
-  cinefoundry harness "<brief>" [--id id] [--ratio 16:9|9:16|1:1] [--duration 15] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts"] [--plan-only] [--video-model ltx25-fast|ltx25-fast-nvfp4|wan22-14b|wan22-5b|seedance]
+  One idea in, a finished film out
+  cinefoundry ad "<brief>"      [--duration 30] [--ratio 16:9|9:16|1:1] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts"] [--plan-only]
+  cinefoundry short "<topic>"   [--seconds 45] [--ratio 9:16] [--fps 30] [--plan-only]
+  cinefoundry drama "<story>"   [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--plan-only]
+  Common: [--id id] [--video-model ltx25-fast-nvfp4|ltx25-fast|wan22-14b|wan22-5b|seedance] [--candidates 2]
+  (cinefoundry harness is the same as cinefoundry ad)
 
   Individual tools, as the skills call them
   cinefoundry eval [--briefs eval/briefs.json] [--repeats 2]      with/without-skill comparison

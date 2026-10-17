@@ -5,6 +5,7 @@ description: The director of photography's, the production designer's, the produ
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: picture
   tags:
     - advertising
     - cinematography

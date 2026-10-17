@@ -5,6 +5,7 @@ description: Inspect a generated advertisement frame with the local vision model
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: picture
   tags:
     - dgx-spark
     - stepfun

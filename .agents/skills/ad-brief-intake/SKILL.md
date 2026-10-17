@@ -5,6 +5,7 @@ description: Turn a rough advertising request into a confirmed production brief 
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: production
   tags:
     - advertising
     - brief

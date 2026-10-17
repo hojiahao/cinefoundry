@@ -5,6 +5,7 @@ description: Plan and check unified-memory use on a single DGX Spark (GB10, one 
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: production
   tags:
     - dgx-spark
     - unified-memory

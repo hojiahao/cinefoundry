@@ -5,6 +5,7 @@ description: Generate a product hero still, storyboard frames anchored to it, an
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
+  category: picture
   tags:
     - dgx-spark
     - comfyui
