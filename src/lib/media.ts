@@ -14,7 +14,7 @@ export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'ltx25-fast' | 'ltx25-fast-n
  * The 14B image-to-video model runs at its native 16 fps and needs a first frame.
  * LTX-2.5 Fast is image-to-video here too, at 24 fps; its frame count must be 8n+1 (5 s = 121).
  */
-const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: string; t2v?: string; lipsync?: string; values?: Record<string, unknown> }> = {
+export const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: string; t2v?: string; lipsync?: string; values?: Record<string, unknown> }> = {
   'wan22-5b': { fps: 24, i2v: 'wan22_ti2v_5b_i2v', t2v: 'wan22_ti2v_5b_t2v' },
   'wan22-14b': { fps: 16, i2v: 'wan22_i2v_14b_4step' },
   'ltx25-fast': { fps: 24, i2v: 'ltx25_fast_i2v', lipsync: 'ltx25_fast_lipsync', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors' } },

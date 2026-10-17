@@ -1,7 +1,6 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
 import { ComfyClient } from '../comfy/client.js'
-import { loadWorkflow } from '../comfy/workflow.js'
 import { flag, numberFlag, requireFlag, UsageError, type ParsedArgs } from '../lib/args.js'
 import { CATEGORIES, scanCopy, type Category } from '../lib/compliance.js'
 import { assembleFilm, detectCuts, extractFrame, probeDuration } from '../lib/ffmpeg.js'
@@ -22,6 +21,10 @@ import type { NarrativeOptions } from '../crafts/narrative/context.js'
 import { endpoints, type ModelEndpoint } from '../agent/llm.js'
 import { runAblation, writeBenchmarks } from '../agent/evals.js'
 import { startStudio } from '../studio/server.js'
+import { installationReport, type DoctorSection } from '../setup/doctor.js'
+import { installedFeatures, manifestCommand, runSetup } from '../setup/index.js'
+import { FEATURES, featuresFor, loadManifest, type Feature } from '../setup/manifest.js'
+import { checkWorkflows, loadWorkflows } from '../setup/workflows.js'
 
 export type Command = (args: ParsedArgs) => Promise<number>
 
@@ -221,33 +224,47 @@ async function cut(args: ParsedArgs): Promise<number> {
   return 0
 }
 
-/** Compare every workflow template with the running ComfyUI: unknown nodes, unknown inputs, missing model files. */
-async function doctor(): Promise<number> {
-  const info = await new ComfyClient().objectInfo()
-  const problems: string[] = []
-  for (const name of ['qwen_image_lightning', 'qwen_image_edit_lightning', 'qwen_image_2512', 'qwen_image_edit_2511_lightning', 'wan22_ti2v_5b_t2v', 'wan22_ti2v_5b_i2v', 'wan22_i2v_14b_4step', 'ltx25_fast_i2v', 'ace_step_instrumental']) {
-    const graph = (await loadWorkflow(name)) as Record<string, { class_type: string; inputs: Record<string, unknown> }>
-    for (const [nodeId, node] of Object.entries(graph)) {
-      if (nodeId.startsWith('_')) continue
-      const spec = info[node.class_type]
-      if (!spec) {
-        problems.push(`${name} node ${nodeId}: unknown class ${node.class_type}`)
-        continue
-      }
-      const declared = { ...spec.input.required, ...spec.input.optional }
-      for (const [input, value] of Object.entries(node.inputs)) {
-        // "format.codec.encoding.crf" is a dynamic input: it exists once its root ("format") takes a value, so the
-        // static schema does not list it. Only the root has to be declared.
-        const root = input.split('.')[0]!
-        if (!(input in declared) && !(input.includes('.') && root in declared)) problems.push(`${name} node ${nodeId}: ${node.class_type} has no input "${input}"`)
-        else if (/_name$/.test(input) && !String(value).includes('{{') && Array.isArray(declared[input]?.[0]) && !(declared[input]![0] as unknown[]).includes(value)) {
-          problems.push(`${name} node ${nodeId}: model file not installed: ${String(value)}`)
-        }
-      }
-    }
+/**
+ * Is this machine ready to make a film? Platform, model files, images, voice library and services (src/setup/doctor.ts),
+ * then every workflow template node by node against the running ComfyUI: unknown nodes, unknown inputs, missing model
+ * files. `--verify` hashes every model file now instead of trusting the installer's record.
+ */
+async function doctor(args: ParsedArgs): Promise<number> {
+  const sections: Record<string, DoctorSection> = await installationReport({ verify: flag(args, 'verify') === 'true' })
+  const manifest = loadManifest()
+  const installed = new Set(installedFeatures())
+  const optional = (filename: string) => manifest.files.find((file) => file.layout === 'file' && file.filename === filename && !file.features.some((feature) => installed.has(feature)))?.features.join(',')
+  try {
+    const { problems, warnings } = checkWorkflows(await new ComfyClient().objectInfo(), loadWorkflows(), optional)
+    sections.workflows = { ok: problems.length === 0, problems, warnings }
+  } catch (error) {
+    sections.workflows = { ok: false, problems: [`ComfyUI not reachable, workflows not checked: ${(error as Error).message}`], warnings: [] }
   }
-  print({ ok: problems.length === 0, problems })
+  const problems = Object.entries(sections).flatMap(([name, section]) => section.problems.map((problem) => `${name}: ${problem}`))
+  const warnings = Object.entries(sections).flatMap(([name, section]) => section.warnings.map((warning) => `${name}: ${warning}`))
+  print({ ok: problems.length === 0, problems, warnings, sections: Object.fromEntries(Object.entries(sections).map(([name, section]) => [name, { ok: section.ok, ...section.detail }])) })
   return problems.length === 0 ? 0 : 1
+}
+
+const SETUP_USAGE = `usage: cinefoundry setup [--check | --dry-run] [--models-only] [--no-start] [--formats ad,short,drama] [--with ${Object.keys(FEATURES).filter((name) => !FEATURES[name as Feature].default).join(',')}] [--proxy URL|none]
+       cinefoundry setup manifest [--refresh] [--proxy URL|none]`
+
+/** Install everything a first film needs (scripts/install.sh calls this once Node and the build are in place). */
+async function setup(args: ParsedArgs): Promise<number> {
+  const log = (line: string) => console.log(line)
+  if (args.positionals[0] === 'manifest') return manifestCommand(flag(args, 'refresh') === 'true', flag(args, 'proxy'), log)
+  if (args.positionals.length) throw new UsageError(SETUP_USAGE)
+  const check = flag(args, 'check') === 'true'
+  const dryRun = flag(args, 'dry-run') === 'true'
+  if (check && dryRun) throw new UsageError('--check and --dry-run are exclusive')
+  const list = (name: string) => (args.flags.get(name) ?? []).flatMap((value) => value.split(',')).map((value) => value.trim()).filter((value) => value && value !== 'true')
+  let features: Feature[]
+  try {
+    features = featuresFor(list('formats'), list('with'))
+  } catch (error) {
+    throw new UsageError(`${(error as Error).message}\n${SETUP_USAGE}`)
+  }
+  return runSetup({ mode: check ? 'check' : dryRun ? 'dry-run' : 'install', modelsOnly: flag(args, 'models-only') === 'true', noStart: flag(args, 'no-start') === 'true', features, proxy: flag(args, 'proxy'), log })
 }
 
 async function studio(args: ParsedArgs): Promise<number> {
@@ -325,4 +342,4 @@ async function evalCommand(args: ParsedArgs): Promise<number> {
   return 0
 }
 
-export const COMMANDS: Record<string, Command> = { ad: harnessCommand, short: shortCommand, drama: dramaCommand, harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }
+export const COMMANDS: Record<string, Command> = { ad: harnessCommand, short: shortCommand, drama: dramaCommand, harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, setup, studio }
