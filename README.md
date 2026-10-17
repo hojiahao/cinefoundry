@@ -22,7 +22,7 @@
 
 **Spotfoundry（广告工坊）** 是一个运行在单台 NVIDIA DGX Spark 上的广告成片智能体：输入一句创意，交付一支画面、配音、配乐齐全，字幕正确、文案合规的短视频广告。素材、模型与生成的每一帧全程留在本机。
 
-第三届 NVIDIA DGX Spark 黑客松 · Agent Skills 开发挑战赛**优秀奖**（第 4–12 名，官方未公布具体名次）· 作者：贺家豪 · 十日谈征文：[《十日谈：在一台 DGX Spark 上做广告片的十天》](https://zhuanlan.zhihu.com/p/2088218312492828625)
+第三届 NVIDIA DGX Spark 黑客松 · Agent Skills 开发挑战赛**优秀奖** · 作者：贺家豪 · 十日谈征文：[《十日谈：在一台 DGX Spark 上做广告片的十天》](https://zhuanlan.zhihu.com/p/2088218312492828625)
 
 | 痛点 | 现有 AI 视频工具 | Spotfoundry |
 |---|---|---|
