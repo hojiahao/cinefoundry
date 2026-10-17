@@ -182,34 +182,74 @@ Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted 
 }
 
 /** Shot breakdown: the director and the director of photography cut each scene into 5-second shots; dialogue is shot single. */
+/**
+ * How many 5-second shots each scene gets: one per line (each line is spoken in exactly one shot) plus at least one
+ * without dialogue (an establishing view, a reaction, an insert); what is left goes to the scenes with the most action.
+ */
+export function allocateShots(play: Screenplay, total: number): number[] {
+  const base = play.scenes.map((s) => s.lines.length + 1)
+  let left = total - base.reduce((a, b) => a + b, 0)
+  if (left < 0) throw new Error(`${base.reduce((a, b) => a + b, 0)} shots are needed (one per line and one more per scene) but the episode has ${total}`)
+  const weight = play.scenes.map((s) => Math.max(1, s.action.split(/\s+/).length))
+  const counts = [...base]
+  while (left > 0) {
+    // The scene whose action is least covered per shot gets the next shot.
+    let best = 0
+    for (let k = 1; k < counts.length; k++) if (weight[k]! / counts[k]! > weight[best]! / counts[best]!) best = k
+    counts[best]!++
+    left--
+  }
+  return counts
+}
+
+/** "No line" arrives as -1, null or a string; only a non-negative integer index is a line. */
+const lineIndex = (value: unknown) => (typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : undefined)
+
+/**
+ * Shot breakdown, scene by scene as a real production breaks down a script: each scene gets its exact number of shots
+ * (allocateShots), the director and the DP design them with the scene's lines in hand, and the joined episode passes
+ * checkShots. One call per scene keeps every answer small enough to be right; a 24-shot episode in one answer came
+ * back with 13 shots six times running.
+ */
 export async function shotsStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
+  const system = await ctx.agentPrompt('director working with the director of photography and the script supervisor', ['storyboard-design', 'cinematography-and-art-direction', 'character-and-continuity'])
   let total = 0
   for (const play of ctx.plays) {
-    ctx.log(`▸ shots        episode ${play.episode} · director + DP · nemotron`)
-    const run = await chatJson<{ shots: NarrativeShot[] }>(
-      ctx.planner,
-      {
-        system: await ctx.agentPrompt('director working with the director of photography and the script supervisor', ['storyboard-design', 'cinematography-and-art-direction', 'character-and-continuity']),
-        thinking: false,
-        maxTokens: 6000,
-        temperature: 0.4,
-        user: `Series look: ${bible.look}. World: ${bible.world}.
+    const counts = allocateShots(play, Math.floor(ctx.episodeSeconds / 5))
+    ctx.log(`▸ shots        episode ${play.episode} · director + DP · ${counts.reduce((a, b) => a + b, 0)} shots over ${play.scenes.length} scenes`)
+    const shots: NarrativeShot[] = []
+    let seconds = 0
+    for (const [index, scene] of play.scenes.entries()) {
+      const want = counts[index]!
+      const sceneOnly: Screenplay = { ...play, scenes: [{ ...scene, scene: 1 }] }
+      const previous = shots.at(-1)
+      const run = await chatJson<{ shots: NarrativeShot[] }>(
+        ctx.planner,
+        {
+          system, thinking: false, maxTokens: 4000, temperature: 0.4,
+          user: `Series look: ${bible.look}. World: ${bible.world}.
 Characters: ${bible.characters.map((c) => `${c.id} (${c.name}): ${c.look}; wears ${c.wardrobe}`).join(' | ')}
-Screenplay:\n${json(play)}
-
-Break it into exactly ${Math.floor(ctx.episodeSeconds / 5)} shots of 5 seconds for a ${ctx.ratio} frame. Every line is spoken in exactly one shot ("line" = its index in the scene, from 0). A dialogue shot frames only its speaker facing camera (medium or close-up), or over the listener's shoulder; use the other shots for establishing, reactions and inserts. Image prompts describe the frame in picture words - never a character's face or hair (the reference portrait carries that), never numbers or on-screen text.
+Episode ${play.episode}, scene ${scene.scene} of ${play.scenes.length}:
+${json(scene)}
+${previous ? `The previous shot was: ${previous.framing}, ${previous.image_prompt.slice(0, 160)}\n` : ''}
+Break this scene into exactly ${want} shots of 5 seconds for a ${ctx.ratio} frame. Each of its ${scene.lines.length} line(s) is spoken in exactly one shot ("line" = the line's index in this scene, from 0; omit "line" on a shot without dialogue). A dialogue shot frames only its speaker facing camera (medium or close-up), or over the listener's shoulder; use the other shots for an establishing view, reactions and inserts. Vary framing from shot to shot. Image prompts describe the frame in picture words - never a character's face or hair (the reference portrait carries that), never numbers or on-screen text.
 Return JSON only: {"shots": [{"shot": 1, "scene": 1, "framing": "wide|medium|close-up|over-the-shoulder|insert", "camera": "...", "characters": ["id"], "image_prompt": "...", "video_prompt": "...", "line": 0, "seconds": 5}]}`,
-      },
-      (value) => (Array.isArray(value.shots) ? checkShots(value.shots, play, { seconds: ctx.episodeSeconds }) : ['"shots" must be an array']),
-      6,
-    )
-    failIfHardProblems(`shots ${play.episode}`, checkShots(run.value.shots, play, { seconds: ctx.episodeSeconds }), run.attempts)
-    const shots = run.value.shots.map((shot, index) => ({ ...shot, shot: index + 1, seconds: 5, line: typeof shot.line === 'number' ? shot.line : undefined }))
-    ctx.shots.set(play.episode, shots)
-    total += shots.length
-    await writeFile(join(ctx.dir!, 'storyboard', `ep${String(play.episode).padStart(2, '0')}.shots.json`), json(shots))
-    await ctx.record('shots', 'director', ctx.planner, { episode: play.episode, seconds: run.seconds, attempts: run.attempts, shots: shots.length, dialogue: shots.filter((s) => s.line !== undefined).length })
+        },
+        (value) => (Array.isArray(value.shots) ? checkShots(value.shots.map((s) => ({ ...s, scene: 1, line: lineIndex(s.line) })), sceneOnly, { seconds: want * 5 }) : ['"shots" must be an array']),
+        6,
+      )
+      const sceneShots = run.value.shots.map((s) => ({ ...s, scene: 1, line: lineIndex(s.line) }))
+      failIfHardProblems(`shots ${play.episode}.${scene.scene}`, checkShots(sceneShots, sceneOnly, { seconds: want * 5 }), run.attempts)
+      shots.push(...sceneShots.map((s) => ({ ...s, scene: scene.scene })))
+      seconds += run.seconds
+    }
+    const numbered = shots.map((shot, index) => ({ ...shot, shot: index + 1, seconds: 5 }))
+    failIfHardProblems(`shots ${play.episode}`, checkShots(numbered, play, { seconds: ctx.episodeSeconds }), 1)
+    ctx.shots.set(play.episode, numbered)
+    total += numbered.length
+    await writeFile(join(ctx.dir!, 'storyboard', `ep${String(play.episode).padStart(2, '0')}.shots.json`), json(numbered))
+    await ctx.record('shots', 'director', ctx.planner, { episode: play.episode, seconds, scenes: play.scenes.length, perScene: counts, shots: numbered.length, dialogue: numbered.filter((s) => s.line !== undefined).length })
   }
   return `${total} shots`
 }

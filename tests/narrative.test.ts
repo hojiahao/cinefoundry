@@ -55,9 +55,11 @@ describe('narrative checks', () => {
   })
 
   it('refuses more lines than the running time has shots', () => {
-    expect(checkScreenplay(play, bible, { seconds: 10, ratio: '16:9' })).toEqual([])
+    // One scene with two lines: a shot per line and one without dialogue - 15 seconds, not 10.
+    expect(checkScreenplay(play, bible, { seconds: 15, ratio: '16:9' })).toEqual([])
+    expect(checkScreenplay(play, bible, { seconds: 10, ratio: '16:9' }).join(' ')).toContain('need 3 shots')
     const crowded: Screenplay = { ...play, scenes: [{ ...play.scenes[0]!, lines: [...play.scenes[0]!.lines, ...play.scenes[0]!.lines] }] }
-    expect(checkScreenplay(crowded, bible, { seconds: 15, ratio: '16:9' }).join(' ')).toContain('do not fit 15 seconds')
+    expect(checkScreenplay(crowded, bible, { seconds: 15, ratio: '16:9' }).join(' ')).toContain('need 5 shots')
   })
 
   it('shoots dialogue single: the speaker first, framed close enough to read the mouth, every line once', () => {
@@ -130,5 +132,21 @@ describe('compliance findings are grounded in the script', () => {
     expect(checkReviewEvidence({ approve: false, issues: ['money worship at series level'] }, source).join(' ')).toMatch(/quote the exact words/)
     expect(checkReviewEvidence({ approve: false, issues: ['series: "rebirth revenge on the rich husband"'] }, source).join(' ')).toMatch(/do not appear/)
     expect(checkReviewEvidence({ approve: false, issues: [] }, source).join(' ')).toMatch(/at least one issue/)
+  })
+})
+
+import { allocateShots } from '../src/crafts/narrative/writing.js'
+
+describe('scene-by-scene shot allocation', () => {
+  const play = (lines: number[], actions: string[]) => ({ episode: 1, title: 't', scenes: lines.map((n, i) => ({ scene: i + 1, heading: 'INT. SHOP - DAY', characters: ['mia'], action: actions[i]!, lines: Array.from({ length: n }, () => ({ speaker: 'mia', en: 'Hi there.', zh: '你好' })) })) })
+  it('gives every line a shot, every scene one more, and the rest to the scenes with the most action', () => {
+    const counts = allocateShots(play([2, 1, 3], ['a short beat', 'a long sweeping sequence across the whole rain-soaked street at night', 'two people talk']), 12)
+    expect(counts.reduce((a, b) => a + b, 0)).toBe(12)
+    expect(counts[0]).toBeGreaterThanOrEqual(3)
+    expect(counts[1]).toBeGreaterThan(2) // the long action scene takes the spare shots
+    expect(counts[2]).toBeGreaterThanOrEqual(4)
+  })
+  it('refuses an episode whose lines need more shots than its running time holds', () => {
+    expect(() => allocateShots(play([5, 5], ['x', 'y']), 10)).toThrow(/12 shots are needed/)
   })
 })

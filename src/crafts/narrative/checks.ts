@@ -89,7 +89,8 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
   })
   // Each line is a shot, and scenes need a few shots without dialogue (establishing, reaction, insert).
   const budget = Math.floor(want.seconds / 5)
-  if (lines > budget) problems.push(`${lines} lines do not fit ${want.seconds} seconds (${budget} shots of 5 s, one line each): cut lines`)
+  // Every line is one shot and every scene needs at least one shot without dialogue (an establishing view, a reaction).
+  if (lines + scenes.length > budget) problems.push(`${lines} lines in ${scenes.length} scenes need ${lines + scenes.length} shots (one per line, one more per scene) but ${want.seconds} seconds hold ${budget}: cut lines or merge scenes`)
   if (lines === 0) problems.push('no dialogue: characters speak on screen in this format')
   return problems
 }
