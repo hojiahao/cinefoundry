@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="Cinefoundry 影工坊" width="860">
+  <img src="docs/assets/banner.svg" alt="Cinefoundry" width="860">
 </p>
 
 <p align="center">

@@ -7,7 +7,8 @@ box-drawing characters become polylines. Caption text is converted to glyph outl
 everywhere instead of depending on the fonts installed on the viewer's machine.
 
     pip install pyfiglet fonttools
-    python scripts/make-banner.py --latin GoogleSansCode[wght].ttf > docs/assets/banner.svg
+    python scripts/make-banner.py --latin GoogleSansCode[wght].ttf > docs/assets/banner.svg            # English README
+    python scripts/make-banner.py --latin GoogleSansCode[wght].ttf --lang zh > docs/assets/banner.zh-CN.svg   # Chinese README
 
 Google Sans Code: https://github.com/google/fonts/tree/main/ofl/googlesanscode (OFL-1.1)
 """
@@ -57,6 +58,7 @@ def main() -> None:
     parser.add_argument("--latin", required=True, help="Google Sans Code TTF (variable or static)")
     parser.add_argument("--cjk", default="/usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc")
     parser.add_argument("--weight", type=int, default=500)
+    parser.add_argument("--lang", choices=["en", "zh"], default="en", help="tagline and caption language")
     args = parser.parse_args()
 
     latin = TTFont(args.latin)
@@ -91,12 +93,20 @@ def main() -> None:
 
     tagline_y, caption_y = height - 54, height - 24
     prompt = outline("$", PAD_X, tagline_y, 21, fonts)
-    tagline = outline("影工坊 · 把一个想法，拍成一部成片", PAD_X + 26, tagline_y, 21, fonts)
-    caption_text = "agentic film studio · runs on one NVIDIA DGX Spark"
+    text = {
+        "en": ("One idea in, a finished film out", "agentic film studio · ads, shorts, micro-dramas · on one NVIDIA DGX Spark",
+               "Cinefoundry: an agentic film studio on one NVIDIA DGX Spark. One idea in, a finished film out."),
+        "zh": ("影工坊 · 一个想法进去，一部成片出来", "智能体影像工作室 · 广告片 · 短视频 · 微短剧 · 单台 NVIDIA DGX Spark",
+               "Cinefoundry 影工坊：运行在单台 NVIDIA DGX Spark 上的智能体影像工作室。一个想法进去，一部成片出来。"),
+    }[args.lang]
+    tagline = outline(text[0], PAD_X + 26, tagline_y, 21, fonts)
+    caption_text = text[1]
     caption = outline(caption_text, PAD_X, caption_y, 16, fonts)
-    caption_width = len(caption_text) * latin["hmtx"]["a"][0] * 16 / latin["head"].unitsPerEm
+    # The cursor sits after the caption: CJK characters are one em wide, Latin ones use the monospace advance.
+    mono = latin["hmtx"]["a"][0] / latin["head"].unitsPerEm
+    caption_width = sum(1.0 if "\u3000" <= ch <= "\u9fff" or "\uff00" <= ch <= "\uffef" else mono for ch in caption_text) * 16
 
-    print(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="Cinefoundry 影工坊: agentic film studio, runs on one NVIDIA DGX Spark">
+    print(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="{text[2]}">
   <defs>
     <linearGradient id="ink" gradientUnits="userSpaceOnUse" x1="{PAD_X}" y1="0" x2="{width - PAD_X}" y2="0">
       <stop offset="0" stop-color="#f6e2b0"/><stop offset="0.55" stop-color="#d9a441"/><stop offset="1" stop-color="#e0724f"/>
