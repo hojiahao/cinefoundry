@@ -50,7 +50,7 @@ export const BROADCAST_VOICE_CHAIN = 'highpass=f=70,acompressor=threshold=-22dB:
  * SPOTFOUNDRY_TTS_REF_WAV / SPOTFOUNDRY_TTS_REF_TEXT and, with SPOTFOUNDRY_TTS_STYLE, re-voicing each line in
  * that style. A line that overruns its slot is time-stretched, at most 1.25x, never cut.
  */
-export async function synthesizeVoices(lines: VoiceLine[]): Promise<VoiceResult[]> {
+export async function synthesizeVoices(lines: VoiceLine[], voice?: { wav: string; text: string }): Promise<VoiceResult[]> {
   const engine = ttsEngine()
   if (engine === 'kokoro') {
     const results: VoiceResult[] = []
@@ -58,9 +58,10 @@ export async function synthesizeVoices(lines: VoiceLine[]): Promise<VoiceResult[
     return results
   }
   const work = resolve(process.env.SPOTFOUNDRY_STEP_AUDIO_DIR ?? 'runtime-data/step-audio')
-  const reference = resolve(process.env.SPOTFOUNDRY_TTS_REF_WAV ?? '')
-  const referenceText = process.env.SPOTFOUNDRY_TTS_REF_TEXT ?? ''
-  if (!process.env.SPOTFOUNDRY_TTS_REF_WAV || !referenceText) throw new Error(`SPOTFOUNDRY_TTS_ENGINE=${engine} needs SPOTFOUNDRY_TTS_REF_WAV (a wav under runtime-data/step-audio/) and SPOTFOUNDRY_TTS_REF_TEXT (what it says)`)
+  // The voice the creative director cast for this film, else the configured default narrator.
+  const reference = resolve(voice?.wav ?? process.env.SPOTFOUNDRY_TTS_REF_WAV ?? '')
+  const referenceText = voice?.text ?? process.env.SPOTFOUNDRY_TTS_REF_TEXT ?? ''
+  if (!(voice?.wav ?? process.env.SPOTFOUNDRY_TTS_REF_WAV) || !referenceText) throw new Error(`SPOTFOUNDRY_TTS_ENGINE=${engine} needs SPOTFOUNDRY_TTS_REF_WAV (a wav under runtime-data/step-audio/) and SPOTFOUNDRY_TTS_REF_TEXT (what it says)`)
   if (!reference.startsWith(`${work}/`)) throw new Error(`the reference voice must live under ${work} so the container can read it`)
   const inside = (path: string) => `/work/${relative(work, path)}`
   const jobDir = join(work, 'jobs', `${Date.now().toString(36)}`)

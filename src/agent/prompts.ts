@@ -17,8 +17,10 @@ ${brief.photo
 Write EXACTLY ${script.beats.length} shots, numbered 1 to ${script.beats.length}, one per beat, in beat order.
 Return JSON only: {"style": "...", "product": "...", "shots": [{"shot": 1, "seconds": 5, "framing": "...", "camera": "...", "image_prompt": "...", "video_prompt": "...", "on_screen_text": "", "must_show": "..."}]}`
 
-export const agentSystem = (role: string, rules: string, skill?: { name: string; body: string }) =>
-  [`You are the ${role} of Spotfoundry, an advertising studio running on one DGX Spark.`, rules, skill ? `# Skill: ${skill.name}\n\n${skill.body}` : ''].filter(Boolean).join('\n\n')
+/** One agent can work from several skills at once: the storyboard artist works with the director of photography's. */
+export const agentSystem = (role: string, rules: string, skill?: { name: string; body: string } | Array<{ name: string; body: string }>) =>
+  [`You are the ${role} of Spotfoundry, an advertising studio running on one DGX Spark.`, rules,
+    ...(skill ? (Array.isArray(skill) ? skill : [skill]) : []).map((s) => `# Skill: ${s.name}\n\n${s.body}`)].filter(Boolean).join('\n\n')
 
 /** The English container word for a client's Chinese description: a storyboard that copied 透明玻璃瓶 verbatim never said "bottle" and failed six times. */
 export function containerWord(appearance: string): string | undefined {

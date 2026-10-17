@@ -37,6 +37,8 @@ let storyboardBroken = false
 let photoLetteringReply = '冷'
 
 beforeAll(async () => {
+  // The casting library on this machine must not decide what the fake creative director may cast.
+  process.env.SPOTFOUNDRY_VOICE_LIBRARY = join(tmpdir(), 'no-voice-library.json')
   comfy = await startFakeComfy()
   llm = createServer((request, response) => {
     const chunks: Buffer[] = []
@@ -63,6 +65,7 @@ beforeAll(async () => {
         if (rejectNow) shot1Rejected = true
         reply = rejectNow ? { pass: false, score: 40, issues: ['a hand appears although the shot does not call for one'] } : { pass: true, score: 92, issues: [] }
       } else if (system.includes('intake producer')) { seen.push('brief'); reply = replies.brief }
+      else if (system.includes('You are the creative director')) { seen.push('creative'); reply = TREATMENT }
       else if (system.includes('compliance reviewer')) { seen.push('review'); reply = replies.review }
       else if (system.includes('copywriter')) { seen.push('script'); reply = ++scriptCalls === 1 ? replies.badScript : replies.script }
       else if (String(user).includes('quality gate rejected')) { seen.push('repair'); reply = { fixes: [{ issue: 'hands', change: 'product-only' }], delete: ['Shot 1: the product on crushed ice'], scene: String(/Current scene description: (.*)/.exec(String(user))?.[1]).replace(/^[^,]*/, 'Product-only macro of the product on crushed ice') } }
@@ -79,6 +82,13 @@ beforeAll(async () => {
 })
 afterAll(() => { llm.close(); comfy.close() })
 
+const TREATMENT = {
+  insight: '忙碌的人想要片刻安静', proposition: '一口清爽', concept: '喧闹中打开罐子，世界安静下来', brandVoice: 'restrained and premium',
+  visual: { concept: 'a cold can glowing in a dark quiet room', light: 'night, cool backlight from behind, soft fill', palette: ['deep blue', 'silver', 'lime'], texture: 'condensation, brushed metal' },
+  rhythm: 'quiet hook, build, hero',
+  sound: { voice: 'default', voiceDirection: 'unhurried and warm', music: 'sparse piano, slow, resolves softly', ambience: 'a quiet room at night' },
+}
+
 describe('Spotfoundry Harness', () => {
   it('takes a brief to a finished film, rewriting a bad script and regenerating a rejected frame', async () => {
     const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-harness-'))
@@ -90,7 +100,7 @@ describe('Spotfoundry Harness', () => {
     const result = await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'soda-test', silent: true, candidates: 1, resolution: '720p', fps: 60, log: (line) => log.push(line) })
 
     // Stage order, and the first script (absolute claim, 1-character voiceover) was sent back.
-    expect(seen.filter((name) => name !== 'gate' && name !== 'repair')).toEqual(['brief', 'script', 'script', 'review', 'storyboard'])
+    expect(seen.filter((name) => name !== 'gate' && name !== 'repair')).toEqual(['brief', 'creative', 'script', 'script', 'review', 'storyboard'])
     expect(result.rejectedAttempts.script).toBe(1)
     expect(readFileSync(join(projects, 'soda-test', 'script', 'copy.txt'), 'utf8')).not.toContain('全网第一')
 

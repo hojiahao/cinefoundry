@@ -3,6 +3,7 @@ import { dirname } from 'node:path'
 import { ComfyClient } from '../comfy/client.js'
 import { loadWorkflow, renderWorkflow } from '../comfy/workflow.js'
 import { cloudVideoConfig, generateCloudVideo } from './cloudvideo.js'
+import { exec } from './exec.js'
 import { concatCopy, extractLastFrame, scaleImage } from './ffmpeg.js'
 
 export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.SPOTFOUNDRY_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
@@ -13,11 +14,11 @@ export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'ltx25-fast' | 'ltx25-fast-n
  * The 14B image-to-video model runs at its native 16 fps and needs a first frame.
  * LTX-2.5 Fast is image-to-video here too, at 24 fps; its frame count must be 8n+1 (5 s = 121).
  */
-const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: string; t2v?: string; values?: Record<string, unknown> }> = {
+const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: string; t2v?: string; lipsync?: string; values?: Record<string, unknown> }> = {
   'wan22-5b': { fps: 24, i2v: 'wan22_ti2v_5b_i2v', t2v: 'wan22_ti2v_5b_t2v' },
   'wan22-14b': { fps: 16, i2v: 'wan22_i2v_14b_4step' },
-  'ltx25-fast': { fps: 24, i2v: 'ltx25_fast_i2v', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors' } },
-  'ltx25-fast-nvfp4': { fps: 24, i2v: 'ltx25_fast_i2v', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-nvfp4.safetensors' } },
+  'ltx25-fast': { fps: 24, i2v: 'ltx25_fast_i2v', lipsync: 'ltx25_fast_lipsync', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors' } },
+  'ltx25-fast-nvfp4': { fps: 24, i2v: 'ltx25_fast_i2v', lipsync: 'ltx25_fast_lipsync', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-nvfp4.safetensors' } },
 }
 /** Native frame rate of a local video model's clips (Wan2.2 14B renders at 16 fps, the others at 24). */
 export function videoFps(model: VideoModel): number {
@@ -120,7 +121,9 @@ export async function generateImage(
 
 export async function generateVideo(
   comfy: ComfyClient,
-  request: { prompt: string; negative?: string; output: string; resolution: string; ratio: string; durationSeconds: number; firstFrame?: string; freeAfter?: boolean; model?: VideoModel },
+  request: { prompt: string; negative?: string; output: string; resolution: string; ratio: string; durationSeconds: number; firstFrame?: string; freeAfter?: boolean; model?: VideoModel
+    /** An on-screen line (wav, already spoken by the voice engine): LTX generates the picture against it so the mouth follows the words. */
+    dialogue?: { audio: string; offsetSeconds?: number } },
 ): Promise<MediaResult> {
   const started = Date.now()
   const modelName = request.model ?? (process.env.SPOTFOUNDRY_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
@@ -136,6 +139,8 @@ export async function generateVideo(
   const model = VIDEO_MODELS[modelName as Exclude<VideoModel, 'seedance'>]
   if (!model) throw new Error(`Unknown video model ${modelName}; use ${Object.keys(VIDEO_MODELS).join(', ')} or seedance.`)
   if (!model.t2v && !request.firstFrame) throw new Error(`${modelName} is image-to-video only; pass a first frame.`)
+  if (request.dialogue && !model.lipsync) throw new Error(`${modelName} cannot sync a speaker's mouth to a line; use an LTX model for dialogue shots.`)
+  if (request.dialogue && request.durationSeconds > VIDEO_SEGMENT_SECONDS) throw new Error('a dialogue shot is one segment (5 s)')
   const [width, height] = videoSize(request.resolution, request.ratio)
   const segmentCount = Math.max(1, Math.ceil(request.durationSeconds / VIDEO_SEGMENT_SECONDS))
   await mkdir(dirname(request.output), { recursive: true })
@@ -143,7 +148,7 @@ export async function generateVideo(
   let startFrame = request.firstFrame
   const segments: string[] = []
   for (let index = 0; index < segmentCount; index++) {
-    const workflow = startFrame ? model.i2v : model.t2v!
+    const workflow = request.dialogue ? model.lipsync! : startFrame ? model.i2v : model.t2v!
     const values: Record<string, unknown> = {
       ...model.values,
       prompt: request.prompt,
@@ -160,6 +165,14 @@ export async function generateVideo(
       filename_prefix: `spotfoundry/${Date.now()}_${index}`,
     }
     if (startFrame) values.start_image = await comfy.uploadImage(await readFile(startFrame), `start_${Date.now()}_${index}.png`)
+    if (request.dialogue) {
+      // The line sits in a shot-long track (a breath of silence before it), so the frozen audio covers every frame.
+      const track = `${request.output}.dialogue.wav`
+      const delay = Math.round((request.dialogue.offsetSeconds ?? 0.4) * 1000)
+      await exec('ffmpeg', ['-y', '-v', 'error', '-i', request.dialogue.audio, '-af', `aresample=48000,aformat=channel_layouts=stereo,adelay=${delay}|${delay},apad=whole_dur=${VIDEO_SEGMENT_SECONDS}`, '-t', String(VIDEO_SEGMENT_SECONDS), track])
+      values.dialogue_audio = await comfy.uploadImage(await readFile(track), `dialogue_${Date.now()}.wav`)
+      values.seconds = VIDEO_SEGMENT_SECONDS
+    }
     const outputs = await comfy.run(renderWorkflow(await loadWorkflow(workflow), values))
     const segment = `${request.output}.seg${index}.mp4`
     await writeFile(segment, await comfy.download(outputs[0]!))
@@ -180,7 +193,7 @@ export async function generateVideo(
     seconds: (Date.now() - started) / 1000,
     width,
     height,
-    detail: { model: modelName, fps: model.fps, segments: segmentCount, durationSeconds: segmentCount * VIDEO_SEGMENT_SECONDS, firstFrame: Boolean(request.firstFrame) },
+    detail: { model: modelName, fps: model.fps, lipsync: Boolean(request.dialogue), segments: segmentCount, durationSeconds: segmentCount * VIDEO_SEGMENT_SECONDS, firstFrame: Boolean(request.firstFrame) },
   }
 }
 

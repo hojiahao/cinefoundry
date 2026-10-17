@@ -12,6 +12,8 @@ export const RATIOS: Ratio[] = ['16:9', '9:16', '1:1']
 
 /** Landscape is the default delivery: broadcast, web pre-roll and the big screen. Vertical is opt-in. */
 export const DEFAULT_RATIO: Ratio = '16:9'
+/** The master: the 30-second spot, from which the 15- and 6-second versions are cut. */
+export const DEFAULT_DURATION = 30
 export const DEFAULT_RESOLUTION = '1080p'
 /** Delivery frame rate. Clips are generated at 24 fps and interpolated (RIFE) up to it; 24 keeps the film look. */
 export const DEFAULT_FPS = 60

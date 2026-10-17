@@ -4,7 +4,7 @@ import { ComfyClient } from '../comfy/client.js'
 import { scanCopy } from '../lib/compliance.js'
 import { normalizeImage, probeDuration } from '../lib/ffmpeg.js'
 import { generateImage, generateVideo, interpolateVideo, interpolationMultiplier, videoFps, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
-import { DEFAULT_FPS, DEFAULT_RATIO, DEFAULT_RESOLUTION, RATIOS, checkFps, generationResolution, isRatio } from '../lib/formats.js'
+import { DEFAULT_DURATION, DEFAULT_FPS, DEFAULT_RATIO, DEFAULT_RESOLUTION, RATIOS, checkFps, generationResolution, isRatio } from '../lib/formats.js'
 import { cloudVideoConfig } from '../lib/cloudvideo.js'
 import { exec } from '../lib/exec.js'
 import { TITLE_FONT } from './finish.js'
@@ -18,6 +18,8 @@ import { qualityGate, type QaVerdict } from './gate.js'
 import { jevConfig, judgeCopy, judgeStoryboard } from './jev.js'
 import { chatJson, endpoints, JsonReplyError, type ModelEndpoint } from './llm.js'
 import { agentSystem, scriptUser, storyboardUser } from './prompts.js'
+import { checkTreatment, treatmentForCopy, treatmentForPicture, treatmentUser, type Treatment } from './stages/creative.js'
+import { castableVoices } from '../lib/voices.js'
 import { loadRules, loadSkill } from './skills.js'
 
 export interface HarnessOptions {
@@ -178,8 +180,8 @@ async function runStages(options: HarnessOptions, setStage: typeof saveStage): P
   // Fail before any model time is spent, not half an hour later at the hero still.
   if (options.productImage) await access(options.productImage).catch(() => { throw new Error(`Product image not found: ${options.productImage}`) })
 
-  const agentPrompt = async (role: string, skill: string) =>
-    agentSystem(role, rules, options.withoutSkills ? undefined : { name: skill, body: await loadSkill(skill) })
+  const agentPrompt = async (role: string, skill: string | string[]) =>
+    agentSystem(role, rules, options.withoutSkills ? undefined : await Promise.all((Array.isArray(skill) ? skill : [skill]).map(async (name) => ({ name, body: await loadSkill(name) }))))
 
   // ---- brief -----------------------------------------------------------------------------
   log('▸ brief        intake agent · nemotron')
@@ -206,7 +208,7 @@ Return JSON only:
   // What the request states outright is not the model's to decide: the coffee brief asked for
   // 横版 and the intake agent still chose 9:16. Explicit user words win over the agent's choice.
   const stated = statedFormat(options.brief)
-  const brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ratio: (options.ratio as Brief['ratio'] | undefined) ?? stated.ratio ?? DEFAULT_RATIO, ...(options.durationSeconds ? { durationSeconds: options.durationSeconds } : stated.durationSeconds ? { durationSeconds: stated.durationSeconds } : {}) }
+  const brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ratio: (options.ratio as Brief['ratio'] | undefined) ?? stated.ratio ?? DEFAULT_RATIO, durationSeconds: options.durationSeconds ?? stated.durationSeconds ?? DEFAULT_DURATION }
   // A closing line the client quoted is theirs, word for word: the copywriter never saw the request, so
   // "DGX Spark，把 AI 超算放上你的桌面" became "AI supercomputing on your desk". The model's copy counts only if it is in the request.
   const modelTagline = briefRun.value.tagline?.trim()
@@ -300,6 +302,25 @@ Return JSON only: {"description": "one to three English sentences: overall shape
   brief.industry = industry
   await writeFile(join(dir, 'brief.json'), JSON.stringify(brief, null, 2))
 
+  // ---- creative --------------------------------------------------------------------------
+  // The creative director decides the film before anyone writes or draws it: insight, proposition, concept, the
+  // visual treatment (light, palette, texture), the rhythm and the sound (cast voice, score, ambience).
+  await setStage(brief.id, 'creative', 'running')
+  log('▸ creative     creative director · nemotron')
+  const voices = castableVoices()
+  const casting = voices.length ? voices : [{ id: 'default', description: 'the configured narrator' }]
+  const treatmentRun = await chatJson<Treatment>(
+    planner,
+    { system: await agentPrompt('creative director', 'creative-direction'), thinking: false, maxTokens: 3000, temperature: 0.6, user: treatmentUser(brief, options.brief, casting) },
+    (value) => checkTreatment(value, casting),
+    4,
+  )
+  const treatment = treatmentRun.value
+  if (treatmentRun.unresolved.length) log(`  treatment accepted with open points: ${treatmentRun.unresolved.join('; ').slice(0, 200)}`)
+  await writeFile(join(dir, 'creative', 'treatment.json'), JSON.stringify(treatment, null, 2))
+  await record('creative', 'creative-director', planner, { seconds: treatmentRun.seconds, attempts: treatmentRun.attempts, voice: treatment.sound?.voice, concept: treatment.concept })
+  await setStage(brief.id, 'creative', 'done', treatment.concept)
+
   // ---- script ----------------------------------------------------------------------------
   await setStage(brief.id, 'script', 'running')
   log('▸ script       copywriter agent · nemotron')
@@ -311,7 +332,7 @@ Return JSON only: {"description": "one to three English sentences: overall shape
       thinking: false,
       maxTokens: 3000,
       temperature: 0.8,
-      user: scriptUser(brief, options.brief),
+      user: `${scriptUser(brief, options.brief)}\n\n${treatmentForCopy(treatment)}`,
     },
     async (script) => {
       const problems = checkScript(script, brief)
@@ -434,10 +455,10 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
   // ---- storyboard ------------------------------------------------------------------------
   await setStage(brief.id, 'storyboard', 'running')
   log('▸ storyboard   storyboard agent · nemotron')
-  const storyboardUserPrompt = storyboardUser(brief, script)
+  const storyboardUserPrompt = `${storyboardUser(brief, script)}\n\n${treatmentForPicture(treatment)}`
   const storyboardRun = await chatJson<Storyboard>(
     planner,
-    { system: await agentPrompt('storyboard artist', 'storyboard-design'), thinking: false, maxTokens: 5000, temperature: 0.4, user: storyboardUserPrompt },
+    { system: await agentPrompt('storyboard artist working with the director of photography', ['storyboard-design', 'cinematography-and-art-direction']), thinking: false, maxTokens: 5000, temperature: 0.4, user: storyboardUserPrompt },
     async (storyboard) => {
       const problems = checkStoryboard(storyboard, script, brief)
       const judged = problems.length === 0 ? await judgeWith((config) => judgeStoryboard(config, storyboard), 'storyboard') : undefined
@@ -639,7 +660,7 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
   // Finishing (voice, music, titles, grade) needs neither language model, so their ~100 s weight
   // reload runs underneath it instead of after it.
   const waking = Promise.all([planner, reviewer].map((target) => wakeService(target.baseUrl).then((woke) => record('run', 'scheduler', undefined, { phase: 'cut', woke: target.name, wokeSeconds: woke.wokeSeconds ?? 0 })).catch(() => undefined)))
-  const finalCut = await finishFilm({ dir, brief, script, storyboard, heroPath: hero!.path, comfy, audio: options.audio, silent: options.silent, record, log })
+  const finalCut = await finishFilm({ dir, brief, script, storyboard, heroPath: hero!.path, comfy, audio: options.audio, silent: options.silent, record, log, treatment })
   await addAsset(brief.id, { id: 'final-cut', kind: 'video', stage: 'cut', path: 'cut/final.mp4', execution: 'local-dgx-spark', model: 'ffmpeg' })
   await setStage(brief.id, 'cut', 'done', `${(await probeDuration(finalCut)).toFixed(1)}s`)
   result.finalCut = finalCut

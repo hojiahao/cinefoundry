@@ -64,7 +64,7 @@
   <div id="app"><div class="empty">加载中…</div></div>
 </main>
 <script>
-const STAGE_NAMES = { brief:'需求', script:'脚本', compliance:'合规', storyboard:'分镜', frames:'生图', qa:'质检', clips:'生视频', cut:'成片' }
+const STAGE_NAMES = { brief:'需求', creative:'创意', script:'脚本', compliance:'合规', storyboard:'分镜', frames:'生图', qa:'质检', clips:'生视频', cut:'成片' }
 const esc = (text) => String(text ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]))
 // Recording mode (?record=1): only the most recent project, images load at once, and a clip is shown by its
 // first frame (headless browsers used for screen capture cannot play H.264).

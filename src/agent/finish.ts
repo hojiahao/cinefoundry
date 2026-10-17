@@ -8,6 +8,8 @@ import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../li
 import { memoryStatus } from '../lib/memory.js'
 import { buildAss } from '../lib/titles.js'
 import { industryOf, type Brief, type Script, type Storyboard } from './checks.js'
+import type { Treatment } from './stages/creative.js'
+import { castableVoices, voiceReference } from '../lib/voices.js'
 import { writeDeliveryReport } from './delivery.js'
 
 /** Overlap into the end card. Between shots the film cuts hard: commercials cut on action and dissolve only to close. */
@@ -48,6 +50,8 @@ export interface FinishInput {
   silent?: boolean
   record: Recorder
   log: (line: string) => void
+  /** The creative director's treatment: the cast voice and the score direction. */
+  treatment?: Treatment
 }
 
 /** The cut stage: end card, typography, sound and the finishing pass. Used by the harness and by `spotfoundry cut`. */
@@ -104,13 +108,16 @@ export async function finishFilm(input: FinishInput): Promise<string> {
     // first: the nuts film died here with "CUDA error: out of memory" after all three clips were done. One retry
     // after another free covers a model that was still releasing.
     await enterPhase(comfy, 'voiceover (TTS)', record)
-    const spoken = await synthesizeVoices(lines).catch(async (error: Error) => {
+    // The announcer the creative director cast, when that voice has been designed on this machine.
+    const cast = input.treatment && castableVoices().some((v) => v.id === input.treatment!.sound.voice) ? voiceReference(input.treatment.sound.voice) : undefined
+    if (cast) log(`  voice        ${input.treatment!.sound.voice} (cast by the creative director)`)
+    const spoken = await synthesizeVoices(lines, cast).catch(async (error: Error) => {
       if (!/out of memory|CUDA error/i.test(error.message)) throw error
       log('  voiceover ran out of memory; freeing ComfyUI and retrying once')
       await comfy.free()
       await new Promise((resolve) => setTimeout(resolve, 20000))
       await record('run', 'scheduler', undefined, { phase: 'voiceover retry', availableBeforeGb: (await memoryStatus()).availableGb })
-      return synthesizeVoices(lines)
+      return synthesizeVoices(lines, cast)
     })
     for (const [index, beat] of script.beats.entries()) {
       const voiceStart = clipStart(index, durations, overlaps) + 0.45
@@ -125,7 +132,8 @@ export async function finishFilm(input: FinishInput): Promise<string> {
     if (!music) {
       await enterPhase(comfy, 'music (ACE-Step)', record)
       music = join(dir, 'audio', 'music.mp3')
-      const bed = await generateMusic(comfy, { tags: `instrumental, advertising underscore, ${brief.tone}, clean modern production, no vocals`, seconds: total, output: music })
+      const direction = input.treatment?.sound.music ?? `advertising underscore, ${brief.tone}`
+      const bed = await generateMusic(comfy, { tags: `instrumental, ${direction}, high-end commercial score, clean modern production, no vocals`, seconds: total, output: music })
       log(`▸ music        ${bed.seconds.toFixed(1)}s`)
       await record('cut', 'music', undefined, { seconds: bed.seconds, model: 'ace_step_v1_3.5b' })
       await comfy.free()

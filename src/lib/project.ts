@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path'
 
 export type StageStatus = 'pending' | 'running' | 'done' | 'failed'
 
-export const STAGES = ['brief', 'script', 'compliance', 'storyboard', 'frames', 'qa', 'clips', 'cut'] as const
+export const STAGES = ['brief', 'creative', 'script', 'compliance', 'storyboard', 'frames', 'qa', 'clips', 'cut'] as const
 export type Stage = (typeof STAGES)[number]
 
 export interface Asset {
@@ -55,7 +55,7 @@ export async function createProject(input: Pick<ProjectState, 'id' | 'title' | '
     assets: [],
   }
   state.stages.brief = { status: 'done', updatedAt: now }
-  for (const folder of ['script', 'storyboard', 'frames', 'clips', 'cut', 'reports']) {
+  for (const folder of ['creative', 'script', 'storyboard', 'frames', 'clips', 'cut', 'reports']) {
     await mkdir(join(projectDir(input.id), folder), { recursive: true })
   }
   await saveProject(state)
