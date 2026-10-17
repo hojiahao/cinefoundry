@@ -16,13 +16,14 @@ const numeric = <K extends string>(value: unknown, keys: K[]): Record<K, number>
     ? (Object.fromEntries(keys.map((k) => [k, (value as Record<K, number>)[k]])) as Record<K, number>)
     : undefined
 
-async function judge(reviewer: ModelEndpoint, images: string[], user: string): Promise<CastingVerdict> {
+/** A casting verdict reads several photographs at once; the reviewer reasons before it answers, so it gets the larger budget. */
+async function judge(reviewer: ModelEndpoint, images: string[], user: string, maxTokens = 3000): Promise<CastingVerdict> {
   const copies = await Promise.all(images.map(reviewProxy))
   for (let attempt = 0; ; attempt++) {
     try {
       const run = await chatJson<CastingVerdict>(
         reviewer,
-        { system: 'You are the quality gate of a film studio. You did not make this frame. Judge only what is visible, strictly: a flawed frame costs minutes of video generation and a face that changes between shots breaks the story.', images: copies, maxTokens: 3000, temperature: 0, user },
+        { system: 'You are the quality gate of a film studio. You did not make this frame. Judge only what is visible, strictly: a flawed frame costs minutes of video generation and a face that changes between shots breaks the story.', images: copies, maxTokens, temperature: 0, user },
         (v) => (typeof v.pass === 'boolean' && typeof v.score === 'number' ? [] : ['need boolean "pass" and numeric "score"']),
         1,
       )
@@ -44,7 +45,8 @@ async function judge(reviewer: ModelEndpoint, images: string[], user: string): P
 }
 
 /** Already-cast characters a candidate is compared with; a bible has at most five characters. */
-export const MAX_CAST_COMPARED = 4
+/** At most this many cast members are shown next to a candidate: more photographs only lengthen the reviewer's reasoning. */
+export const MAX_CAST_COMPARED = 2
 
 /**
  * A casting candidate: one real-looking adult who matches the written look and the casting brief, and who cannot be
@@ -71,7 +73,7 @@ ${others.map((o, i) => `- image 1 could be mistaken for ${o.character.name} (ima
 - the face is recognisably a well-known actor, model or public figure;
 - any text, logo or watermark;
 - the face is not clearly lit and readable, or is cropped.
-${VERDICT(rate)}`)
+${VERDICT(rate)}`, 6000)
 }
 
 export type PackView = 'profile' | 'full-body'
