@@ -53,6 +53,15 @@ describe('narrative checks', () => {
     expect(named('Lin Xia / 林夏', 'mia')).toMatch(/made from the English name/)
   })
 
+  it('keeps a name the client wrote exactly: "顾言" is not "顾言筠"', () => {
+    const request = '调香师林夏和地产继承人顾言签下协议'
+    const cast = (name: string) => ({ ...bible, clientNames: ['林夏', '顾言'], characters: [{ ...bible.characters[0]!, id: 'lin-xia', name: 'Lin Xia / 林夏' }, { ...bible.characters[1]!, id: 'gu-yan', name }] })
+    expect(checkBible(cast('Gu Yan / 顾言'), { episodes: 1, request })).toEqual([])
+    const renamed = checkBible({ ...cast('Gu Yansu / 顾言筠'), characters: cast('Gu Yansu / 顾言筠').characters.map((c) => (c.id === 'gu-yan' ? { ...c, id: 'gu-yansu' } : c)) }, { episodes: 1, request }).join(' ')
+    expect(renamed).toMatch(/keeps the name exactly/)
+    expect(renamed).toMatch(/"顾言筠" renames "顾言"/)
+  })
+
   it('writes a look as cast: the face, never a passing state', () => {
     const tired = { ...bible, characters: [{ ...bible.characters[0]!, look: 'shoulder-length dark hair, tired eyes' }] }
     expect(checkBible(tired, { episodes: 1 }).join(' ')).toMatch(/passing state/)

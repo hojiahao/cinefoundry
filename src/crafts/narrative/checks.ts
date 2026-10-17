@@ -12,6 +12,8 @@ export const MAX_LINE_WORDS = 12
 export const maxZhChars = (ratio: string) => (ratio === '9:16' ? 12 : 16)
 const DIALOGUE_FRAMINGS = ['medium', 'close-up', 'over-the-shoulder', 'medium close-up']
 
+/** The Chinese half of "English / 中文". */
+const zhName = (name: string | undefined) => (name?.split('/')[1] ?? '').trim()
 const words = (text: string) => text.trim().split(/\s+/).filter(Boolean).length
 const zhLength = (text: string) => [...text.replace(/\s/g, '')].length
 
@@ -31,7 +33,15 @@ export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want
     if (!Array.isArray(bible.clientNames)) problems.push('"clientNames" must list the character names the request gives (an empty list if it gives none)')
     for (const name of names) {
       if (!want.request.includes(name)) problems.push(`clientNames: "${name}" is not written in the request; list only names the client wrote, exactly`)
-      else if (!(bible.characters ?? []).some((c) => c.name?.includes(name))) problems.push(`the client named a character "${name}": that character keeps the name exactly (e.g. "Lin Xia / ${name}"), not a new one`)
+      else if (!(bible.characters ?? []).some((c) => zhName(c.name) === name)) problems.push(`the client named a character "${name}": that character keeps the name exactly (e.g. "Lin Xia / ${name}"), not a new one`)
+    }
+    // "顾言" came back as "顾言筠": a Chinese name that extends a name the client wrote is that character, renamed.
+    for (const c of bible.characters ?? []) {
+      const zh = zhName(c.name)
+      if (!want.request || zh.length < 3 || want.request.includes(zh)) continue
+      const request = want.request
+      const written = [...zh].map((_, i) => zh.slice(0, zh.length - 1 - i)).find((prefix) => prefix.length >= 2 && request.includes(prefix))
+      if (written) problems.push(`${c.id}: "${zh}" renames "${written}", the name the client wrote; keep it exactly`)
     }
   }
   for (const key of ['logline', 'genre', 'world', 'look'] as const) if (!bible[key]?.trim()) problems.push(`${key} is empty`)
