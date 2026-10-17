@@ -8,14 +8,14 @@
   },
   {
     "id": "storyboard-design-eval-002-two-actions",
-    "question": "第二个镜头我想要模特先开罐再喝一口再对镜头笑。",
+    "question": "第二个镜头我想要模特先打开香水瓶盖，再喷一下，再对镜头笑。",
     "expected_skill": "storyboard-design",
     "expected_script": null,
     "ground_truth": "The agent explains that the video model follows one action per segment and splits the request into separate shots or picks one action, instead of putting three actions in one video prompt."
   },
   {
-    "question": "给国货保湿面霜“润”做分镜：磨砂白色圆罐，金色盖子，罐身金色细体字“润”。",
-    "ground_truth": "The product field describes the face-cream jar from this brief (frosted white round jar, gold lid, thin gold “润” lettering) and quotes the label text “润”. It does not reuse any example product from the skill text or from an earlier project (no can, no “冷”). Every image_prompt refers to “the product”.",
+    "question": "给香水“雾岸”做分镜：烟灰色磨砂玻璃方瓶，黑色金属瓶盖，瓶身白色细体字“雾岸”。",
+    "ground_truth": "The product field describes the perfume from this brief in English (a square frosted smoke-grey glass bottle with a black metal cap and thin white “雾岸” lettering), names it a bottle as the request does, and quotes the label text “雾岸” with no other Chinese. It does not reuse any example product from the skill text or from an earlier project. Every image_prompt refers to “the product”.",
     "id": "storyboard-design-eval-003-do-not-copy-example",
     "expected_skill": "storyboard-design",
     "expected_script": null
@@ -29,9 +29,9 @@
   },
   {
     "id": "storyboard-design-eval-005-electronics-playbook",
-    "question": "脚本已通过合规：机械键盘“青”，15 秒横版，三拍。做分镜。",
+    "question": "脚本已通过合规：复古胶片相机“银隼”，银色金属机身配黑色皮纹，顶盖刻有“银隼”字样，30 秒横版，六拍。做分镜。",
     "expected_skill": "storyboard-design",
     "expected_script": null,
-    "ground_truth": "Three shots with different framings (a macro on a few keys, a low-angle three-quarter hero with one slow move, a use context or profile), lit with a cool rim light and one accent, no rainbow or RGB, no screen or cursor, hands at most once and from a low side angle; the whole keyboard is never shown sharp with all legends readable; product described once with the \"青\" badge; must_show names something visible in a still."
+    "ground_truth": "Six shots, no two with the same framing and camera move (a macro on the shutter dial or lens ring with a light sweep, a low-angle three-quarter hero with one slow move, a use context or profile, a wide reveal), lit with a rim light and at most one accent, no rainbow or RGB, no screen, viewfinder display or UI, hands at most once and from a low side angle; the engraved dials and scales are never all shown sharp, kept macro on a few or in shallow depth of field; the product is described once in English with the “银隼” lettering in quotes; must_show names something visible in a single still."
   }
 ]

@@ -50,7 +50,7 @@
 ## 工作原理
 
 <p align="center">
-  <img src="docs/assets/architecture.png" alt="影工坊架构：一个智能体引擎、每种片型一条流水线、工艺层、岗位 Skill 与质检门、DGX Spark 上的本地模型" width="760">
+  <img src="docs/assets/architecture.zh-CN.png" alt="影工坊架构：一个智能体引擎、每种片型一条流水线、工艺层、岗位 Skill 与质检门、DGX Spark 上的本地模型" width="960">
 </p>
 
 - **一个引擎，多种片型。** 影工坊引擎（`src/engine`）负责每一部片都需要的事：启动前检查、一次只拍一部的运行锁、工作台上的阶段状态、运行记录、智能体提示词、模型调度与失败处理。每种片型是一条流水线（`src/pipelines/ad`、`short`、`drama`）：一串有序的阶段，每个阶段交给加载了对应 Skill 的智能体。
@@ -134,7 +134,6 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 | [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | 客户经理 / 策划 | 解读简报，只问阻塞项，其余自行决定并说明 |
 | [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | 广告法务 | 《广告法》用词扫描与独立审稿，`block` 级必须改写 |
 | [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | 内容审核 | 微短剧管理规定、内容红线、AI 标识、平台申报、肖像与声音权利 |
-| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | 技术质检与交付 | 时长、帧率、码率、响度与真峰值、黑帧静音、字幕越界、AI 标识 |
 | [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | 技术统筹 | 统一内存先量后排，按阶段加载与释放模型 |
 
 **编剧创作**
@@ -172,6 +171,7 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 | [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | 后期合成 | 定版、真字体标题与字幕、调色、旁白与配乐混音 |
 | [`bilingual-subtitles`](.agents/skills/bilingual-subtitles/SKILL.md) | 字幕 | 中文在上、英文在下：每行字数、阅读速度、时长与安全区 |
 | [`platform-packaging`](.agents/skills/platform-packaging/SKILL.md) | 平台包装 | 三套待测标题、封面、简介、话题标签、AI 申报 |
+| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | 技术质检与交付 | 时长、帧率、码率、响度与真峰值、黑帧静音、字幕越界、AI 标识 |
 
 **研究**
 

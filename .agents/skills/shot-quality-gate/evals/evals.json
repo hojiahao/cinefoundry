@@ -14,8 +14,8 @@
     "ground_truth": "The agent stops regenerating, keeps the highest scoring attempt, records the open issue for the delivery report, and continues with the remaining shots."
   },
   {
-    "question": "质检一张机械键盘首帧：键帽上有字母，空格上方有“青”字铭牌，画面里没有其他文字。",
-    "ground_truth": "The gate treats key legends and the “青” nameplate as lettering printed on the product itself and does not reject the frame for “text outside the product label”; it rejects only captions, slogans, numbers or watermarks that are not part of the product.",
+    "question": "质检一张复古胶片相机首帧：快门速度盘和镜头环上有刻度数字，顶盖刻着“银隼”字样，画面里没有其他文字。",
+    "ground_truth": "The gate treats the dial numerals, lens scale and the engraved “银隼” lettering as lettering printed on the product itself and does not reject the frame for “text outside the product label”; it rejects only captions, slogans, numbers or watermarks that are not part of the product.",
     "id": "shot-quality-gate-eval-003-product-lettering-allowed",
     "expected_skill": "shot-quality-gate",
     "expected_script": null

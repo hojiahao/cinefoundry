@@ -1,6 +1,6 @@
 ---
 name: delivery-qc
-version: "0.1.0"
+version: "0.2.0"
 description: Technical QC and delivery for every Cinefoundry deliverable - automated checks of duration, frame rate, resolution, codec and profile, bitrate, loudness and true peak per destination (web default -16 LUFS / -1.5 dBTP and the broadcast, platform and Netflix-class targets from the research), black frames, silence gaps, clipped audio, frozen picture, subtitle overflow and safe areas, the explicit AI label at the start and on the end card, and the implicit AIGC metadata of GB 45438-2025 - then the delivery package layout and the QC report. Use on every master, cutdown, vertical version and episode before it leaves the studio, after any re-cut or re-encode, or when the user asks whether a file is ready to deliver or upload.
 license: BUSL-1.1
 metadata:
@@ -58,8 +58,8 @@ Run on the file as delivered, never on an intermediate.
 | Frozen picture | `freezedetect=n=0.003:d=1.5` | warn only: locked-off shots can be still, but a frozen clip from a failed generation reads as a glitch |
 | Subtitles | parse the `.ass`; render width per event | any event breaking `bilingual-subtitles` limits: chars per line (zh 16 / en 42 on 16:9, zh 12 / en 32 on 9:16), reading speed (zh 9 / en 20 per s), duration 5/6-7 s, gap < 2 frames, zh commas or full stops, rendered width outside the safe area (9:16: x ∈ [60, 900], baseline ≤ y 1440) |
 | Overlap | event rectangles | a subtitle, title or closing line overlapping the AI label |
-| Explicit AI label | `.ass` Label events, then the vision model on frames at 0.5 s, 2.5 s and mid end card | “内容由 AI 生成” missing from 0-3 s, missing on the end card (ads) or episode opening (drama), illegible, or on 9:16 placed in the platform UI band (y < 380 or x > 900) |
-| Label size | rendered glyph height / shortest frame side | **warn** below 5%, or on screen under 2 s: the research's reading of GB 45438-2025 (secondhand, **unverified**, research 3.5). The current style renders about 2.4% (16:9) and 2.8% (9:16): every file carries this warn until the standard text is checked |
+| Explicit AI label | `.ass` Label events, then the vision model on frames at 0.5 s, 2.5 s and mid end card | “内容由 AI 生成” missing from 0-3 s, missing on the end card (ads) or episode opening (drama), illegible, or on 9:16 placed in the platform's top UI band (y < 380). **Warn** when its right edge passes x = 900 (the code sets a 5 % right margin, x = 1026 on a 1080-wide frame): confirm in each platform's preview that the button column does not cover it |
+| Label size | rendered glyph height / shortest frame side | **warn** below 5%, or on screen under 2 s: the research's reading of GB 45438-2025 (secondhand, **unverified**, research 3.5). The Label style sets the font size to 5% of the short side (54 px at 1080p); measure the rendered glyph height, which runs below the font size, and report it |
 | Implicit metadata | `ffprobe -show_format` tag `AIGC` (JSON) and `comment` | not valid JSON; `Label` ≠ "1"; `ContentProducer` or `ProduceID` empty or not this project; `ContentPropagator` / `PropagateID` keys absent; comment missing 内容由 AI 生成 |
 | Fonts | glyph coverage of every on-screen character | any missing glyph (the cut already fails on this; re-check after copy edits) |
 

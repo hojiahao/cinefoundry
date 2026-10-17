@@ -1,6 +1,6 @@
 ---
 name: cinematography-and-art-direction
-version: "0.1.0"
+version: "0.2.0"
 description: The director of photography's, the production designer's, the product stylist's and the casting director's craft for every shot - light setups by category, lens language in picture words, camera moves with speed and end frame, sets, surfaces and props, how the product is styled and presented, and how people are cast, dressed and directed so they read as real. Use together with storyboard-design whenever shots are designed or changed, or when a frame is regenerated after the quality gate.
 license: BUSL-1.1
 metadata:
@@ -43,6 +43,8 @@ One light logic for the whole film, from the treatment: the same time of day, th
 | Consumer electronics | dark studio, cool rim light along the bevels, one or two colours | crisp edges, machined metal, a light sweep across the surface | rainbow RGB unless briefed (*checked*), sharp tiny legends |
 | Computers and servers | soft warm gold key and rim light, at most a faint green accent far back | weight and craftsmanship of the casing, scale | blue, cyan or neon light (*checked*), screen contents (*checked*) |
 | Home and lifestyle | motivated practical light - a window, a lamp, a candle | lived-in warmth, layered depth | sterile studio emptiness |
+| Fragrance | low, sculpted side or back light through the glass, amber highlights, velvety shadow | the liquid's colour glowing in the bottle, facets and edges of the glass, the cap's weight | flat beauty lighting, liquid spraying in every shot |
+| Automotive | large soft overhead source or low golden-hour sun raking the bodywork, deep clean blacks | the paint's reflections flowing over the shoulder lines, wheels, the road | flat midday light, a warped reflection, a car that floats off the road |
 
 Code already appends the category anchor and a realism clause to every frame (real materials, accurate reflections, natural falloff, grain; not CGI). Put the scene, its light direction and its composition in `image_prompt`; do not repeat the anchor.
 
@@ -58,7 +60,7 @@ Code already appends the category anchor and a realism clause to every frame (re
 
 - One surface, one backdrop, one prop at most per shot. Clutter reads as cheap and the edit model redraws the product into it.
 - Surfaces that photograph well and carry the palette: stone, brushed metal, linen, oiled wood, dark glass, wet slate.
-- Props support the story, never compete: a glass beside a drink, coffee beans beside a pack, a folded towel beside a cream. Place them ("a glass to the right of the can") - an unplaced second object is rejected (*checked*).
+- Props support the story, never compete: a glass beside a drink, coffee beans beside a pack, a folded towel beside a cream. Place them ("a cup to the left of the coffee bag") - an unplaced second object is rejected (*checked*).
 - Practical light sources in frame (a lamp, a window, a candle) make light motivated and add depth.
 
 ## Product styling
@@ -97,8 +99,8 @@ ten-degree orbit, a rack focus from the badge to the keys, dust motes in the rim
 
 **Computers (desktops, mini PCs, workstations, servers, GPUs).** Dark studio and reflective tabletop like
 consumer electronics, but lit soft warm gold, with at most a faint green accent in the background: blue,
-cyan, "cool" or neon light is rejected (*checked*) because the models spread it over the metal and a gold
-DGX Spark came out blue, LED strips glowing along its edges. Data-center racks stay dim and warm. The story is what the machine
+cyan, "cool" or neon light is rejected (*checked*) because the image and video models spread it over the metal:
+a warm-coloured casing comes out blue, with LED strips the brief never asked for glowing along its edges. Data-center racks stay dim and warm. The story is what the machine
 does, so the person and the result may appear. Shots that work: the product on a desk at night,
 three-quarter, slow push-in; the moment of use - a hand at a keyboard from a low side angle, or a face lit
 by a screen that faces away from camera or sits out of focus - one hand shot at most (*checked*); a
@@ -113,6 +115,10 @@ least two shots; the last shot hands over to the end card.
 readable in the reveal; one hand at most, and only applying.
 
 **Food.** Warm directional light, steam and texture; the pack or cup in frame with what it makes.
+
+**Fragrance.** The bottle is jewellery: one sculpted light through the glass, dark or stone surfaces, the liquid glowing. Shots that work: a macro on the facets with a light sweep, the bottle in a place the treatment names (a window at dusk, a coastline in haze), a single mist in backlight at most once, the bottle whole and upright for the hero. The person, if any, is a shoulder, a wrist or a silhouette, never a beauty close-up.
+
+**Automotive.** The car is shot like a real car commercial: the bodywork is read through its reflections, so the light is large and soft or low and raking. Shots that work: a macro on a detail (a badge, a light signature, a wheel) with a slow push; a low tracking shot alongside on an open road; the car small in a wide landscape; a three-quarter front hero, stationary, best-lit. One move per shot and nothing that asks the video model to steer through traffic.
 
 The category anchor (studio, light, depth of field) is appended to every frame prompt by code from the
 brief's product, so put the scene in `image_prompt` and leave the lighting base to the pipeline.

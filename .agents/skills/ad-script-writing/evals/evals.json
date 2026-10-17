@@ -1,30 +1,30 @@
 [
   {
-    "id": "ad-script-writing-eval-001-fifteen-second-script",
-    "question": "brief 已确认：夏日气泡水，15 秒竖版，受众是大学生，核心信息是“0 糖也有爽感”。写脚本。",
+    "id": "ad-script-writing-eval-001-thirty-second-master",
+    "question": "brief 已确认：无线耳机 LUMO，30 秒横版，受众是每天通勤的年轻上班族，核心信息是“一戴上，世界就安静了”。写脚本。",
     "expected_skill": "ad-script-writing",
     "expected_script": null,
-    "ground_truth": "The agent names one structure, writes exactly three 5-second beats, each with see / vo / text and a job (hook, proof, payoff or cta). Every vo line is 8-18 Chinese characters with the count shown, every title at most 8 characters with no closing punctuation and no emoji or symbols, the product is visible in at least two beats including the last, the first beat works without sound, no superlatives, guarantees or health effects appear, the register fits a drink, and the agent saves script/script.json and hands the copy to ad-compliance-review before any generation."
+    "ground_truth": "The agent names one structure and writes exactly six 5-second beats, each with job, see, vo, zh and text. Every vo is one English line of 4-13 words (ideally 6-10) in crafted broadcast copy with no stock ad-speak (no seamless, immerse yourself, like never before) and no absolute claim (no best, perfect, ultimate); the lines vary in length and build to a turn. Every zh is a natural Chinese translation of its line, at most 16 characters, with spaces instead of commas and full stops; every text is a Chinese title of at most 8 characters with no closing punctuation. No switch, keycap or key-travel vocabulary appears. The script is saved to script/script.json and handed to ad-compliance-review before any generation."
   },
   {
     "id": "ad-script-writing-eval-002-too-many-beats",
     "question": "脚本里我想要 8 个镜头，15 秒。",
     "expected_skill": "ad-script-writing",
     "expected_script": null,
-    "ground_truth": "The agent explains that clips are generated in 5 s segments so a 15 s film has three beats, and proposes either three beats or a longer duration instead of writing eight beats."
+    "ground_truth": "The agent explains that clips are generated in 5 s segments so a 15 s film has exactly three beats, and proposes either three beats or a longer duration (up to the 30 s master of six beats) instead of writing eight."
   },
   {
     "id": "ad-script-writing-eval-003-title-matches-product-form",
-    "question": "brief 已确认：挂耳咖啡「醒」，15 秒横版，受众是上班族，核心信息是“清晨一口”。写脚本。",
+    "question": "brief 已确认：精品咖啡「拾豆」，牛皮纸自立袋装的咖啡豆，15 秒竖版，受众是在家手冲的年轻人，核心信息是“慢一点，才喝得出来”。写脚本。",
     "expected_skill": "ad-script-writing",
     "expected_script": null,
-    "ground_truth": "Every title and voiceover line refers to a drip bag or a cup, never to a can, bottle or opening a can; the see lines are in English only; the voiceover contains no English word and never describes the packaging's printing; the film ends on the product in a cup."
+    "ground_truth": "Three beats. No title or subtitle mentions a can or bottle (罐/瓶); the copy is about aroma, the pour and the first sip, never biting or chewing and never a body effect such as waking up or 提神. Each zh is at most 12 characters because the film is 9:16, with spaces instead of commas and full stops. The English vo never contains the Chinese brand name 拾豆; the end card carries it."
   },
   {
-    "id": "ad-script-writing-eval-004-computer-is-not-a-keyboard",
-    "question": "brief 已确认：NVIDIA DGX Spark 桌面 AI 超算，15 秒横版，受众是开发者，核心信息是“把 AI 超算放上你的桌面”，卖点依据：128GB 统一内存，可本地运行 2000 亿参数模型。用户原话的定版字幕：“DGX Spark，把 AI 超算放上你的桌面。” 写脚本。",
+    "id": "ad-script-writing-eval-004-absolutes-and-proof",
+    "question": "brief 已确认：汽油 GT 跑车 VORSA，30 秒横版，受众是 35 岁以上的成功人士，核心信息是“为长路而生”，卖点依据：3.0T 直列六缸。用户原话的定版字幕：“VORSA，为长路而生。” 写脚本。",
     "expected_skill": "ad-script-writing",
     "expected_script": null,
-    "ground_truth": "The agent writes three beats about what the computer runs and what that changes for a developer (pressing Enter and a model answering locally, a palm-sized box doing a data center's job, data staying on the desk), never about keys, switches, key travel or clicks (no 青轴/键帽/键程). Any figure it uses comes from the proof points (128GB, 2000 亿参数) and nothing stronger. No title or voiceover repeats the closing line; the last beat hands over to the end card that shows it verbatim."
+    "ground_truth": "Six beats in a restrained premium register about the drive felt (the road, the sound, the long stretch ahead). No English absolute claim (the best, ultimate, unbeatable, number one, the only) and no Chinese one (最, 第一, 顶级, 极致). The only figure used is the proof point (3.0T straight six), and no speed or safety promise appears. No title, subtitle or vo repeats the closing line; the last beat hands over to the end card that shows it verbatim."
   }
 ]

@@ -1,0 +1,1116 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Cinefoundry 影工坊架构：一个引擎，每种片型一条流水线，模型全部在一台 DGX Spark 上本地运行",
+    "locale": "zh-CN",
+    "output": "cinefoundry-architecture.zh-CN.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "external": {
+          "label": "入口"
+        },
+        "backend": {
+          "label": "引擎 · 流水线 · 工艺"
+        },
+        "frontend": {
+          "label": "智能体技能"
+        },
+        "security": {
+          "label": "关卡"
+        },
+        "database": {
+          "label": "项目记录与交付"
+        },
+        "cloud": {
+          "label": "语言与视觉模型"
+        },
+        "messagebus": {
+          "label": "媒体模型与成片工具"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "agents",
+      "type": "external",
+      "label": "外部智能体",
+      "sublabel": "Claude Code · Codex · DSH",
+      "pos": [
+        20,
+        20
+      ],
+      "size": [
+        230,
+        56
+      ]
+    },
+    {
+      "id": "cli",
+      "type": "external",
+      "label": "cinefoundry CLI",
+      "sublabel": "ad | short | drama",
+      "pos": [
+        490,
+        20
+      ],
+      "size": [
+        200,
+        56
+      ]
+    },
+    {
+      "id": "studio",
+      "type": "external",
+      "label": "Studio 看板",
+      "sublabel": "127.0.0.1:3090",
+      "pos": [
+        870,
+        20
+      ],
+      "size": [
+        200,
+        56
+      ]
+    },
+    {
+      "id": "skills",
+      "type": "frontend",
+      "label": "Agent Skills · 25 个岗位",
+      "sublabel": "制片 7 · 编剧 5 · 视觉 5 · 声音 2 · 后期 5 · 研究 1",
+      "pos": [
+        20,
+        150
+      ],
+      "size": [
+        350,
+        72
+      ]
+    },
+    {
+      "id": "run",
+      "type": "backend",
+      "label": "runPipeline",
+      "sublabel": "预检 · 加锁 · 逐阶段",
+      "pos": [
+        440,
+        150
+      ],
+      "size": [
+        300,
+        72
+      ]
+    },
+    {
+      "id": "record",
+      "type": "database",
+      "label": "项目状态",
+      "sublabel": "state.json · run.jsonl",
+      "pos": [
+        880,
+        150
+      ],
+      "size": [
+        190,
+        72
+      ]
+    },
+    {
+      "id": "ad",
+      "type": "backend",
+      "label": "广告片",
+      "sublabel": "16:9 · 60 fps",
+      "pos": [
+        40,
+        290
+      ],
+      "size": [
+        120,
+        52
+      ]
+    },
+    {
+      "id": "short",
+      "type": "backend",
+      "label": "短视频",
+      "sublabel": "9:16 · 30 fps",
+      "pos": [
+        40,
+        490
+      ],
+      "size": [
+        120,
+        52
+      ]
+    },
+    {
+      "id": "drama",
+      "type": "backend",
+      "label": "微短剧",
+      "sublabel": "9:16 · 24 fps",
+      "pos": [
+        40,
+        600
+      ],
+      "size": [
+        120,
+        52
+      ]
+    },
+    {
+      "id": "a_brief",
+      "type": "backend",
+      "label": "需求",
+      "sublabel": "接案制片",
+      "pos": [
+        200,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_creative",
+      "type": "backend",
+      "label": "创意",
+      "sublabel": "创意阐述",
+      "pos": [
+        312,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_script",
+      "type": "backend",
+      "label": "脚本",
+      "sublabel": "文案",
+      "pos": [
+        424,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_comp",
+      "type": "security",
+      "label": "合规",
+      "sublabel": "扫描 + 审查",
+      "pos": [
+        536,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_board",
+      "type": "backend",
+      "label": "分镜",
+      "sublabel": "镜头设计",
+      "pos": [
+        648,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_frames",
+      "type": "security",
+      "label": "生图质检",
+      "sublabel": "产品主图",
+      "pos": [
+        760,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_clips",
+      "type": "backend",
+      "label": "生视频",
+      "sublabel": "LTX-2.5 · RIFE",
+      "pos": [
+        872,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_cut",
+      "type": "backend",
+      "label": "成片",
+      "sublabel": "配音 · 配乐",
+      "pos": [
+        984,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "treatment",
+      "type": "backend",
+      "label": "创意阐述",
+      "sublabel": "crafts/treatment",
+      "pos": [
+        295.0,
+        395
+      ],
+      "size": [
+        120,
+        48
+      ]
+    },
+    {
+      "id": "repair",
+      "type": "backend",
+      "label": "提示词修复",
+      "sublabel": "crafts/repair",
+      "pos": [
+        743.0,
+        395
+      ],
+      "size": [
+        120,
+        48
+      ]
+    },
+    {
+      "id": "n_dev",
+      "type": "backend",
+      "label": "剧本开发",
+      "sublabel": "系列圣经 / 选题",
+      "pos": [
+        200,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_play",
+      "type": "backend",
+      "label": "剧本",
+      "sublabel": "英文对白 · 中字",
+      "pos": [
+        312,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_comp",
+      "type": "security",
+      "label": "合规",
+      "sublabel": "独立审查",
+      "pos": [
+        424,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_shots",
+      "type": "backend",
+      "label": "分镜",
+      "sublabel": "镜头表",
+      "pos": [
+        536,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_cast",
+      "type": "backend",
+      "label": "选角定妆",
+      "sublabel": "定脸 · 定声",
+      "pos": [
+        648,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_frames",
+      "type": "security",
+      "label": "生图质检",
+      "sublabel": "人物一致",
+      "pos": [
+        760,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_dia",
+      "type": "security",
+      "label": "对白",
+      "sublabel": "Whisper 质检",
+      "pos": [
+        200,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_clips",
+      "type": "backend",
+      "label": "生视频",
+      "sublabel": "口型同步",
+      "pos": [
+        312,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_sound",
+      "type": "backend",
+      "label": "声音",
+      "sublabel": "音效 · 配乐",
+      "pos": [
+        424,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_cut",
+      "type": "backend",
+      "label": "成片",
+      "sublabel": "四轨混音",
+      "pos": [
+        536,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_pack",
+      "type": "backend",
+      "label": "平台包装",
+      "sublabel": "仅短视频",
+      "pos": [
+        648,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "labels",
+      "type": "security",
+      "label": "AI 标识",
+      "sublabel": "显式标识 + 隐式元数据",
+      "pos": [
+        509.0,
+        715
+      ],
+      "size": [
+        140,
+        52
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "database",
+      "label": "projects/<id>/cut/",
+      "sublabel": "成片 · 交付报告",
+      "pos": [
+        282,
+        715
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "sched",
+      "type": "backend",
+      "label": "分阶段调度",
+      "sublabel": "加载 · 释放 · 页缓存",
+      "pos": [
+        420,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "nemotron",
+      "type": "cloud",
+      "label": "Nemotron 3.5 Lightning",
+      "sublabel": "NVFP4 · vLLM :8001",
+      "pos": [
+        30,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "stepvl",
+      "type": "cloud",
+      "label": "Step3-VL-10B",
+      "sublabel": "FP8 · vLLM :8002",
+      "pos": [
+        200,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "tts",
+      "type": "messagebus",
+      "label": "Qwen3-TTS",
+      "sublabel": "音色设计 + 克隆",
+      "tag": "52 个音色库",
+      "pos": [
+        590,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "whisper",
+      "type": "messagebus",
+      "label": "Whisper",
+      "sublabel": "large-v3-turbo · 质检",
+      "pos": [
+        760,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "moss",
+      "type": "messagebus",
+      "label": "MOSS-SoundEffect",
+      "sublabel": "v2 · 音效",
+      "pos": [
+        930,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ffmpeg",
+      "type": "messagebus",
+      "label": "ffmpeg",
+      "sublabel": "混音 · 字幕 · 调色",
+      "pos": [
+        30,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "qwenimg",
+      "type": "messagebus",
+      "label": "Qwen-Image · Edit",
+      "sublabel": "主图与首帧",
+      "pos": [
+        420,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ltx",
+      "type": "messagebus",
+      "label": "LTX-2.5 Fast",
+      "sublabel": "NVFP4 · 口型同步",
+      "pos": [
+        590,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "rife",
+      "type": "messagebus",
+      "label": "RIFE 4.26",
+      "sublabel": "插帧",
+      "pos": [
+        760,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ace",
+      "type": "messagebus",
+      "label": "ACE-Step",
+      "sublabel": "配乐",
+      "pos": [
+        930,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "引擎 · src/engine",
+      "wraps": [
+        "run",
+        "record"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "流水线",
+      "wraps": [
+        "ad",
+        "short",
+        "drama"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "广告片阶段 · src/pipelines/ad",
+      "wraps": [
+        "a_brief",
+        "a_creative",
+        "a_script",
+        "a_comp",
+        "a_board",
+        "a_frames",
+        "a_clips",
+        "a_cut"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "工艺 · src/crafts（短视频与微短剧共用叙事阶段）",
+      "wraps": [
+        "treatment",
+        "repair",
+        "n_dev",
+        "n_play",
+        "n_comp",
+        "n_shots",
+        "n_cast",
+        "n_frames",
+        "n_dia",
+        "n_clips",
+        "n_sound",
+        "n_cut",
+        "n_pack"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "NVIDIA DGX Spark · GB10 · 121.7 GB 统一内存 · 默认本地生成",
+      "wraps": [
+        "sched",
+        "nemotron",
+        "stepvl",
+        "tts",
+        "whisper",
+        "moss",
+        "ffmpeg",
+        "qwenimg",
+        "ltx",
+        "rife",
+        "ace"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "security-group",
+      "label": "vLLM",
+      "wraps": [
+        "nemotron",
+        "stepvl"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "security-group",
+      "label": "ComfyUI :8188",
+      "wraps": [
+        "qwenimg",
+        "ltx",
+        "rife",
+        "ace"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "security-group",
+      "label": "音频容器",
+      "wraps": [
+        "tts",
+        "whisper",
+        "moss"
+      ],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    {
+      "id": "agents-cli",
+      "from": "agents",
+      "to": "cli",
+      "label": "入口技能",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cli-run",
+      "from": "cli",
+      "to": "run",
+      "variant": "emphasis"
+    },
+    {
+      "id": "studio-run",
+      "from": "studio",
+      "to": "run",
+      "label": "发起广告片",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [
+        [
+          795,
+          48
+        ],
+        [
+          795,
+          116
+        ],
+        [
+          590,
+          116
+        ]
+      ],
+      "labelSegment": 2
+    },
+    {
+      "id": "studio-record",
+      "from": "studio",
+      "to": "record",
+      "label": "读取",
+      "variant": "dashed"
+    },
+    {
+      "id": "skills-run",
+      "from": "skills",
+      "to": "run",
+      "label": "提示词"
+    },
+    {
+      "id": "run-record",
+      "from": "run",
+      "to": "record",
+      "label": "状态 · 运行日志"
+    },
+    {
+      "id": "run-ad",
+      "from": "run",
+      "to": "ad",
+      "label": "PIPELINES[format]",
+      "labelSegment": 1,
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          590,
+          252
+        ],
+        [
+          12,
+          252
+        ],
+        [
+          12,
+          316.0
+        ]
+      ]
+    },
+    {
+      "id": "run-short",
+      "from": "run",
+      "to": "short",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          590,
+          252
+        ],
+        [
+          12,
+          252
+        ],
+        [
+          12,
+          516.0
+        ]
+      ]
+    },
+    {
+      "id": "run-drama",
+      "from": "run",
+      "to": "drama",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          590,
+          252
+        ],
+        [
+          12,
+          252
+        ],
+        [
+          12,
+          626.0
+        ]
+      ]
+    },
+    {
+      "id": "ad-brief",
+      "from": "ad",
+      "to": "a_brief",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_brief-a_creative",
+      "from": "a_brief",
+      "to": "a_creative",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_creative-a_script",
+      "from": "a_creative",
+      "to": "a_script",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_script-a_comp",
+      "from": "a_script",
+      "to": "a_comp",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_comp-a_board",
+      "from": "a_comp",
+      "to": "a_board",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_board-a_frames",
+      "from": "a_board",
+      "to": "a_frames",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_frames-a_clips",
+      "from": "a_frames",
+      "to": "a_clips",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_clips-a_cut",
+      "from": "a_clips",
+      "to": "a_cut",
+      "variant": "emphasis"
+    },
+    {
+      "id": "creative-treatment",
+      "from": "a_creative",
+      "to": "treatment",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "frames-repair",
+      "from": "a_frames",
+      "to": "repair",
+      "label": "未通过",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 26
+    },
+    {
+      "id": "short-dev",
+      "from": "short",
+      "to": "n_dev",
+      "variant": "emphasis"
+    },
+    {
+      "id": "drama-dev",
+      "from": "drama",
+      "to": "n_dev",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          184,
+          626.0
+        ],
+        [
+          184,
+          516.0
+        ]
+      ]
+    },
+    {
+      "id": "n_dev-n_play",
+      "from": "n_dev",
+      "to": "n_play",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_play-n_comp",
+      "from": "n_play",
+      "to": "n_comp",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_comp-n_shots",
+      "from": "n_comp",
+      "to": "n_shots",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_shots-n_cast",
+      "from": "n_shots",
+      "to": "n_cast",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_cast-n_frames",
+      "from": "n_cast",
+      "to": "n_frames",
+      "variant": "emphasis"
+    },
+    {
+      "id": "frames-dialogue",
+      "from": "n_frames",
+      "to": "n_dia",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          803.0,
+          571
+        ],
+        [
+          243.0,
+          571
+        ]
+      ]
+    },
+    {
+      "id": "n_dia-n_clips",
+      "from": "n_dia",
+      "to": "n_clips",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_clips-n_sound",
+      "from": "n_clips",
+      "to": "n_sound",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_sound-n_cut",
+      "from": "n_sound",
+      "to": "n_cut",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cut-pack",
+      "from": "n_cut",
+      "to": "n_pack",
+      "variant": "dashed"
+    },
+    {
+      "id": "ncut-labels",
+      "from": "n_cut",
+      "to": "labels",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "emphasis"
+    },
+    {
+      "id": "acut-labels",
+      "from": "a_cut",
+      "to": "labels",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "via": [
+        [
+          1027.0,
+          741
+        ]
+      ],
+      "variant": "emphasis"
+    },
+    {
+      "id": "labels-delivery",
+      "from": "labels",
+      "to": "delivery",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sched-stepvl",
+      "from": "sched",
+      "to": "stepvl",
+      "label": "常驻",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "sched-qwen",
+      "from": "sched",
+      "to": "qwenimg",
+      "label": "只载一族扩散模型",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "引擎",
+      "items": [
+        "runPipeline：先预检，再取 projects/.harness.lock，然后按顺序运行每个阶段",
+        "每个阶段先标记运行中，结束后标记完成，出错时写明原因标记失败；Ctrl-C 与 SIGTERM 同样处理",
+        "reports/run.jsonl：每次模型调用和决定各记一行，带 runId"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "关卡",
+      "items": [
+        "合规：广告法用语扫描 + 独立审查（广告片）；独立审查 + 剧本校验（叙事片）",
+        "Step3-VL 视觉质检：产品主图（广告片）、定妆照与人物一致（叙事片）；最多重生成 2 次，之后保留最佳一版并记为待办",
+        "Whisper large-v3-turbo 逐句听写对白，不准就重录",
+        "每条成片都带显式 AI 标识和隐式 AIGC 元数据"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "智能体技能（metadata.category）",
+      "items": [
+        "制片 7：cinefoundry-ad-film、cinefoundry-short-video、cinefoundry-micro-drama、ad-brief-intake、ad-compliance-review、content-compliance、spark-model-scheduler",
+        "编剧 5：creative-direction、ad-script-writing、series-development、screenwriting、short-video-scripting",
+        "视觉 5：storyboard-design、cinematography-and-art-direction、character-and-continuity、spark-local-media-generation、shot-quality-gate",
+        "声音 2：dialogue-and-voice、sound-design-and-music",
+        "后期 5：editing-and-versioning、final-cut-assembly、bilingual-subtitles、platform-packaging、delivery-qc",
+        "研究 1：ad-reference-breakdown"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "模型层",
+      "items": [
+        "两个语言模型常驻；扩散模型按阶段加载",
+        "ComfyUI 同时只载一族扩散模型，每个阶段结束即释放",
+        "音频模型在容器中运行，每批只加载一次"
+      ]
+    }
+  ]
+}

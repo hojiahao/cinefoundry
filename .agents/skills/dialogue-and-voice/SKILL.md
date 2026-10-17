@@ -1,7 +1,7 @@
 ---
 name: dialogue-and-voice
-version: "0.1.0"
-description: The voice casting director's, the dialogue director's and the ADR supervisor's craft - designing one English voice per character from a written description with Qwen3-TTS VoiceDesign, casting the ad announcer from the library, directing delivery, Whisper pronunciation QC with retake thresholds, the rules a lip-synced shot must meet (one speaker in frame, medium or close framing, a line of at most five seconds with a breath before it) and off-screen voice-over. Use when characters are cast, before any dialogue or voice-over is synthesised, before lip-synced clips are generated, and when a line fails QC or needs a different read.
+version: "0.2.0"
+description: The voice casting director's, the dialogue director's and the ADR supervisor's craft - the 52-voice designed casting library (English and Mandarin, female and male, five adult age bands; announcer, narrator, presenter and character uses) and its design and QC scripts, casting characters from the library first and designing a voice only when none fits, casting the English ad announcer, directing delivery, Whisper pronunciation QC with retake thresholds, the rules a lip-synced shot must meet (one speaker in frame, medium or close framing, a line of at most five seconds with a breath before it) and off-screen voice-over. Use when characters are cast, before any dialogue or voice-over is synthesised, before lip-synced clips are generated, and when a line fails QC or needs a different read.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
@@ -13,46 +13,46 @@ metadata:
     - lip-sync
     - qwen3-tts
     - whisper
+    - casting
 ---
 
 # Dialogue and voice
 
-Every voice in a Cinefoundry film is designed from words, never recorded from or cloned of a real person. A designed reference clip is made once per character (or per announcer), and every line is cloned from that one clip, so the voice never changes within a film or a season. In narrative films the line is synthesised first and the picture is generated to it: LTX-2.5 lip-sync takes the dialogue audio, encodes it and freezes it, and only the picture is sampled, so the mouth follows the words (`workflows/ltx25_fast_lipsync.json`). The audio is the performance; a flat read makes a flat face.
+Every voice in a Cinefoundry film is designed from words, never recorded from or cloned of a real person. A designed reference clip is made once per voice - for each of the casting library's voices, and for a character no library voice fits - and every line is cloned from that one clip, so the voice never changes within a film or a season. In narrative films the line is synthesised first and the picture is generated to it: LTX-2.5 lip-sync takes the dialogue audio, encodes it and freezes it, and only the picture is sampled, so the mouth follows the words (`workflows/ltx25_fast_lipsync.json`). The audio is the performance; a flat read makes a flat face.
+
+## The casting library
+
+`deploy/voices/library.json` holds 52 designed voices: English (General American) and Mandarin (标准普通话), female and male, 13 of each per language, across five adult age bands - 18-25, 26-35, 36-50, 51-65, 66+. Each entry has an `id` (`en-f2635-warm-velvet`, `zh-m3650-…`), its `ageBand`, `age`, `timbre`, the VoiceDesign `design` it is made from, a casting `description`, and its `uses`: `announcer` (ads), `narrator` (documentary and story narration), `presenter` (creator shorts), `character` (drama roles). The library also fixes one neutral reference text per language and the pitch range per gender (female 150-300 Hz, male 80-180 Hz).
+
+A voice is castable only once its reference clip has passed QC on this machine: `castableVoices` in `src/lib/voices.ts` lists a voice only when `voices/<id>.wav` exists in the audio work folder, and only QC writes that file.
 
 ## What the tools do today
 
 | Tool | What it does | Note |
 |---|---|---|
-| `scripts/voice-cast.py` (`designVoices`) | Qwen3-TTS VoiceDesign per character: a written `design`, a reference line, a `language` (English by default), 3 takes | The character voices |
-| `scripts/voice-design.py` | The same model over `deploy/voices.json`: 4 takes per announcer, Mandarin reference text | The ad announcer library |
+| `scripts/voice-design.py` | Qwen3-TTS VoiceDesign over the library: each voice's `design` speaks its language's reference text, 4 takes per voice (`--takes`), filtered by `--only <ids>` or `--language English\|Chinese` | Builds the library's candidate takes |
+| `scripts/voice-qc.py` | Picks each library voice's reference from its takes. A take must pass all three: **pronunciation** - Whisper large-v3-turbo error against the reference text at most 0.05 (`--max-error`; English by word, Chinese by toned pinyin syllable); **pitch** - median F0 of voiced frames inside the library's range for the voice's gender, so a deep male narrator cannot come out a tenor; **level** - peak below -0.3 dBFS and RMS above -40 dBFS. Lowest error wins, ties go to the take nearest the voice's median length | Writes `voices/<id>.wav` and every measurement to `voices/qc.json`; a voice with no passing take stays uncastable |
+| `scripts/voice-cast.py` (`designVoices`) | VoiceDesign for one film's characters that no library voice fits: a written `design`, one reference line, a `language`, 4 takes in the drama and short pipelines | Takes scored by Whisper, the lowest-error one kept |
 | `scripts/qwen-clone.py` (`cloneLines`) | Qwen3-TTS Base: encodes one reference clip once and voices every line from it; per-line `seed` and `language` | No style or emotion parameter |
 | `scripts/asr-score.py` (`scoreSpeech`) | Whisper large-v3-turbo; language picked from the expected text; English scored as word error rate, Chinese as toned-syllable (pinyin) error rate, so homophones are not errors | Punctuation and case ignored |
 | `speakChecked` in `src/lib/speech.ts` | Speaks, scores and retakes: a line above 0.08 error gets up to 2 more seeds, the lowest-error take is kept | Keeps the best take even if it still fails: read the returned rates |
-| `src/lib/audio.ts` | Trims leading and trailing silence at -45 dB, speeds an overrunning line up to 1.25x (never cuts), runs the broadcast voice chain (70 Hz high-pass, 3:1 compression, low-mid body, 3.2 kHz presence, limiter) | Places ad voice-over 0.45 s after its shot starts |
+| `src/lib/audio.ts` | Trims leading and trailing silence at -45 dB, speeds an overrunning line up to 1.25x (never cuts), runs the broadcast voice chain (70 Hz high-pass, 3:1 compression, low-mid body, 3.2 kHz presence, limiter) | Places ad voice-over 0.45 s after its shot starts, 4.1 s per line |
 | `ltx25_fast_lipsync.json` | Trims the dialogue audio to the shot length and generates the picture against it | Audio longer than the shot is cut off |
 
 ## Casting a character voice
 
-1. Start from `Character.voice` (English, required, *checked*): age, timbre, pace, accent. Expand it into a VoiceDesign `design` of three to five sentences: age and gender, register and timbre (breathy, chesty, nasal, gravelly), pace and rhythm, accent (General American, Southern British, light Mandarin-accented English - say which), the attitude underneath ("dry and guarded, warms only with people she trusts"). No names of actors or real people.
-2. Write an English reference text of 8-12 seconds: phonetically varied, emotionally neutral, in the character's register, no proper names. A neutral reference clones well in every mood; an angry one makes every line angry.
-3. Design three takes (`voice-cast.py`, `language: English`), score each with Whisper, keep the cleanest, then listen: timbre right for the face, no hiss, no clipped consonants, no metallic tail. Keep the clip and its text under `runtime-data/step-audio/` (the only folder the audio containers can reach); it is the character's entry in the film's voice map, which also holds `vo` for a narrator.
-4. Cast for contrast across the ensemble the way the look sheet does for faces: two characters of the same gender differ in pitch range and pace, audible with the screen off.
-5. Lock the voice with the look sheet for the season.
+1. Start from `Character.voice` (English, required, *checked*): age, timbre, pace, accent, the attitude underneath ("dry and guarded, warms only with people she trusts"). No names of actors or real people.
+2. **The library first** (`castFromLibrary` in `src/crafts/narrative/production.ts`). The code takes the QC-passed English voices tagged `character` of the same gender and within twelve years of the character's age, scores each by the words of `Character.voice` that appear in its timbre and design (three points a word, minus a quarter point per year of age difference), and casts the best. Write `Character.voice` in the library's vocabulary - timbre and register words like warm, husky, gravelly, breathy, bright, resonant - so the match lands on the voice you mean.
+3. **Design only when nothing fits.** A character no library voice matches gets a voice of their own: the code builds the design from `Character.voice` plus age, gender and "natural American English, speaking like a real actor in a television drama, not an announcer", speaks one neutral English line in 4 takes, scores them with Whisper and keeps the cleanest. Then listen: timbre right for the face, no hiss, no clipped consonants, no metallic tail. A designed voice has passed pronunciation only - pitch and level are yours to check by ear. Keep the clip and its text under `runtime-data/step-audio/` (the only folder the audio containers can reach).
+4. A reference text, when you write one: 8-12 seconds, phonetically varied, emotionally neutral, in the character's register, no proper names. A neutral reference clones well in every mood; an angry one makes every line angry.
+5. Cast for contrast across the ensemble the way the look sheet does for faces: two characters of the same gender differ in pitch range and pace, audible with the screen off.
+6. Lock the voice with the look sheet for the season.
 
 ## Casting the ad announcer
 
-Ads cast one announcer per film from `deploy/voices.json` (the creative director's `sound.voice`, *checked* against the library ids). The six designed Mandarin narrators:
+The ad's announcer speaks English. The creative director casts one per film as `sound.voice` from `castableVoices({language: 'English', use: 'announcer'})` - the QC-passed English library voices tagged `announcer` - and the treatment check rejects any id not on that list (*checked*). The cut clones every line from that voice's reference with Qwen3-TTS and checks each one with Whisper (`speakChecked`). When no English announcer has passed QC on the machine, the only option is `default`, the configured narrator; run `voice-design.py --language English` and `voice-qc.py` before a client film rather than ship that.
 
-| id | Use for |
-|---|---|
-| `baritone-premium` | premium automotive, watches, computing, finance |
-| `warm-premium-female` | skincare, jewellery, fragrance, home |
-| `bright-young-female` | drinks, snacks, everyday treats |
-| `clear-young-male` | sports drinks, consumer electronics, everyday tech |
-| `deep-authority-male` | technology launches, corporate and brand films |
-| `intimate-soft-female` | candles, sleep, night-time home |
-
-Cutdowns of the same campaign keep the master's announcer. An English announcer is not in the library; design one with this skill's casting steps if a brief needs it.
+Cast from the descriptions as a casting director would: age band, timbre and the categories the description names - a low, breathy 30-something for fragrance and night-time luxury, a deep resonant bass for cars and flagship launches, a warm baritone for coffee and premium tech, a bright young voice for snacks and youthful brands. Cutdowns of the same campaign keep the master's announcer.
 
 ## Directing delivery
 
@@ -68,8 +68,8 @@ Every synthesised line is transcribed and compared with its script before it rea
 | Material | Measure | Pass | Retake |
 |---|---|---|---|
 | English dialogue (≤ 12 words) | word error rate | ≤ 0.08 (code), and 0 errors on names, numbers and the line's key words | any content word wrong, dropped or added, even under 0.08 |
-| Mandarin announcer | toned-syllable error rate | ≤ 0.05, and 0 on the brand name, product name and numbers | anything above, or a wrong tone on the brand |
-| Reference clip for a voice | error rate | the lowest of the takes, and 0 on a 10-12 s line | redesign if no take reaches it |
+| English ad announcer line (4-13 words) | word error rate | ≤ 0.08 (code), and 0 on the brand name, product name and numbers | anything above, or a stress on the wrong word of the line |
+| Library reference clip | error rate, pitch, level | ≤ 0.05 (*checked* by `voice-qc.py`), median pitch inside the gender's range, peak below -0.3 dBFS, RMS above -40 dBFS | no passing take: redesign the voice's `design`, never lower the bar |
 
 On a 12-word line one wrong word is 0.083: the code threshold already means "at most one slip in a short line", and that slip may not be a word that carries meaning.
 
@@ -102,3 +102,5 @@ On a 12-word line one wrong word is 0.083: the code threshold already means "at 
 - A 15-word line squeezed to 5 s by time-stretching: rushed, and the lip-sync falls apart.
 - No breath before the line: the mouth is already moving on the cut.
 - Two characters of the same gender with indistinguishable voices.
+- A character voice designed from scratch because `Character.voice` used words no library entry contains, when a QC-passed library voice of the right gender and age would have fitted.
+- A library voice made castable by copying a take into `voices/` by hand instead of passing `voice-qc.py`.

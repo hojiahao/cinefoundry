@@ -1,23 +1,23 @@
 [
   {
     "id": "cinefoundry-ad-film-eval-001-one-sentence",
-    "question": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版广告，面向大学生，夏天。",
+    "question": "给无线耳机 LUMO 做一条广告，面向通勤的年轻上班族，核心是“一戴上，世界就安静了”。",
     "expected_skill": "cinefoundry-ad-film",
     "expected_script": null,
-    "ground_truth": "The agent checks the three services answer and no other harness run is active, runs `node dist/cli.js harness` with the brief verbatim in the background, reports progress from the stage lines, and when it finishes reports the film path, per-shot gate results, total seconds and open items from reports/delivery.md."
+    "ground_truth": "The agent checks the three services answer and no other run is active, runs `node dist/cli.js ad` with the brief verbatim in single quotes in the background, leaving --duration (30 s master), --ratio (16:9), --resolution and --fps at their defaults because the brief states none, reports progress from the stage lines, and when it finishes reports the film path, per-shot gate results, the measured total and open items from reports/delivery.md."
   },
   {
     "id": "cinefoundry-ad-film-eval-002-approve-first",
     "question": "先给我看脚本和分镜，我确认了再生成视频。",
     "expected_skill": "cinefoundry-ad-film",
     "expected_script": null,
-    "ground_truth": "The agent runs the harness with --plan-only, shows script/script.json and storyboard/storyboard.json, and only after the user approves runs the full harness."
+    "ground_truth": "The agent runs `node dist/cli.js ad` with --plan-only, shows creative/treatment.json, script/script.json (English vo, Chinese zh and titles per beat) and storyboard/storyboard.json, and only after the user approves runs the full pipeline."
   },
   {
     "id": "cinefoundry-ad-film-eval-003-busy",
     "question": "再帮我同时做一支咖啡的广告。",
     "expected_skill": "cinefoundry-ad-film",
     "expected_script": null,
-    "ground_truth": "The agent sees a harness run is already active, explains that one film runs at a time on the single GPU, and queues the second brief to start when the first finishes instead of launching it in parallel."
+    "ground_truth": "The agent sees a run is already active, explains that one film runs at a time on the single GPU, and queues the second brief to start when the first finishes instead of launching it in parallel."
   }
 ]

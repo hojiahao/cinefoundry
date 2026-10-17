@@ -1,6 +1,6 @@
 ---
 name: bilingual-subtitles
-version: "0.1.0"
+version: "0.2.0"
 description: The timed-text lead's craft for bilingual subtitles - Chinese large on top, English small below - with per-language line and reading-speed limits, timing taken from the spoken audio, safe areas for 16:9 and 9:16, styling, speaker changes, sidecar files, and the rule that subtitles never cover the AI label. Use when a film, short or episode is subtitled or re-timed, when dialogue or voice-over changes after a retake, when a vertical version is made, or when the user asks to fix, restyle or export subtitles.
 license: BUSL-1.1
 metadata:
@@ -16,14 +16,14 @@ metadata:
 
 # Bilingual subtitles
 
-Characters speak English on screen; the Chinese audience reads Chinese first. Every spoken line carries a Chinese subtitle, set large, with the English line small beneath it - the layout Chinese fansub groups and Bilibili audiences know. Netflix has no bilingual same-screen standard, so each language follows its own column of the Netflix timed-text guides (research, 1.4): a subtitle that breaks either language's rules fails, even if the other is fine.
+Characters speak English on screen, and the ad's announcer speaks English; the Chinese audience reads Chinese first. Every spoken line carries a Chinese subtitle, set large, with the English line small beneath it - the layout Chinese fansub groups and Bilibili audiences know. In narrative films the Chinese is `DialogueLine.zh`; in an ad it is the script's `zh` under the announcer's `vo`, written by the copywriter and checked with the script. Netflix has no bilingual same-screen standard, so each language follows its own column of the Netflix timed-text guides (research, 1.4): a subtitle that breaks either language's rules fails, even if the other is fine.
 
 ## Limits
 
 | | Chinese (top, large) | English (bottom, small) |
 |---|---|---|
-| Characters per line, 16:9 | 16 (*checked* on the screenplay) | 42 |
-| Characters per line, 9:16 | 12 (research, 5.4: the vertical line is narrower) | 32 |
+| Characters per line, 16:9 and 1:1 | 16 (*checked* on the screenplay and the ad script) | 42 |
+| Characters per line, 9:16 | 12 (*checked*; research, 5.4: the vertical line is narrower) | 32 |
 | Reading speed | ≤ 9 characters / s | ≤ 20 characters / s |
 | Lines per event | 1 (the renderer joins newlines, see below) | 1 |
 | On screen | at least 5/6 s (20 frames at 24 fps), at most 7 s | same event as the Chinese |
@@ -80,7 +80,7 @@ Noto Sans CJK SC for both languages (commercial use allowed; every character is 
 
 ## The AI label is never covered
 
-The explicit label “内容由 AI 生成” sits top-right on its own layer for the first 3 s and on the end card. Titles, subtitles and the closing line never overlap it. On 9:16 the label's position in code (about 67 px from the top, 32 px from the right edge) falls inside the zone platform UI covers (top 120-380 px, right 96-200 px, research 4.3): for vertical deliverables it must sit inside the safe zone, below y = 380 and left of x = 900, or the platform's own overlay hides it. `delivery-qc` checks this; do not ship a vertical file with the label under the UI.
+The explicit label “内容由 AI 生成” sits top-right on its own layer for the first 3 s and on the end card. Titles, subtitles and the closing line never overlap it. It is set prominently: text 5 % of the frame's short side (54 px at 1080p), right margin 5 % of the width, top margin 4 % of the height on 16:9 and 20 % on 9:16 - on a 1080x1920 frame the label starts at y = 384, below the top band platform UI covers (top 120-380 px, research 4.3). Its right edge sits at x = 1026, inside the right-hand column where platforms put their buttons lower down the frame: check the vertical file in each platform's preview, and `delivery-qc` checks it against the safe zone; do not ship a vertical file with the label under the UI.
 
 ## Output format
 

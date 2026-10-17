@@ -1,6 +1,6 @@
 ---
 name: series-development
-version: "0.1.0"
+version: "0.2.0"
 description: The showrunner's and head writer's job for a micro-drama (微短剧) or a narrative short series - logline, genre and tone, world, series look, the character roster (ids, locked look, wardrobe, arc, designed voice, adults only), and the episode plan with a three-second hook and a cliffhanger per episode and the paywall (卡点) placed for longer series. Use at the start of any drama, series, 短剧 or story-driven project, when the user changes the premise, cast or episode count, or when content-compliance rejects a premise rather than a line.
 license: BUSL-1.1
 metadata:
@@ -74,7 +74,7 @@ Titles (`title`, and the series name in the brief): concrete and intriguing, nev
    - `look` (English, words only, *checked* no digits): face shape, hair colour and cut, build, skin, one distinguishing feature. Make every pair of characters tell apart at thumbnail size - different hair silhouettes, different builds. Write "in her early thirties", never "32".
    - `wardrobe` (English): a default outfit with one signature colour or item that never changes without a story reason.
    - `arc` (Chinese, two sentences): what they want, what stops them, how they change.
-   - `voice` (English): age, timbre, pace, accent, one habit ("a low, dry alto, unhurried, faint Boston vowels, drops her volume when she lies"). A designed voice only - never "sounds like" any real actor or singer.
+   - `voice` (English): age, timbre, pace, accent, one habit ("a low, dry alto, unhurried, faint Boston vowels, drops her volume when she lies"). A designed voice only - never "sounds like" any real actor or singer. Casting takes a QC-passed voice from the casting library first (same gender, within twelve years, matched on the timbre words in this field) and designs a new one only when none fits (`dialogue-and-voice`), so use plain timbre words - warm, husky, gravelly, breathy, bright, resonant - rather than metaphors.
 7. **Season shape.** Write the season in one paragraph for yourself: the setup by episode 2, the midpoint reversal, the paywall peak (if any), the final turn. Then work backwards from the peaks: the 卡点 sits on the highest emotional point, not at a natural chapter break.
 8. **Episode plan** (Chinese, all four fields non-empty - *checked*):
    - `title`: the episode card, four to eight characters.

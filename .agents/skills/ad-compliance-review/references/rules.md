@@ -7,6 +7,10 @@ Summaries for triage. Confirm against the current official text before publicati
 Practice extends this to equivalent superlatives (第一、顶级、极致、首选、全网最低 …).
 Rewrite toward a specific, provable attribute: “销量第一” → “2025 年 X 平台同品类销量领先（数据来源：…）”
 is still risky without the source on screen; prefer describing the feature itself.
+The rule follows the claim, not the language: an English voiceover heard in China is advertising content too, so
+"the best", "number one", "the only", "ultimate", "world's first" are restricted exactly like 最佳、第一、唯一、顶级、首创.
+The code rejects the common forms in `vo` (`EN_ABSOLUTES` in `src/agent/checks.ts`); the reviewer judges the rest
+("finest", "unmatched", "like no other").
 
 ## guarantee
 《广告法》第四条、第二十八条：不得含有虚假或者引人误解的内容。

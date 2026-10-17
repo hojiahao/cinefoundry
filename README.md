@@ -50,7 +50,7 @@ A crew of AI agents — creative director, screenwriter, director of photography
 ## How it works
 
 <p align="center">
-  <img src="docs/assets/architecture.png" alt="Cinefoundry architecture: one agent engine, a pipeline per format, crafts, role skills and gates, local models on one DGX Spark" width="760">
+  <img src="docs/assets/architecture.png" alt="Cinefoundry architecture: one agent engine, a pipeline per format, crafts, role skills and gates, local models on one DGX Spark" width="960">
 </p>
 
 - **One engine, many formats.** The Cinefoundry Engine (`src/engine`) owns what every production needs: preflight, the one-film-at-a-time lock, stage status on the studio board, the run log, agent prompts, model scheduling and failure handling. A format is a pipeline (`src/pipelines/ad`, `short`, `drama`): an ordered list of stages, each run by an agent under its skills.
@@ -134,7 +134,6 @@ From September 22 the hard limits (beat count, line length, shot count) moved in
 | [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | Account planner | Reads the brief, asks only what blocks it, decides the rest |
 | [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | Advertising legal | Advertising Law wording scan and an independent reviewer; `block` findings must be rewritten |
 | [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | Content review | Micro-drama regulation, content red lines, AI labelling, platform disclosure, likeness and voice rights |
-| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | QC and delivery | Duration, frame rate, bitrate, loudness and true peak, black frames and silence, subtitle overflow, AI labels |
 | [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | Technical producer | Measures unified memory, then loads and releases models phase by phase |
 
 **Writing**
@@ -172,6 +171,7 @@ From September 22 the hard limits (beat count, line length, shot count) moved in
 | [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | Finishing | End card, typeset titles and subtitles, grade, voice and score mix |
 | [`bilingual-subtitles`](.agents/skills/bilingual-subtitles/SKILL.md) | Subtitles | Chinese over English: line length, reading speed, timing and safe areas |
 | [`platform-packaging`](.agents/skills/platform-packaging/SKILL.md) | Packaging | Three titles to test, cover, description, hashtags, AI disclosure |
+| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | QC and delivery | Duration, frame rate, bitrate, loudness and true peak, black frames and silence, subtitle overflow, AI labels |
 
 **Research**
 

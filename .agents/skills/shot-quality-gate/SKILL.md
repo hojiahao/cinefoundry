@@ -1,6 +1,6 @@
 ---
 name: shot-quality-gate
-version: "0.2.0"
+version: "0.3.0"
 description: Inspect a generated advertisement frame with the local vision model and decide whether it may proceed to video generation - product identity against references, warped text or logos, anatomy errors, and whether the required content is present. Use after every generated frame and before any clip is made from it, or when the user asks to check, QA or verify generated shots.
 license: BUSL-1.1
 metadata:
@@ -15,7 +15,7 @@ metadata:
 
 # Shot quality gate
 
-Video generation is the expensive step - about six minutes a clip on this machine - and it
+Video generation is the expensive step - 247 s for one native-1080p clip on this machine, measured - and it
 faithfully animates whatever is wrong in its first frame. Gate frames with a second pair of
 eyes that did not write the prompt, on a different model from the one that did.
 
@@ -25,7 +25,7 @@ eyes that did not write the prompt, on a different model from the one that did.
 
    ```bash
    cinefoundry qa --project <id> --shot 1 --frame projects/<id>/frames/shot_001.png \
-     --ref projects/<id>/refs/product.png --expect "the can upright in ice with its label readable"
+     --ref projects/<id>/refs/product.png --expect "the product upright on dark stone with its label readable"
    ```
 
    The local StepFun vision model returns `{"pass", "score", "issues"}`; the report is saved to `reports/qa_1.json`. Exit code 1 means rejected.

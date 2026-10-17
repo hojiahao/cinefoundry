@@ -1,10 +1,10 @@
 [
   {
     "id": "final-cut-assembly-eval-001-assemble",
-    "question": "三个镜头的视频都有了，出成片，配上字幕。",
+    "question": "六个镜头的视频都有了，出成片，配上字幕。",
     "expected_skill": "final-cut-assembly",
     "expected_script": null,
-    "ground_truth": "The agent confirms all clips exist via project status, writes cut/subtitles.srt with one cue per beat from the voiceover, runs `cinefoundry cut --project --subtitles`, checks the printed duration against the brief, and writes reports/delivery.md with per-shot measured seconds, gate scores, regeneration counts, where each asset was produced, open issues, and the AI-generated label."
+    "ground_truth": "The agent confirms all six clips exist via `cinefoundry project status`, runs `cinefoundry cut --project <id>`, which typesets the Chinese titles, the Chinese subtitles over the English announcer line timed to the voice, the end card and the AI label (first 3 s and end card, 5% of the short side), mixes the soundtrack to -16 LUFS and -1.5 dBTP, checks the printed duration against 30 + 3 - 0.5 = 32.5 s, and writes reports/delivery.md with per-shot measured seconds, gate scores, regeneration counts, where each asset was produced, open issues, and the AI-generated label."
   },
   {
     "id": "final-cut-assembly-eval-002-music-rights",

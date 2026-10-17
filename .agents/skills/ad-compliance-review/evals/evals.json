@@ -1,23 +1,30 @@
 [
   {
     "id": "ad-compliance-review-eval-001-blocked-copy",
-    "question": "检查这段口播能不能用：“全网第一的气泡水，100%天然，喝了永不发胖。”品类是食品。",
+    "question": "检查这段字幕能不能用：“全网第一的咖啡豆，100%天然，喝了永不发胖。”品类是食品。",
     "expected_skill": "ad-compliance-review",
     "expected_script": null,
     "ground_truth": "The agent runs `cinefoundry copy-check` with --category food rather than judging from memory, reports three block findings (全网第一 as an absolute term, 100% and 永不 as guarantees) citing 广告法 第九条 and the misleading-content articles, rewrites each while keeping the selling point, rescans until exit code 0, and states that this is a wording screen and not legal advice."
   },
   {
     "id": "ad-compliance-review-eval-002-cosmetics-efficacy",
-    "question": "面霜文案：“美白祛斑，好评率98%”。",
+    "question": "身体乳文案：“美白祛斑，好评率98%”。",
     "expected_skill": "ad-compliance-review",
     "expected_script": null,
     "ground_truth": "The agent scans with --category cosmetics, reports 美白 and 祛斑 as review findings that need registered efficacy and proof, reports 好评率 and 98% as data claims that need a stated source, does not mark them as outright prohibited, and asks for the substantiation or offers a rewrite."
   },
   {
-    "id": "ad-compliance-review-eval-003-clean-copy",
-    "question": "“清爽气泡，夏日畅饮。”可以吗？",
+    "id": "ad-compliance-review-eval-003-clean-bilingual-copy",
+    "question": "无线耳机 LUMO 的一拍：VO “Put them in. Let the city fade.” 字幕 “戴上 让城市退后” 标题 “安静”。可以吗？",
     "expected_skill": "ad-compliance-review",
     "expected_script": null,
-    "ground_truth": "The agent runs the scan, reports verdict pass with no findings, and still notes what a wording scan cannot verify (visual claims, implied comparisons)."
+    "ground_truth": "The agent runs the scan, reports pass with no findings, judges that the English reads as native broadcast copy and that the subtitle says what the English says, and still notes what a wording scan cannot verify (visual claims, implied comparisons)."
+  },
+  {
+    "id": "ad-compliance-review-eval-004-english-absolute",
+    "question": "VORSA 的第 6 拍：VO “The ultimate grand tourer. Nothing else comes close.” 字幕 “终极 GT 无可匹敌” 标题 “唯一”。",
+    "expected_skill": "ad-compliance-review",
+    "expected_script": null,
+    "ground_truth": "The agent flags beat 6: \"ultimate\" is an English absolute claim (rejected by EN_ABSOLUTES), \"Nothing else comes close\" and 无可匹敌 are implied superlatives over competitors that a scan may miss, and 唯一 in the title is a block finding (absolute_terms). It returns one revised item for beat 6 with all three fields vo, zh and text, keeping the meaning and rhythm without any absolute or comparative claim, and the rewrite fits 4-13 words, a subtitle of at most 16 characters with spaces instead of commas, and a title of at most 8 characters."
   }
 ]

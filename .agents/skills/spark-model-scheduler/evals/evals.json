@@ -19,5 +19,12 @@
     "expected_skill": "spark-model-scheduler",
     "expected_script": null,
     "ground_truth": "The agent explains that CUDA allocations on GB10 are not charged to the container cgroup and uses the drop in available memory from /proc/meminfo instead."
+  },
+  {
+    "id": "spark-model-scheduler-eval-004-available-is-not-free",
+    "question": "mem status 显示还有 60GB 可用，可 LTX 一加载就 CUDA out of memory，为什么？",
+    "expected_skill": "spark-model-scheduler",
+    "expected_script": null,
+    "ground_truth": "The agent explains that MemAvailable counts the page cache, which on DGX Spark CUDA cannot allocate from, compares MemFree with MemAvailable in /proc/meminfo, frees ComfyUI with `cinefoundry mem free`, evicts the page cache (sync; echo 3 > /proc/sys/vm/drop_caches) before retrying the video phase, and plans against MemFree after the eviction."
   }
 ]

@@ -1,6 +1,6 @@
 ---
 name: storyboard-design
-version: "0.3.0"
+version: "0.4.0"
 description: Convert an approved ad script into a shot-by-shot storyboard with image prompts, video motion prompts and reference assignments that the local image and video models can execute. Use after the script passes compliance, when a reference breakdown must be mapped onto a new product, or when the user asks to change shots, framing, camera moves or pacing.
 license: BUSL-1.1
 metadata:
@@ -55,14 +55,14 @@ Waxy or plastic skin, over-smooth surfaces, everything centred and symmetrical, 
 ## Workflow
 
 1. Read the brief and the approved script. One script beat becomes one shot of 5 seconds.
-2. Describe the product once, in `product`, in English, following the brief's `appearance` to the letter (container, material, colours - the client chose them; a silver can that became a glass bottle was rejected): container type, material, colours, and the label text in quotes (the only place Chinese may appear - anything else in Chinese gets painted onto the product). Every shot shows that same product. In `image_prompt` call it "the product" and do not describe it again - the pipeline generates one approved hero still from `product` and anchors every frame to it, because a product described per shot drifts (a can in shot 1 became a bottle in shot 2).
-3. Write one `style` line - palette, light, texture, mood - and nothing else. No numbers, no lens specs, no resolution tags: the image model paints short tokens like "50mm" into the picture as text. Style and the no-text rule are appended to every shot automatically.
-4. Never ask for captions, slogans or subtitles in `image_prompt`. On-screen text is typeset in post-production in a real font; text drawn by the model warps, duplicates and turns rare characters into common ones. Put the beat's text in `on_screen_text` only.
-5. Design around what the models do badly. Prefer product, liquid, ice, glass, steam, light and macro compositions. Use at most one shot with a person, framed so that hands and face are not the subject. Never two subjects or two actions in one shot: the video model picks one.
+2. Describe the product once, in `product`, in English (*checked*), following the brief's `appearance` to the letter (container, material, colours - the client chose them; a container other than the one the request names is rejected, *checked*): container type, material, colours, and the label text `brandText` in quotes (*checked*: it must appear; the quotes are the only place Chinese may appear - anything else in Chinese gets painted onto the product). With a product photo, `product` describes exactly what the photo shows, and `style` may not give the product a colour or finish (*checked*). Every shot shows that same product. In `image_prompt` call it "the product" and do not describe it again - the pipeline generates one approved hero still from `product` and anchors every frame to it, because a product described per shot drifts (a can in shot 1 became a bottle in shot 2).
+3. Write one `style` line in English (*checked*) - palette, light, texture, mood - and nothing else. No numbers, no lens specs, no resolution tags: the image model paints short tokens like "50mm" into the picture as text. Style and the no-text rule are appended to every shot automatically.
+4. Never ask for captions, slogans or subtitles in `image_prompt`. On-screen text is typeset in post-production in a real font; text drawn by the model warps, duplicates and turns rare characters into common ones. Put the beat's title in `on_screen_text` only (at most 8 characters, *checked*).
+5. Design around what the models do badly. Prefer product, liquid, glass, steam, light and macro compositions. Use at most one shot with a hand (*checked*), and at most one with a person, framed so that hands and face are not the subject. Never two subjects or two actions in one shot: the video model picks one.
 6. Vary the shots like a cinematographer: change framing between neighbours (macro -> medium -> wide), give each shot a motivated light source, and build to the product reveal.
-7. `image_prompt` in English: subject first, then action, setting, light, framing.
-8. `camera` is one move verb with its qualifiers ("slow push-in", "low-angle slow orbit"). "Handheld" is a move of its own: "slow push-in with a subtle handheld float" counts two and is rejected, as is "push-in then pan". Put a float or sway in `video_prompt` instead. `video_prompt` in English, separate from the look: what moves, that one camera move described the way a cinematographer would, and what stays still. For product-only shots end with "No people and no hands enter the frame" - otherwise the video model tends to add a hand.
-9. `must_show` is what the quality gate checks on a single still frame, so write something visible and specific in one picture: the product, its placement, what surrounds it. Never motion ("cursor moving", "steam rising"), never screen or UI content, never sound. Motion belongs in `video_prompt`. One subject per shot: if a second object stands with the product (a glass, a cup, a plate), say where in `must_show` ("a glass of soda to the right of the can"), and preferably in `image_prompt` too; the validator rejects a second object that `must_show` does not place, and an image prompt without a placement borrows the one from `must_show`.
+7. `image_prompt` in English (*checked*; Chinese only inside quoted label text): subject first, then action, setting, light, framing.
+8. `camera` is one move verb with its qualifiers (*checked*) ("slow push-in", "low-angle slow orbit"). "Handheld" is a move of its own: "slow push-in with a subtle handheld float" counts two and is rejected, as is "push-in then pan". Put a float or sway in `video_prompt` instead. `video_prompt` in English with no Chinese (*checked*), separate from the look: what moves, that one camera move described the way a cinematographer would, and what stays still. For product-only shots end with "No people and no hands enter the frame" - otherwise the video model tends to add a hand.
+9. `must_show` is what the quality gate checks on a single still frame, so write something visible and specific in one picture: the product, its placement, what surrounds it. Never motion ("cursor moving", "steam rising", *checked*), never screen or UI content (*checked*), never sound. Motion belongs in `video_prompt`. One subject per shot: if a second object stands with the product (a glass, a cup, a plate), say where in `must_show` ("a cup of coffee to the left of the bag"), and preferably in `image_prompt` too; the validator rejects a second object that `must_show` does not place (*checked*), and an image prompt without a placement borrows the one from `must_show`.
 10. If a reference breakdown exists, keep its shot count, durations, framing and camera moves; replace subject, product and scene.
 
 ## Semantic checks
@@ -89,23 +89,19 @@ come back as rewrite reasons in the same loop as the validator's own.
 ```
 
 This is a shape, not content. Every value comes from the brief and the script in front of
-you. A storyboard that describes a product other than the brief's (a can for a face cream)
-is rejected by the validator before anything is generated.
-
-```text
-```
+you. A storyboard that describes a product other than the brief's (a drink can for a perfume)
+is rejected by the validator before anything is generated (*checked*). Exactly one shot per beat, in beat order (*checked*).
 
 ## Common failures
 
 - Two subjects or two actions in one shot: the video model picks one. Split the shot.
 - Text requested inside the image, or a style line with numbers in it: it shows up as stray lettering and the gate rejects the frame.
-- Re-describing the product in a shot: the description competes with the hero still and the product drifts ("brass-finish texture" made a dark grey keyboard gold). Judged by Jev and rejected.
-- The same framing three times in a row, or two neighbours with the same framing and camera move: the film reads as one long shot (the keyboard film was three near-identical three-quarter views). Rejected by the validator.
+- Re-describing the product in a shot: the description competes with the hero still and the product drifts - a finish word ("brass-finish texture") repaints the product's own colour. Judged by Jev and rejected.
+- The same framing three times in a row, or two shots with the same framing and camera move: the film reads as one long shot (three near-identical three-quarter views). Rejected by the validator (*checked*), wherever in the film the two shots sit.
 - A shot that depends on something the models cannot draw reliably (a cursor moving across a screen, a specific UI): four attempts failed on it. Keep shots physical: product, hands-free material, light, liquid, texture.
 - A shot built around a screen, a display or UI: image models invent gibberish interfaces and the gate rejects them. Show the device, not what it shows.
-- A keyboard shown whole and sharp: sixty tiny legends, all of them garbled, and a "青" badge that landed on the space bar. Macro on a few keys, or shallow depth of field.
-- A hand in every shot (a finger pressing a key three times): the film is about the hand, not the keyboard, and the model changed the product under it. One hand shot at most.
-- A second object with no place ("icy bubbles in a poured glass" next to the can): every frame is edited from the hero still of the can alone, so the model poured water onto the can, then put the can inside the glass, then drew only a glass. Four rejects. Place it beside the product, or leave it out.
-- must_show written as motion ("keys glowing row by row"): the gate looks at one still and rejects every candidate. Name what one picture shows.
-- Two macro push-ins on a pressed key, one at each end of the film: same framing and move twice is rejected wherever the two shots sit.
-- Rainbow RGB underglow nobody asked for: it reads as cheap on a product that was briefed as cool-toned rim light. Light with one or two colours.
+- A product covered in small printed legends (keys, dials, scales, engraved numerals) shown whole and sharp: dozens of tiny legends, all garbled, and the badge drawn in the wrong place. Go macro on a few, or keep them in shallow depth of field; a whole keyboard in sharp focus is rejected (*checked*).
+- A hand in every shot: the film is about the hand, not the product, and the model changes the product under it. One hand shot at most (*checked*), from a low side angle, never from above (*checked*).
+- A second object with no place (a poured glass next to the product): every frame is edited from the hero still of the product alone, so an unplaced glass made the model pour liquid onto the product, then put the product inside the glass, then draw only the glass. Four rejects. Place it beside the product, or leave it out.
+- must_show written as motion ("light sweeping row by row"): the gate looks at one still and rejects every candidate. Name what one picture shows.
+- Rainbow RGB light nobody asked for on electronics (*checked*), or blue, cyan or neon light on a computer (*checked*): it reads as cheap and the models spread it over the product's own colours. Light with one or two colours.

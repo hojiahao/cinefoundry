@@ -1,10 +1,10 @@
 [
   {
     "id": "spark-local-media-generation-eval-001-generate-frames-and-clips",
-    "question": "分镜确认了，开始生成，产品还没发布不能上云。",
+    "question": "分镜确认了，六个镜头，开始生成，产品还没发布不能上云。",
     "expected_skill": "spark-local-media-generation",
     "expected_script": null,
-    "ground_truth": "The agent checks memory first, generates the product hero still on a plain backdrop and gates it, generates every storyboard frame with `cinefoundry image --project --shot` passing the hero still with --ref (two candidates per shot), runs the quality gate before any clip, generates clips with `cinefoundry video --model wan22-14b --first-frame` from approved frames using --keep-loaded on all but the last clip, uses only the local route because the product is unreleased, and reports the measured seconds printed by the CLI rather than estimates."
+    "ground_truth": "The agent checks memory first and evicts the model files' page cache before the GPU phases (CUDA only sees truly free memory on DGX Spark), generates the product hero still on a plain backdrop and gates it, generates every storyboard frame with `cinefoundry image --project --shot` passing the hero still with --ref (two candidates per shot), runs the quality gate before any clip, generates six native-1080p clips with `cinefoundry video --model ltx25-fast-nvfp4 --ratio 16:9 --resolution 1080p --first-frame` from approved frames using --keep-loaded on all but the last, interpolates with RIFE for the 60 fps delivery, uses only the local route because the product is unreleased, and reports the measured seconds printed by the CLI rather than estimates."
   },
   {
     "id": "spark-local-media-generation-eval-002-workflow-rejected",

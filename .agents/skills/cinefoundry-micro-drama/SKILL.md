@@ -1,6 +1,6 @@
 ---
 name: cinefoundry-micro-drama
-version: "0.1.0"
+version: "0.2.0"
 description: Produce a vertical micro-drama (微短剧) - series bible, a cast with locked faces and designed voices, and finished episodes with lip-synced English dialogue, bilingual subtitles, sound design and score - locally on a DGX Spark, by running the Cinefoundry drama pipeline. Use when the user asks for a short drama, a web series, 短剧 / 微短剧, a pilot episode, or wants more episodes of an existing Cinefoundry series.
 license: BUSL-1.1
 metadata:
@@ -37,7 +37,7 @@ pgrep -af "cli.js (ad|short|drama|harness)"; curl -sf 127.0.0.1:8001/v1/models >
 
 1. Take the user's story idea verbatim, in their language: premise, genre, the characters they named, the ending they want. Never paraphrase it.
 2. Ask only if there is no premise at all. Decide genre, length and cast yourself and say what you chose.
-3. Agree the scope before GPU time: a series plan (`--episodes`, default 1) and how many to make now (`--produce`, default all planned). One 60-second episode is twelve 5-second shots; on one DGX Spark that is roughly an hour and a half of generation, so a pilot of one to three episodes is the sensible first run.
+3. Agree the scope before GPU time: a series plan (`--episodes`, default 1) and how many to make now (`--produce`, default all planned). One 60-second episode is twelve 5-second shots, each a native-1080p video generation - the longest part of the run - so a pilot of one to three episodes is the sensible first run. Quote durations from the run log, never in advance.
 4. Run from the repository root:
 
    ```bash

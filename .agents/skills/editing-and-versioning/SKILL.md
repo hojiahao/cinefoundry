@@ -1,6 +1,6 @@
 ---
 name: editing-and-versioning
-version: "0.1.0"
+version: "0.2.0"
 description: The editor's and the versioning editor's craft - story and rhythm, cutting on action and on dialogue (J and L cuts within what the assembler can do), reaction shots, retention editing for creator shorts, ad cutdowns from the 30 s master to 15 s and 6 s (choose shots, rewrite copy, re-run compliance, re-voice), micro-drama episodes that end on the cliffhanger, and the frame rate per format. Use when clips exist and the edit is decided, when a cutdown or vertical version is made, when an episode runs long or loses tension, or when the user asks to re-cut, tighten, shorten or reorder a film.
 license: BUSL-1.1
 metadata:
@@ -68,7 +68,7 @@ A cutdown is a new film made from the master's shots, not a trimmed master.
 
 1. **Choose shots.** 15 s keeps the hook, the single proof and the product hero; 6 s keeps one image that carries the proposition and the end card. Choose the strongest frames, not the first ones.
 2. **Durations to the frame.** Spots are exact: Σ durations − Σ overlaps = 30.0, 15.0 or 6.0 s. Example 6 s: hero shot 3.5 s + end card 3.0 s − 0.5 s dissolve. Example 15 s: 4.0 + 4.0 + 4.5 + 3.0 − 0.5. Trim tails to fit; never speed up picture.
-3. **Rewrite the copy separately** with `ad-script-writing`: a 15 s line is a new line that fits 15 s, not the master's first half; 6 s has at most one short line or none, with the brand on screen throughout.
+3. **Rewrite the copy separately** with `ad-script-writing`: a 15 s line is a new English line - with its own Chinese subtitle and title - that fits 15 s, not the master's first half; 6 s has at most one short line or none, with the brand on screen throughout.
 4. **Re-run compliance** (`ad-compliance-review`) on the new copy. Shorter copy drops qualifiers; a claim safe in 30 s can become absolute in 6 s.
 5. **Re-voice** with the master's cast announcer, run pronunciation QC (`dialogue-and-voice`), re-mix with the same score, edited to resolve on the new end card - not faded.
 6. Re-time subtitles from the new voice (`bilingual-subtitles`) and run `delivery-qc` on every version.

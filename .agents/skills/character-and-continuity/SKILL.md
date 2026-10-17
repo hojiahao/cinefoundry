@@ -5,7 +5,7 @@ description: The casting director's, the costume designer's and the script super
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
-  category: production
+  category: picture
   tags:
     - casting
     - costume

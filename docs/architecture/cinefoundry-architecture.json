@@ -2,301 +2,1114 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Cinefoundry 影工坊 · 系统架构",
-    "locale": "zh-CN",
+    "title": "Cinefoundry architecture: one engine, a pipeline per format, local models on one DGX Spark",
+    "locale": "en",
     "output": "cinefoundry-architecture.html",
     "quality_profile": "showcase",
     "legend": {
       "mode": "auto",
       "entries": {
         "external": {
-          "label": "用户"
+          "label": "Entry points"
         },
         "backend": {
-          "label": "Cinefoundry Harness"
+          "label": "Engine · pipelines · crafts"
         },
         "frontend": {
-          "label": "技能与界面"
+          "label": "Agent skills"
         },
-        "cloud": {
-          "label": "本地大模型"
-        },
-        "messagebus": {
-          "label": "扩散生成"
+        "security": {
+          "label": "Gates"
         },
         "database": {
-          "label": "项目记录"
+          "label": "Project record and delivery"
+        },
+        "cloud": {
+          "label": "Language and vision models"
+        },
+        "messagebus": {
+          "label": "Media models and finishing"
         }
       }
     }
   },
   "components": [
     {
-      "id": "creator",
-      "type": "external",
-      "label": "创作者",
-      "sublabel": "一句创意",
-      "pos": [
-        240,
-        40
-      ],
-      "size": [
-        136,
-        52
-      ]
-    },
-    {
       "id": "agents",
-      "type": "backend",
-      "label": "子智能体",
-      "sublabel": "文案 · 审稿 · 质检",
+      "type": "external",
+      "label": "External agents",
+      "sublabel": "Claude Code · Codex · DSH",
       "pos": [
-        40,
-        170
+        20,
+        20
       ],
       "size": [
-        136,
-        52
+        230,
+        56
       ]
     },
     {
-      "id": "director",
-      "type": "backend",
-      "label": "导演智能体",
-      "sublabel": "cinefoundry harness",
+      "id": "cli",
+      "type": "external",
+      "label": "cinefoundry CLI",
+      "sublabel": "ad | short | drama",
       "pos": [
-        240,
-        170
+        490,
+        20
       ],
       "size": [
-        136,
-        52
+        200,
+        56
       ]
     },
     {
-      "id": "nemotron",
-      "type": "cloud",
-      "label": "Nemotron 3.5",
-      "sublabel": "NVIDIA · NVFP4",
+      "id": "studio",
+      "type": "external",
+      "label": "Studio board",
+      "sublabel": "127.0.0.1:3090",
       "pos": [
-        440,
-        170
+        870,
+        20
       ],
       "size": [
-        136,
-        52
+        200,
+        56
       ]
     },
     {
       "id": "skills",
       "type": "frontend",
-      "label": "Agent Skills",
-      "sublabel": ".agents/skills",
+      "label": "Agent Skills · 25 roles",
+      "sublabel": "production 7 · writing 5 · picture 5 · sound 2 · post 5 · research 1",
       "pos": [
-        240,
+        20,
+        150
+      ],
+      "size": [
+        350,
+        72
+      ]
+    },
+    {
+      "id": "run",
+      "type": "backend",
+      "label": "runPipeline",
+      "sublabel": "preflight · lock · stages",
+      "pos": [
+        440,
+        150
+      ],
+      "size": [
+        300,
+        72
+      ]
+    },
+    {
+      "id": "record",
+      "type": "database",
+      "label": "Project state",
+      "sublabel": "state.json · run.jsonl",
+      "pos": [
+        880,
+        150
+      ],
+      "size": [
+        190,
+        72
+      ]
+    },
+    {
+      "id": "ad",
+      "type": "backend",
+      "label": "Ad film",
+      "sublabel": "16:9 · 60 fps",
+      "pos": [
+        40,
         290
       ],
       "size": [
-        136,
+        120,
         52
+      ]
+    },
+    {
+      "id": "short",
+      "type": "backend",
+      "label": "Short video",
+      "sublabel": "9:16 · 30 fps",
+      "pos": [
+        40,
+        490
+      ],
+      "size": [
+        120,
+        52
+      ]
+    },
+    {
+      "id": "drama",
+      "type": "backend",
+      "label": "Micro-drama",
+      "sublabel": "9:16 · 24 fps",
+      "pos": [
+        40,
+        600
+      ],
+      "size": [
+        120,
+        52
+      ]
+    },
+    {
+      "id": "a_brief",
+      "type": "backend",
+      "label": "brief",
+      "sublabel": "producer",
+      "pos": [
+        200,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_creative",
+      "type": "backend",
+      "label": "creative",
+      "sublabel": "treatment",
+      "pos": [
+        312,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_script",
+      "type": "backend",
+      "label": "script",
+      "sublabel": "copywriter",
+      "pos": [
+        424,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_comp",
+      "type": "security",
+      "label": "compliance",
+      "sublabel": "scan + review",
+      "pos": [
+        536,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_board",
+      "type": "backend",
+      "label": "storyboard",
+      "sublabel": "shot design",
+      "pos": [
+        648,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_frames",
+      "type": "security",
+      "label": "frames",
+      "sublabel": "hero gate",
+      "pos": [
+        760,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_clips",
+      "type": "backend",
+      "label": "clips",
+      "sublabel": "LTX-2.5 · RIFE",
+      "pos": [
+        872,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "a_cut",
+      "type": "backend",
+      "label": "cut",
+      "sublabel": "voice · score",
+      "pos": [
+        984,
+        290
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "treatment",
+      "type": "backend",
+      "label": "treatment",
+      "sublabel": "crafts/treatment",
+      "pos": [
+        295.0,
+        395
+      ],
+      "size": [
+        120,
+        48
+      ]
+    },
+    {
+      "id": "repair",
+      "type": "backend",
+      "label": "prompt repair",
+      "sublabel": "crafts/repair",
+      "pos": [
+        743.0,
+        395
+      ],
+      "size": [
+        120,
+        48
+      ]
+    },
+    {
+      "id": "n_dev",
+      "type": "backend",
+      "label": "development",
+      "sublabel": "bible / topic",
+      "pos": [
+        200,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_play",
+      "type": "backend",
+      "label": "screenplay",
+      "sublabel": "EN + ZH subs",
+      "pos": [
+        312,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_comp",
+      "type": "security",
+      "label": "compliance",
+      "sublabel": "indep. review",
+      "pos": [
+        424,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_shots",
+      "type": "backend",
+      "label": "shots",
+      "sublabel": "shot list",
+      "pos": [
+        536,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_cast",
+      "type": "backend",
+      "label": "casting",
+      "sublabel": "faces · voices",
+      "pos": [
+        648,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_frames",
+      "type": "security",
+      "label": "frames",
+      "sublabel": "identity gate",
+      "pos": [
+        760,
+        490
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_dia",
+      "type": "security",
+      "label": "dialogue",
+      "sublabel": "Whisper QC",
+      "pos": [
+        200,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_clips",
+      "type": "backend",
+      "label": "clips",
+      "sublabel": "lip-synced",
+      "pos": [
+        312,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_sound",
+      "type": "backend",
+      "label": "sound",
+      "sublabel": "SFX · score",
+      "pos": [
+        424,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_cut",
+      "type": "backend",
+      "label": "cut",
+      "sublabel": "4-bus mix",
+      "pos": [
+        536,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "n_pack",
+      "type": "backend",
+      "label": "packaging",
+      "sublabel": "short only",
+      "pos": [
+        648,
+        600
+      ],
+      "size": [
+        86,
+        52
+      ]
+    },
+    {
+      "id": "labels",
+      "type": "security",
+      "label": "AI labels",
+      "sublabel": "visible + AIGC metadata",
+      "pos": [
+        509.0,
+        715
+      ],
+      "size": [
+        140,
+        52
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "database",
+      "label": "projects/<id>/cut/",
+      "sublabel": "film · delivery report",
+      "pos": [
+        282,
+        715
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "sched",
+      "type": "backend",
+      "label": "Phase scheduler",
+      "sublabel": "load · free · page cache",
+      "pos": [
+        420,
+        845
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "nemotron",
+      "type": "cloud",
+      "label": "Nemotron 3.5 Lightning",
+      "sublabel": "NVFP4 · vLLM :8001",
+      "pos": [
+        30,
+        845
+      ],
+      "size": [
+        140,
+        56
       ]
     },
     {
       "id": "stepvl",
       "type": "cloud",
       "label": "Step3-VL-10B",
-      "sublabel": "StepFun · FP8",
+      "sublabel": "FP8 · vLLM :8002",
       "pos": [
-        40,
-        410
+        200,
+        845
       ],
       "size": [
-        136,
-        52
+        140,
+        56
       ]
     },
     {
-      "id": "cli",
-      "type": "backend",
-      "label": "cinefoundry CLI",
-      "sublabel": "TypeScript",
-      "pos": [
-        240,
-        410
-      ],
-      "size": [
-        136,
-        52
-      ]
-    },
-    {
-      "id": "comfyui",
+      "id": "tts",
       "type": "messagebus",
-      "label": "ComfyUI",
-      "sublabel": "Qwen-Image · LTX-2.5",
+      "label": "Qwen3-TTS",
+      "sublabel": "VoiceDesign + clone",
+      "tag": "52-voice library",
       "pos": [
-        440,
-        410
+        590,
+        845
       ],
       "size": [
-        136,
-        52
+        140,
+        56
       ]
     },
     {
-      "id": "projects",
-      "type": "database",
-      "label": "projects/",
-      "sublabel": "state.json",
+      "id": "whisper",
+      "type": "messagebus",
+      "label": "Whisper",
+      "sublabel": "large-v3-turbo · QC",
       "pos": [
-        240,
-        530
+        760,
+        845
       ],
       "size": [
-        136,
-        52
+        140,
+        56
       ]
     },
     {
-      "id": "studio",
-      "type": "frontend",
-      "label": "Studio 看板",
-      "sublabel": "成片 · 报告",
+      "id": "moss",
+      "type": "messagebus",
+      "label": "MOSS-SoundEffect",
+      "sublabel": "v2 · sound effects",
       "pos": [
-        440,
-        530
+        930,
+        845
       ],
       "size": [
-        136,
-        52
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ffmpeg",
+      "type": "messagebus",
+      "label": "ffmpeg",
+      "sublabel": "mix · titles · grade",
+      "pos": [
+        30,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "qwenimg",
+      "type": "messagebus",
+      "label": "Qwen-Image · Edit",
+      "sublabel": "stills and frames",
+      "pos": [
+        420,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ltx",
+      "type": "messagebus",
+      "label": "LTX-2.5 Fast",
+      "sublabel": "NVFP4 · lip-sync",
+      "pos": [
+        590,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "rife",
+      "type": "messagebus",
+      "label": "RIFE 4.26",
+      "sublabel": "interpolation",
+      "pos": [
+        760,
+        955
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "ace",
+      "type": "messagebus",
+      "label": "ACE-Step",
+      "sublabel": "score",
+      "pos": [
+        930,
+        955
+      ],
+      "size": [
+        140,
+        56
       ]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
-      "label": "NVIDIA DGX Spark · 121.7 GB 统一内存",
+      "label": "Engine · src/engine",
       "wraps": [
-        "agents",
-        "director",
+        "run",
+        "record"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "Pipelines",
+      "wraps": [
+        "ad",
+        "short",
+        "drama"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "Ad film stages · src/pipelines/ad",
+      "wraps": [
+        "a_brief",
+        "a_creative",
+        "a_script",
+        "a_comp",
+        "a_board",
+        "a_frames",
+        "a_clips",
+        "a_cut"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "Crafts · src/crafts (narrative stages shared by short video and micro-drama)",
+      "wraps": [
+        "treatment",
+        "repair",
+        "n_dev",
+        "n_play",
+        "n_comp",
+        "n_shots",
+        "n_cast",
+        "n_frames",
+        "n_dia",
+        "n_clips",
+        "n_sound",
+        "n_cut",
+        "n_pack"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "region",
+      "label": "NVIDIA DGX Spark · GB10 · 121.7 GB unified memory · local by default",
+      "wraps": [
+        "sched",
         "nemotron",
-        "skills",
         "stepvl",
-        "cli",
-        "comfyui",
-        "projects",
-        "studio"
-      ]
+        "tts",
+        "whisper",
+        "moss",
+        "ffmpeg",
+        "qwenimg",
+        "ltx",
+        "rife",
+        "ace"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "security-group",
+      "label": "vLLM",
+      "wraps": [
+        "nemotron",
+        "stepvl"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "security-group",
+      "label": "ComfyUI :8188",
+      "wraps": [
+        "qwenimg",
+        "ltx",
+        "rife",
+        "ace"
+      ],
+      "pad": 14
+    },
+    {
+      "kind": "security-group",
+      "label": "audio containers",
+      "wraps": [
+        "tts",
+        "whisper",
+        "moss"
+      ],
+      "pad": 14
     }
   ],
   "connections": [
     {
-      "id": "brief",
-      "from": "creator",
-      "to": "director",
-      "label": "需求",
-      "variant": "emphasis",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "labelDy": 39
-    },
-    {
-      "id": "delegate",
-      "from": "director",
-      "to": "agents",
-      "label": "委派"
-    },
-    {
-      "id": "reasoning",
-      "from": "director",
-      "to": "nemotron",
-      "label": "推理"
-    },
-    {
-      "id": "vision-gate",
+      "id": "agents-cli",
       "from": "agents",
-      "to": "stepvl",
-      "label": "看图",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "labelDy": 94
-    },
-    {
-      "id": "load-skill",
-      "from": "director",
-      "to": "skills",
-      "label": "加载",
-      "variant": "emphasis",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "labelDy": 34
-    },
-    {
-      "id": "run-command",
-      "from": "skills",
       "to": "cli",
-      "label": "调用",
-      "variant": "emphasis",
-      "fromSide": "bottom",
+      "label": "entry skills",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cli-run",
+      "from": "cli",
+      "to": "run",
+      "variant": "emphasis"
+    },
+    {
+      "id": "studio-run",
+      "from": "studio",
+      "to": "run",
+      "label": "starts ad runs",
+      "fromSide": "left",
       "toSide": "top",
-      "labelDy": 34
+      "via": [
+        [
+          795,
+          48
+        ],
+        [
+          795,
+          116
+        ],
+        [
+          590,
+          116
+        ]
+      ],
+      "labelSegment": 2
     },
     {
-      "id": "vision",
-      "from": "cli",
-      "to": "stepvl",
-      "label": "质检"
-    },
-    {
-      "id": "generate",
-      "from": "cli",
-      "to": "comfyui",
-      "label": "生成"
-    },
-    {
-      "id": "record",
-      "from": "cli",
-      "to": "projects",
-      "label": "记录",
-      "variant": "emphasis",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "labelDy": 34
-    },
-    {
-      "id": "board",
-      "from": "projects",
-      "to": "studio",
-      "label": "只读",
+      "id": "studio-record",
+      "from": "studio",
+      "to": "record",
+      "label": "reads",
       "variant": "dashed"
+    },
+    {
+      "id": "skills-run",
+      "from": "skills",
+      "to": "run",
+      "label": "prompts"
+    },
+    {
+      "id": "run-record",
+      "from": "run",
+      "to": "record",
+      "label": "status · run log"
+    },
+    {
+      "id": "run-ad",
+      "from": "run",
+      "to": "ad",
+      "label": "PIPELINES[format]",
+      "labelSegment": 1,
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          590,
+          252
+        ],
+        [
+          12,
+          252
+        ],
+        [
+          12,
+          316.0
+        ]
+      ]
+    },
+    {
+      "id": "run-short",
+      "from": "run",
+      "to": "short",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          590,
+          252
+        ],
+        [
+          12,
+          252
+        ],
+        [
+          12,
+          516.0
+        ]
+      ]
+    },
+    {
+      "id": "run-drama",
+      "from": "run",
+      "to": "drama",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "via": [
+        [
+          590,
+          252
+        ],
+        [
+          12,
+          252
+        ],
+        [
+          12,
+          626.0
+        ]
+      ]
+    },
+    {
+      "id": "ad-brief",
+      "from": "ad",
+      "to": "a_brief",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_brief-a_creative",
+      "from": "a_brief",
+      "to": "a_creative",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_creative-a_script",
+      "from": "a_creative",
+      "to": "a_script",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_script-a_comp",
+      "from": "a_script",
+      "to": "a_comp",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_comp-a_board",
+      "from": "a_comp",
+      "to": "a_board",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_board-a_frames",
+      "from": "a_board",
+      "to": "a_frames",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_frames-a_clips",
+      "from": "a_frames",
+      "to": "a_clips",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a_clips-a_cut",
+      "from": "a_clips",
+      "to": "a_cut",
+      "variant": "emphasis"
+    },
+    {
+      "id": "creative-treatment",
+      "from": "a_creative",
+      "to": "treatment",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "frames-repair",
+      "from": "a_frames",
+      "to": "repair",
+      "label": "on reject",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 26
+    },
+    {
+      "id": "short-dev",
+      "from": "short",
+      "to": "n_dev",
+      "variant": "emphasis"
+    },
+    {
+      "id": "drama-dev",
+      "from": "drama",
+      "to": "n_dev",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          184,
+          626.0
+        ],
+        [
+          184,
+          516.0
+        ]
+      ]
+    },
+    {
+      "id": "n_dev-n_play",
+      "from": "n_dev",
+      "to": "n_play",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_play-n_comp",
+      "from": "n_play",
+      "to": "n_comp",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_comp-n_shots",
+      "from": "n_comp",
+      "to": "n_shots",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_shots-n_cast",
+      "from": "n_shots",
+      "to": "n_cast",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_cast-n_frames",
+      "from": "n_cast",
+      "to": "n_frames",
+      "variant": "emphasis"
+    },
+    {
+      "id": "frames-dialogue",
+      "from": "n_frames",
+      "to": "n_dia",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          803.0,
+          571
+        ],
+        [
+          243.0,
+          571
+        ]
+      ]
+    },
+    {
+      "id": "n_dia-n_clips",
+      "from": "n_dia",
+      "to": "n_clips",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_clips-n_sound",
+      "from": "n_clips",
+      "to": "n_sound",
+      "variant": "emphasis"
+    },
+    {
+      "id": "n_sound-n_cut",
+      "from": "n_sound",
+      "to": "n_cut",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cut-pack",
+      "from": "n_cut",
+      "to": "n_pack",
+      "variant": "dashed"
+    },
+    {
+      "id": "ncut-labels",
+      "from": "n_cut",
+      "to": "labels",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "emphasis"
+    },
+    {
+      "id": "acut-labels",
+      "from": "a_cut",
+      "to": "labels",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "via": [
+        [
+          1027.0,
+          741
+        ]
+      ],
+      "variant": "emphasis"
+    },
+    {
+      "id": "labels-delivery",
+      "from": "labels",
+      "to": "delivery",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sched-stepvl",
+      "from": "sched",
+      "to": "stepvl",
+      "label": "resident",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "sched-qwen",
+      "from": "sched",
+      "to": "qwenimg",
+      "label": "one diffusion family",
+      "fromSide": "bottom",
+      "toSide": "top"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "智能体",
+      "title": "Engine",
       "items": [
-        "导演按八个阶段推进",
-        "子智能体各管一段",
-        "审查方不能是产出方"
-      ]
-    },
-    {
-      "dot": "emerald",
-      "title": "本地模型",
-      "items": [
-        "Nemotron：规划、文案、审稿、英文提示词",
-        "Step3-VL：看图质检与参考片理解",
-        "扩散模型按阶段加载"
+        "runPipeline: preflight, then projects/.harness.lock, then every stage in order",
+        "Each stage marked running, then done or failed with the reason; Ctrl-C and SIGTERM included",
+        "reports/run.jsonl: one line per model call and decision, tagged with the runId"
       ]
     },
     {
       "dot": "rose",
-      "title": "底线",
+      "title": "Gates",
       "items": [
-        "文案先过合规，再进生成",
-        "首帧过质检，才生成视频",
-        "素材全程不出本机"
+        "Compliance: Advertising Law wording scan plus an independent reviewer (ad); independent reviewer plus screenplay checks (narrative)",
+        "Vision gate on Step3-VL: product hero still (ad), locked portraits and character identity (narrative); at most 2 regenerations, then best attempt reported",
+        "Whisper large-v3-turbo checks every spoken line and retakes it",
+        "Every cut carries the visible AI label and AIGC metadata"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Agent skills (metadata.category)",
+      "items": [
+        "Production 7: cinefoundry-ad-film, cinefoundry-short-video, cinefoundry-micro-drama, ad-brief-intake, ad-compliance-review, content-compliance, spark-model-scheduler",
+        "Writing 5: creative-direction, ad-script-writing, series-development, screenwriting, short-video-scripting",
+        "Picture 5: storyboard-design, cinematography-and-art-direction, character-and-continuity, spark-local-media-generation, shot-quality-gate",
+        "Sound 2: dialogue-and-voice, sound-design-and-music",
+        "Post 5: editing-and-versioning, final-cut-assembly, bilingual-subtitles, platform-packaging, delivery-qc",
+        "Research 1: ad-reference-breakdown"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Model layer",
+      "items": [
+        "Both language models stay resident; diffusion models are loaded per phase",
+        "One diffusion family in ComfyUI at a time, released at every phase boundary",
+        "Audio models run in containers, one model load per batch"
       ]
     }
   ]

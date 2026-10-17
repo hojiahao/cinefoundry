@@ -1,21 +1,21 @@
 [
   {
     "id": "ad-brief-intake-eval-001-new-ad-request",
-    "question": "帮我给一款还没发布的无糖气泡水做一条抖音广告，我有三张产品图。",
+    "question": "帮我给一款还没发布的复古胶片相机“银隼”做一条广告，我有一张产品图。",
     "expected_skill": "ad-brief-intake",
     "expected_script": null,
-    "ground_truth": "The agent asks only for the blocking unknowns it cannot infer (audience, single message) in one message and does not re-ask the product or platform. It decides ratio 9:16 and a 15 s duration itself and states the choice, picks compliance category `food`, runs `cinefoundry project init` with a lowercase dashed id, writes brief.md with the listed fields, lists the three reference images under refs/, and records delivery route `local only` because the product is unreleased."
+    "ground_truth": "The agent asks only for the blocking unknowns it cannot infer (audience, single message) in one message and does not re-ask the product. It decides 16:9 and a 30 s master itself and states the choice, picks compliance category `general` and industry `electronics`, opens the project with a lowercase dashed id, writes brief.json with the documented fields (message in Chinese, brandText 银隼 as printed), passes the photo as --product-image, and keeps generation local because the product is unreleased."
   },
   {
     "id": "ad-brief-intake-eval-002-duration-change",
     "question": "把刚才那个项目改成 10 秒横版。",
     "expected_skill": "ad-brief-intake",
     "expected_script": null,
-    "ground_truth": "The agent updates the existing project brief to 16:9 and 10 s (a multiple of 5 s), states that this means two beats, and does not open a second project or re-ask already known fields."
+    "ground_truth": "The agent updates the existing project brief to 16:9 and 10 s (a multiple of 5 s between 5 and 30), states that this means two beats, and does not open a second project or re-ask already known fields."
   },
   {
-    "question": "给一款叫“醒”的挂耳咖啡做一条 15 秒横版广告，面向清晨通勤的上班族。",
-    "ground_truth": "The brief records ratio 16:9 because the request says 横版, and durationSeconds 15 because the request says 15 秒. The agent does not substitute 9:16 “for short video platforms”.",
+    "question": "给精品咖啡“拾豆”做一条 15 秒横版广告，面向在家手冲的年轻人。",
+    "ground_truth": "The brief records ratio 16:9 because the request says 横版, and durationSeconds 15 because the request says 15 秒, instead of the 30 s default. The agent does not substitute 9:16 “for short video platforms”.",
     "id": "ad-brief-intake-eval-003-stated-ratio-wins",
     "expected_skill": "ad-brief-intake",
     "expected_script": null
