@@ -1,3 +1,4 @@
+import { modelRoots, releaseFileCache } from '../../lib/memory.js'
 import type { WritersRoom } from '../../lib/writers-room.js'
 import { ComfyClient } from '../../comfy/client.js'
 import type { ModelEndpoint } from '../../agent/llm.js'
@@ -85,6 +86,10 @@ export function writersRoom(ctx: NarrativeContext): WritersRoom {
     others: [ctx.planner, ctx.reviewer],
     log: ctx.log,
     record: (detail) => ctx.record('run', 'writers-room', ctx.author, detail),
-    freeDiffusion: async () => { await (ctx.comfy ??= new ComfyClient()).free() },
+    // CUDA here allocates only truly free memory: the page cache of model files read earlier must go, not just ComfyUI.
+    freeDiffusion: async () => {
+      await (ctx.comfy ??= new ComfyClient()).free()
+      await releaseFileCache(modelRoots())
+    },
   }
 }
