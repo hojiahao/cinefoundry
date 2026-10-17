@@ -423,6 +423,20 @@ export async function writeQcReport(dir: string, reports: QcReport[]): Promise<s
   return path
 }
 
+/**
+ * reports/qc.json with these reports replacing the ones of the same deliverables, the others kept in their order: a
+ * revision re-measures only what it re-cut. Returns every report now in the file.
+ */
+export async function mergeQcReport(dir: string, reports: QcReport[]): Promise<QcReport[]> {
+  const path = join(dir, 'reports', 'qc.json')
+  const previous = existsSync(path) ? (JSON.parse(await readFile(path, 'utf8')) as QcReport[]) : []
+  const absolute = (file: string) => (file.startsWith('/') ? file : join(dir, file))
+  const kept = previous.map((r) => reports.find((n) => n.label === r.label) ?? { ...r, file: absolute(r.file), spec: { ...r.spec, ...(r.spec.ass ? { ass: absolute(r.spec.ass) } : {}) } })
+  const all = [...kept, ...reports.filter((r) => !previous.some((p) => p.label === r.label))]
+  await writeQcReport(dir, all)
+  return all
+}
+
 /** Summary of a run for the log, the run record and the stage note. */
 export function qcSummary(reports: QcReport[]): { verdict: QcVerdict; files: Array<{ label: string; verdict: QcVerdict; fails: string[]; warns: string[] }> } {
   const files = reports.map((r) => ({ label: r.label, verdict: r.verdict, fails: r.results.filter((x) => x.status === 'fail').map((x) => x.check), warns: r.results.filter((x) => x.status === 'warn').map((x) => x.check) }))

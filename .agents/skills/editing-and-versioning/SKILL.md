@@ -1,7 +1,7 @@
 ---
 name: editing-and-versioning
-version: "0.2.0"
-description: The editor's and the versioning editor's craft - story and rhythm, cutting on action and on dialogue (J and L cuts within what the assembler can do), reaction shots, retention editing for creator shorts, ad cutdowns from the 30 s master to 15 s and 6 s (choose shots, rewrite copy, re-run compliance, re-voice), micro-drama episodes that end on the cliffhanger, and the frame rate per format. Use when clips exist and the edit is decided, when a cutdown or vertical version is made, when an episode runs long or loses tension, or when the user asks to re-cut, tighten, shorten or reorder a film.
+version: "0.3.0"
+description: The editor's and the versioning editor's craft - story and rhythm, cutting on action and on dialogue (J and L cuts within what the assembler can do), reaction shots, retention editing for creator shorts, ad cutdowns from the 30 s master to 15 s and 6 s (choose shots, rewrite copy, re-run compliance, re-voice), micro-drama episodes that end on the cliffhanger, and the frame rate per format. Also client revisions after delivery (redo a shot, change a line, regrade, rescore) and interchange to an online editor (EDL, FCPXML, OpenTimelineIO, stems, SRT). Use when clips exist and the edit is decided, when a cutdown or vertical version is made, when an episode runs long or loses tension, when the user asks to re-cut, tighten, shorten or reorder a film, when a client asks for a change to a delivered film, or when a cut must go to Resolve, Premiere or Final Cut.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
@@ -12,6 +12,8 @@ metadata:
     - cutdowns
     - retention
     - micro-drama
+    - revisions
+    - interchange
 ---
 
 # Editing and versioning
@@ -73,6 +75,37 @@ A cutdown is a new film made from the master's shots, not a trimmed master. The 
 5. **Re-run compliance** (`ad-compliance-review`) on the new copy, through the same reviewer path as the master; a reviewer's rewrite is kept only if it still passes the version's checks, and copy with a `block` finding is not cut (*checked*). Shorter copy drops qualifiers; a claim safe in 30 s can become absolute in 6 s.
 6. **Re-voice** with the master's cast announcer, run pronunciation QC (`dialogue-and-voice`), re-mix with the same score back-timed so it ends where the master's does - resolving on the new end card, not faded mid-phrase (*checked*: the version takes the last seconds of the master's bed).
 7. Re-time subtitles from the new voice (`bilingual-subtitles`) and run `delivery-qc` on every version (*checked*: the `qc` stage measures master and cutdowns). A version whose plan or copy cannot be made to pass is not cut; it is reported as an open item and the master still ships.
+
+## Client revisions
+
+After delivery the client reviews and asks for changes. A change is a revision of the finished project, never a new run: `cinefoundry revise` re-makes the one thing that changed and everything that depends on it, and nothing else (`docs/revisions.md`).
+
+| The client says | Command | What is re-made |
+|---|---|---|
+| "Redo shot 3" / "the can looks wrong in shot 3" | `revise <id> --shot 3 [--note "what to change"]` | That shot's frame (new seed, or the note applied to its frame prompt), gate, clip; the master and only the cutdowns that use the shot (*checked*) |
+| "Change this line" | `revise <id> --line 2 --text "..." [--zh "..."]` (ad beat) or `--line 3.1 --episode 1` (scene.line) | The line through compliance, re-voiced in the same cast voice with the Whisper check, the lip-synced shot of a dialogue line; the master or the episode (*checked*) |
+| "Warmer", "less saturated" | `revise <id> --grade warmer` | Finishing only: every deliverable regraded, every clip and voice kept (*checked*) |
+| "The music is too busy" | `revise <id> --music "sparse piano, slower"` | A new score; master and cutdowns, back-timed (*checked*) |
+
+How the editor works a note:
+
+1. **Translate the note into one revision.** "Make shot 3 feel like morning" is `--shot 3 --note "soft low morning light from the left"`: a note names what is visible in the frame (light, framing, what is in it), never the product's or a face's look - those come from the hero still and the reference portraits. "Make it warmer" over the whole film is a grade, not six shot notes. One revision per command; several notes are several revisions, each recorded.
+2. **A line change is a copy change.** The new line must pass everything the script passed: the word count for its slot, the subtitle width, the wording scan and the independent reviewer (*checked*). If it fails, the revision is refused with the reason and nothing changes; tell the client what the rule is and offer the reviewer's suggested wording. Never soften a client's line without asking.
+3. **Expect only dependents to change.** A revised shot that no cutdown uses leaves the 15 s and 6 s files untouched; a line revision leaves the cutdowns' own copy alone. The revision record (`reports/revisions.json`) lists every file changed and the version it replaced (`clips/shot_003.v1.mp4`): use it to show the client before and after.
+4. **Report from the record.** After a revision, read the delivery report's 修订记录 and the new QC verdict; a frame kept after a failed gate or a line Whisper still mis-hears is an open item, as in the original run.
+5. **One film at a time.** A revision takes the GPU lock like any run; it is refused while another film generates.
+
+## Interchange: handing the cut to an online editor
+
+When the client's post house finishes the film in DaVinci Resolve, Premiere Pro or Final Cut Pro, export the cut instead of sending only the MP4:
+
+```bash
+cinefoundry export <id> --format fcpxml            # FCPXML 1.10 (Resolve, Final Cut) + FCP 7 XML (Premiere)
+cinefoundry export <id> --format edl --version 15s # CMX 3600 EDL of a cutdown
+cinefoundry export <id> --format otio --episode 2  # OpenTimelineIO of an episode
+```
+
+Everything lands in `projects/<id>/exports/<label>/`: the interchange file, the mix and its four stems (dialogue, music, effects, ambience) as WAVs of the cut's exact length, Chinese and English SRT, the ASS, and `manifest.json`. Timecode starts at 01:00:00:00; every event is on a whole frame at the cut's rate (*checked*); the dissolve into the end card begins on the edit. The picture sources are the ungraded, untitled clips: tell the receiving editor that the grade and titles are in the delivered file and the ASS, and that the explicit AI label must stay burned in.
 
 ## Frame rates per format
 

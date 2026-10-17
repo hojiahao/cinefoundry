@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { exec } from '../../lib/exec.js'
+import { tapStem } from '../../lib/audio.js'
 
 /**
  * A dialogue-led mix in four buses, the way a re-recording mixer balances a drama: dialogue on top and always intelligible,
@@ -15,6 +16,8 @@ export interface MixInput {
   effects: Array<{ path: string; start: number }>
   music?: string
   output: string
+  /** Also write each bus as a stem WAV of the film's length (export, `cinefoundry export`). */
+  stems?: Partial<Record<'dialogue' | 'ambience' | 'effects' | 'music', string>>
 }
 
 export async function mixNarrative(input: MixInput): Promise<void> {
@@ -60,7 +63,12 @@ export async function mixNarrative(input: MixInput): Promise<void> {
     buses.push('mus')
   }
   if (!buses.length) throw new Error('nothing to mix')
-  parts.push(`${buses.map((b) => `[${b}]`).join('')}amix=inputs=${buses.length}:normalize=0:duration=longest,atrim=duration=${input.totalSeconds},alimiter=limit=0.95[out]`)
+  // Stems: each bus also to its own WAV in the same pass, so the stems are exactly what the mix summed.
+  const stemOutputs: string[] = []
+  const kind = { dia: 'dialogue', diaOut: 'dialogue', amb: 'ambience', fx: 'effects', mus: 'music' } as const
+  const mixed = buses.map((bus) => tapStem(parts, stemOutputs, bus, input.stems?.[kind[bus as keyof typeof kind]], input.totalSeconds))
+  parts.push(`${mixed.map((b) => `[${b}]`).join('')}amix=inputs=${mixed.length}:normalize=0:duration=longest,atrim=duration=${input.totalSeconds},alimiter=limit=0.95[out]`)
   await mkdir(dirname(input.output), { recursive: true })
-  await exec('ffmpeg', [...args, '-filter_complex', parts.join(';'), '-map', '[out]', '-ar', '48000', input.output])
+  for (const path of Object.values(input.stems ?? {})) if (path) await mkdir(dirname(path), { recursive: true })
+  await exec('ffmpeg', [...args, '-filter_complex', parts.join(';'), '-map', '[out]', '-ar', '48000', input.output, ...stemOutputs])
 }

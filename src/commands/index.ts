@@ -7,7 +7,11 @@ import { assembleFilm, detectCuts, extractFrame, probeDuration } from '../lib/ff
 import { generateImage, generateVideo, type EditModel, type ImageModel } from '../lib/media.js'
 import { memoryStatus, planMemory } from '../lib/memory.js'
 import { sleepService, wakeService } from '../lib/rest.js'
-import { addAsset, createProject, loadProject, projectDir, setStage, STAGES, type Stage, type StageStatus } from '../lib/project.js'
+import { addAsset, createProject, loadProject, projectDir, projectsRoot, setStage, STAGES, type Stage, type StageStatus } from '../lib/project.js'
+import { RevisionRefused, runRevision, type RevisionRequest } from '../engine/revise.js'
+import { exportCut, INTERCHANGE_FORMATS, type InterchangeFormat } from '../crafts/export.js'
+import { loadFinishing } from '../crafts/finishing.js'
+import { isFormat, REVISIONS } from '../pipelines/index.js'
 import { buildShots } from '../lib/shots.js'
 import type { Brief, Script, Storyboard } from '../agent/checks.js'
 import { CROSSFADE_SECONDS, finishFilm, type Recorder } from '../agent/finish.js'
@@ -223,7 +227,7 @@ async function cut(args: ParsedArgs): Promise<number> {
   if (brand) await record('cut', 'brand-kit', undefined, { brand: brand.id, version: brand.version })
   const output = await finishFilm({
     dir, brief, ...(brand ? { brand: await brandFinish(brand) } : {}), script: await read<Script>('script/script.json'), storyboard: await read<Storyboard>('storyboard/storyboard.json'),
-    heroPath: join(dir, hero.path), endStill: flag(args, 'end-still') ? resolve(flag(args, 'end-still')!) : undefined, comfy: new ComfyClient(), audio: flag(args, 'audio'), silent: flag(args, 'silent') === 'true', record, log: (line) => console.error(line),
+    heroPath: join(dir, hero.path), endStill: flag(args, 'end-still') ? resolve(flag(args, 'end-still')!) : undefined, comfy: new ComfyClient(), audio: flag(args, 'audio'), silent: flag(args, 'silent') === 'true', record, log: (line) => console.error(line), grade: (await loadFinishing(dir)).grade,
   })
   await addAsset(id, { id: 'final-cut', kind: 'video', stage: 'cut', path: 'cut/final.mp4', execution: 'local-dgx-spark', model: 'ffmpeg' })
   await setStage(id, 'cut', 'done')
@@ -352,4 +356,61 @@ async function evalCommand(args: ParsedArgs): Promise<number> {
   return 0
 }
 
-export const COMMANDS: Record<string, Command> = { brand: brandCommand, ad: harnessCommand, short: narrativeCommand('short', SHORT_USAGE), drama: narrativeCommand('drama', DRAMA_USAGE), harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, setup, studio }
+const REVISE_USAGE = 'usage: cinefoundry revise <id> (--shot N [--note "what to change"] | --line <beat|scene.line> --text "new English" [--zh "新字幕"] | --grade <warmer|cooler|...> | --music "direction") [--episode E]'
+
+/** The revision a command line asks for: exactly one of --shot, --line, --grade, --music. */
+export function revisionRequest(args: ParsedArgs): RevisionRequest {
+  const asked = (['shot', 'line', 'grade', 'music'] as const).filter((name) => flag(args, name) !== undefined)
+  if (asked.length !== 1) throw new UsageError(`${asked.length ? `one revision at a time (got --${asked.join(', --')})` : 'say what to revise'}; ${REVISE_USAGE}`)
+  const kind = asked[0]!
+  const episode = flag(args, 'episode') !== undefined ? numberFlag(args, 'episode', 1) : undefined
+  const text = (name: string) => { const value = flag(args, name); if (value === 'true') throw new UsageError(`--${name} needs a value`); return value }
+  if (kind === 'shot') {
+    const shot = numberFlag(args, 'shot', 0)
+    if (!Number.isInteger(shot) || shot < 1) throw new UsageError('--shot is a shot number from 1')
+    return { kind, shot, ...(episode !== undefined ? { episode } : {}), ...(text('note') ? { note: text('note') } : {}) }
+  }
+  if (kind === 'line') {
+    const line = text('line')
+    const newText = text('text')
+    if (!line || !newText) throw new UsageError(`--line needs --text "the new English line"; ${REVISE_USAGE}`)
+    return { kind, line, text: newText, ...(text('zh') ? { zh: text('zh') } : {}), ...(episode !== undefined ? { episode } : {}) }
+  }
+  const value = text(kind)
+  if (!value) throw new UsageError(`--${kind} needs a value; ${REVISE_USAGE}`)
+  return { kind, [kind]: value, ...(episode !== undefined ? { episode } : {}) }
+}
+
+/** Revise a finished project: one shot, one line, the grade or the score; only what depends on it is re-made. */
+async function revise(args: ParsedArgs): Promise<number> {
+  const id = args.positionals[0]
+  if (!id) throw new UsageError(REVISE_USAGE)
+  const request = revisionRequest(args)
+  const state = await loadProject(id).catch(() => { throw new UsageError(`no project ${id} in ${projectsRoot()}`) })
+  const format = (state.format ?? 'ad') as Format
+  if (!isFormat(format)) throw new UsageError(`project ${id} has an unknown format ${format}`)
+  try {
+    print(await runRevision(REVISIONS[format], { id, request, withoutSkills: flag(args, 'without-skills') === 'true' }))
+    return 0
+  } catch (error) {
+    if (!(error instanceof RevisionRefused)) throw error
+    print({ revision: 'refused', reason: error.message })
+    return 1
+  }
+}
+
+/** Interchange for an online editor: EDL, FCPXML (+ FCP 7 XML) or OTIO, with stems, SRT and ASS. */
+async function exportCommand(args: ParsedArgs): Promise<number> {
+  const id = args.positionals[0]
+  const format = flag(args, 'format')
+  if (!id || !format || !INTERCHANGE_FORMATS.includes(format as InterchangeFormat)) throw new UsageError('usage: cinefoundry export <id> --format edl|fcpxml|otio [--episode E | --version master|15s|06s]')
+  const state = await loadProject(id)
+  const narrative = state.format === 'short' || state.format === 'drama'
+  if (narrative && flag(args, 'version')) throw new UsageError('--version is for ad cutdowns; a narrative film exports an --episode')
+  if (!narrative && flag(args, 'episode')) throw new UsageError('--episode is for narrative films; an ad exports a --version (master, 15s, 06s)')
+  const label = narrative ? `ep${String(numberFlag(args, 'episode', 1)).padStart(2, '0')}` : flag(args, 'version', 'master')!
+  print(await exportCut(projectDir(id), { label, format: format as InterchangeFormat }))
+  return 0
+}
+
+export const COMMANDS: Record<string, Command> = { brand: brandCommand, ad: harnessCommand, short: narrativeCommand('short', SHORT_USAGE), drama: narrativeCommand('drama', DRAMA_USAGE), harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, setup, studio, revise, export: exportCommand }

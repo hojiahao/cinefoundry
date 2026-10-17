@@ -37,16 +37,20 @@ export function startFakeComfy(options: { clipSeconds?: number } = {}): Promise<
       }
       if (url.pathname === '/view') {
         const filename = url.searchParams.get('filename')!
-        const graph = jobs.get(filename.split('.')[0]!)!
+        const job = filename.split('.')[0]!
+        const graph = jobs.get(job)!
+        // Every job renders different pixels and sound, so a regenerated asset differs from the one it replaces.
+        const n = Number(job.replace(/\D/g, '')) || 0
         // A graph without a size (frame interpolation works on an uploaded clip) renders a small clip at the graph's frame rate.
         const size = Object.values(graph).map((node: any) => node.inputs).find((inputs: any) => 'width' in inputs) ?? { width: 352, height: 640 }
         const rate = Object.values(graph).find((node: any) => node.class_type === 'CreateVideo')?.inputs?.fps ?? 24
         const output = join(scratch, filename)
         if (filename.endsWith('.mp3')) {
           const seconds = Object.values(graph).map((node: any) => node.inputs?.seconds).find((value) => typeof value === 'number') ?? 3
-          execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', `sine=frequency=220:duration=${seconds}`, '-ac', '2', output])
+          execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', `sine=frequency=${220 + (n % 40) * 11}:duration=${seconds}`, '-ac', '2', output])
         } else {
-          const source = filename.endsWith('.mp4') ? `testsrc=s=${size.width}x${size.height}:d=${options.clipSeconds ?? 1}:r=${rate}` : `color=c=teal:s=${size.width}x${size.height}`
+          const colour = `0x${((n * 2654435761) >>> 8).toString(16).padStart(6, '0').slice(-6)}`
+          const source = filename.endsWith('.mp4') ? `testsrc=s=${size.width}x${size.height}:d=${options.clipSeconds ?? 1}:r=${rate},hue=h=${(n * 47) % 360}` : `color=c=${colour}:s=${size.width}x${size.height}`
           execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', source, ...(filename.endsWith('.mp4') ? ['-pix_fmt', 'yuv420p'] : ['-frames:v', '1']), output])
         }
         response.writeHead(200); response.end(readFileSync(output))

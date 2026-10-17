@@ -13,6 +13,12 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
   Common: [--id id] [--brand brand-id] [--product product-id] [--video-model ltx25-fast-nvfp4|ltx25-fast|wan22-14b|wan22-5b|seedance] [--candidates 2]
   (cinefoundry harness is the same as cinefoundry ad)
 
+  Revisions and interchange, on a finished project
+  cinefoundry revise <id> --shot N [--episode E] [--note "what to change"]        redo a shot; re-cut only what uses it
+  cinefoundry revise <id> --line <beat|scene.line> --text "new English" [--zh "新字幕"] [--episode E]   change a line (compliance-checked)
+  cinefoundry revise <id> --grade <warmer|cooler|brighter|darker|punchier|softer|richer|muted|neutral> | --music "direction"   finishing only
+  cinefoundry export <id> --format edl|fcpxml|otio [--episode E | --version master|15s|06s]   EDL / FCPXML + FCP 7 XML / OTIO, stems, SRT, ASS
+
   Individual tools, as the skills call them
   cinefoundry brand init <brand-id> [--name "Brand"] [--brief "brand brief"]   scaffold a kit in brands/<brand-id>/ (drafted by the brand manager from a brief)
   cinefoundry brand check <brand-id>                                          files, fonts, voices, colours, logos: exit 1 on any problem

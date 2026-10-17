@@ -133,7 +133,7 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
  * (content-compliance). Rewrites are taken only if the screenplay still passes every check.
  */
 /** What the regulation allows, stated in the reviewer's own instruction so it is weighed, not skimmed. */
-const ALLOWED = `Allowed when the values are sound: wealthy characters, inheritances, business acquisitions, contract or fake relationships, arranged matches, rivals who fall in love. Judge the treatment: wealth is never the measure of a person or a weapon of humiliation; no coercion, confinement or "taming" as romance; the lead has her own skill, choices and voice; conflict resolves through truth and character, not revenge; titles carry no 霸总-style or click-bait words.`
+export const ALLOWED = `Allowed when the values are sound: wealthy characters, inheritances, business acquisitions, contract or fake relationships, arranged matches, rivals who fall in love. Judge the treatment: wealth is never the measure of a person or a weapon of humiliation; no coercion, confinement or "taming" as romance; the lead has her own skill, choices and voice; conflict resolves through truth and character, not revenge; titles carry no 霸总-style or click-bait words.`
 
 async function reviewPremise(ctx: NarrativeContext, bible: SeriesBible): Promise<ContentReview> {
   const source = `${bible.logline}\n${bible.genre}\n${bible.characters.map((c) => `${c.name} ${c.role} ${c.arc}`).join('\n')}\n${bible.episodes.map((e) => `${e.title} ${e.synopsis} ${e.hook} ${e.cliffhanger}`).join('\n')}`
@@ -146,7 +146,7 @@ async function reviewPremise(ctx: NarrativeContext, bible: SeriesBible): Promise
   return { ...run.value, approve: run.value.approve && run.unresolved.length === 0 }
 }
 
-type ContentReview = { approve: boolean; issues: string[]; revised?: Array<{ scene: number; line: number; en: string; zh: string }> }
+export type ContentReview = { approve: boolean; issues: string[]; revised?: Array<{ scene: number; line: number; en: string; zh: string }> }
 
 /**
  * Every finding must quote the words it is about, exactly as they appear in the episode or the logline: a reviewer
