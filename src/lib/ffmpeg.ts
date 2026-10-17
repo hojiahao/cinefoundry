@@ -118,6 +118,9 @@ export const GRADES: Record<string, string> = {
 }
 GRADES.general = GRADES.neutral!
 
+/** The video bitrate ceiling of a delivery, Mb/s: 0.2 bit per pixel per frame, never under 8 Mb/s. Delivery QC checks against it. */
+export const bitrateCeilingMbps = (width: number, height: number, fps: number) => Math.max(8, Math.round((width * height * fps * 0.2) / 1e6))
+
 export async function assembleFilm(clips: string[], output: string, options: FilmOptions): Promise<void> {
   const { width, height, fps, durations, crossfadeSeconds } = options
   const conform = clips
@@ -142,6 +145,9 @@ export async function assembleFilm(clips: string[], output: string, options: Fil
     chain += `;[graded]ass='${escaped}'[titled]`
     videoLabel = '[titled]'
   }
+  // Tag the frames themselves: the encoder's -color_* options alone left primaries and transfer untagged (delivery QC).
+  chain += `;${videoLabel}setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv[delivered]`
+  videoLabel = '[delivered]'
   const args = ['-hide_banner', '-loglevel', 'error', '-y', ...clips.flatMap((clip) => ['-i', clip])]
   if (options.audio) {
     args.push('-i', options.audio)
@@ -153,7 +159,7 @@ export async function assembleFilm(clips: string[], output: string, options: Fil
   for (const [key, value] of Object.entries(options.metadata ?? {})) args.push('-metadata', `${key}=${value}`)
   // Delivery: H.264 High, BT.709, quality-driven (crf 16) with a ceiling of 0.2 bits per pixel per frame:
   // about 25 Mbps for 1080p60, 100 Mbps for 4K60 - high-quality platform masters, not a mezzanine.
-  const maxrate = Math.max(8, Math.round((width * height * fps * 0.2) / 1e6))
+  const maxrate = bitrateCeilingMbps(width, height, fps)
   args.push('-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-maxrate', `${maxrate}M`, '-bufsize', `${maxrate * 2}M`, '-profile:v', 'high',
     '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart+use_metadata_tags', output)
   await exec('ffmpeg', args)

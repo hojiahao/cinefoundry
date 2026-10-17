@@ -15,6 +15,7 @@ import { loadVoiceLibrary, voiceReference, voicesDir, type LibraryVoice } from '
 import { existsSync } from 'node:fs'
 import { buildAss, type TitleCue } from '../../lib/titles.js'
 import { produced, key, type NarrativeContext } from './context.js'
+import { loudnessFor, qcOpenItems, qcSummary, runQc, writeQcReport, type QcReport, type QcSpec, type QcVerdict } from '../qc.js'
 import { sheetGate, shotGate } from './gate.js'
 import { mixNarrative } from './mix.js'
 import type { Character, NarrativeShot } from './types.js'
@@ -277,7 +278,36 @@ export async function narrativeCutStage(ctx: NarrativeContext): Promise<string> 
     await addAsset(ctx.projectId!, { id: `episode-${episode}`, kind: 'video', stage: 'cut', path: `cut/ep${pad(episode)}.mp4`, execution: 'local-dgx-spark', model: 'ffmpeg' })
     ctx.log(`▸ cut          episode ${episode}: ${output}`)
   }
-  return `${ctx.outputs.size} episode(s)`
+  const qc = await qcEpisodes(ctx)
+  return `${ctx.outputs.size} episode(s) · qc ${qc}`
+}
+
+/** The QC spec of a finished episode: delivery size and rate, five seconds a shot, a line window per spoken line. */
+export function episodeQcSpec(ctx: NarrativeContext, episode: number): QcSpec {
+  const [width, height] = deliverySize(ctx.options.resolution ?? '1080p', ctx.ratio)
+  const shots = ctx.shots.get(episode) ?? []
+  const speech = shots.flatMap((shot) => {
+    const spoken = shot.line === undefined ? undefined : ctx.lines.get(key(episode, shot.scene, shot.line))
+    if (!spoken) return []
+    const at = (shot.shot - 1) * 5 + LINE_OFFSET
+    return [{ start: at, end: at + spoken.seconds }]
+  })
+  return {
+    label: `ep${pad(episode)}`, file: ctx.outputs.get(episode)!, width, height, fps: ctx.options.fps ?? 24, seconds: shots.length * 5,
+    loudness: loudnessFor(ctx.format === 'drama' ? 'drama' : 'short'), speech, ass: join(ctx.dir!, 'cut', `ep${pad(episode)}.ass`), produceId: `${ctx.projectId}-ep${pad(episode)}`,
+  }
+}
+
+/** Delivery QC on every episode cut in this run: reports/qc.json, open items in the log and the run record. */
+async function qcEpisodes(ctx: NarrativeContext): Promise<QcVerdict> {
+  const reports: QcReport[] = []
+  for (const episode of ctx.outputs.keys()) reports.push(await runQc(episodeQcSpec(ctx, episode)))
+  await writeQcReport(ctx.dir!, reports)
+  const open = qcOpenItems(reports)
+  for (const item of open) ctx.log(`  open item: qc ${item}`)
+  const summary = qcSummary(reports)
+  await ctx.record('cut', 'delivery-qc', undefined, { verdict: summary.verdict, files: summary.files, openItems: open })
+  return summary.verdict
 }
 
 /**
