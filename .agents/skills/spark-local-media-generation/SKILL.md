@@ -1,7 +1,7 @@
 ---
 name: spark-local-media-generation
 version: "0.2.0"
-description: Generate a product hero still, storyboard frames anchored to it, and video clips on the local DGX Spark with the spotfoundry CLI (ComfyUI running Qwen-Image, Qwen-Image-Edit and Wan2.2 14B) instead of a cloud API. Use when product shots, storyboard frames or shot clips must be produced, when material is confidential or unreleased, or when choosing between local and cloud generation.
+description: Generate a product hero still, storyboard frames anchored to it, and native-1080p video clips on the local DGX Spark with the spotfoundry CLI (ComfyUI running Qwen-Image, Qwen-Image-Edit, LTX-2.5 Fast NVFP4 or Wan2.2, and RIFE interpolation) instead of a cloud API. Use when product shots, storyboard frames or shot clips must be produced, when material is confidential or unreleased, or when choosing between local and cloud generation.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)

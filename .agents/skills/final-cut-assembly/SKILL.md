@@ -1,7 +1,7 @@
 ---
 name: final-cut-assembly
 version: "0.2.0"
-description: Finish approved clips into the final advertisement - end card on the product, typeset titles and subtitles, offline voiceover over a locally generated music bed, crossfades and a cinematic grade - and write the delivery report. Use when all clips of a project exist, or when the user asks to re-cut, add or change subtitles or music, or export the final video.
+description: Finish approved clips into the final advertisement at broadcast standard - hard cuts with a dissolve into the end card, the product end card, designed titles and voice-timed subtitles, the voiceover, sound effects and a locally generated score mixed to -16 LUFS, a category grade, 60 fps RIFE masters, explicit and implicit AI labels - and write the delivery report. Use when all clips of a project exist, or when the user asks to re-cut, change titles, subtitles, voice, sound or music, or export the final video.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)

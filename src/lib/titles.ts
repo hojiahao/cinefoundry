@@ -9,6 +9,9 @@ export interface TitleCue {
   closing?: string
   /** The explicit AI-generated label (内容由 AI 生成), set small in the top-right corner. */
   label?: string
+  /** When the subtitle shows, if not the whole cue: the seconds the voiceover line is actually spoken. */
+  subtitleStart?: number
+  subtitleEnd?: number
 }
 
 const assTime = (seconds: number) => {
@@ -47,7 +50,7 @@ export function buildAss(cues: TitleCue[], width: number, height: number, font =
       lines.push(`Dialogue: 1,${assTime(cue.start + 0.6)},${assTime(cue.end - 0.1)},Closing,,0,0,0,,{\\fad(500,300)\\blur0.5${fit}}${clean(cue.closing)}`)
     }
     if (cue.label?.trim()) lines.push(`Dialogue: 2,${assTime(cue.start)},${assTime(cue.end)},Label,,0,0,0,,${clean(cue.label)}`)
-    if (cue.subtitle?.trim()) lines.push(`Dialogue: 0,${assTime(cue.start + 0.25)},${assTime(cue.end - 0.15)},Sub,,0,0,0,,{\\fad(200,200)}${clean(cue.subtitle)}`)
+    if (cue.subtitle?.trim()) lines.push(`Dialogue: 0,${assTime(cue.subtitleStart ?? cue.start + 0.25)},${assTime(cue.subtitleEnd ?? cue.end - 0.15)},Sub,,0,0,0,,{\\fad(150,150)}${clean(cue.subtitle)}`)
   }
   return `${lines.join('\n')}\n`
 }

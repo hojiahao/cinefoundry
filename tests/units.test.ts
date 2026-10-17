@@ -505,3 +505,15 @@ describe('stock ad-speak', () => {
     for (const line of ['拧开盖子，气泡往上冒', '第一口有点凉，后面是回甘']) expect(AI_CLICHES.test(line)).toBe(false)
   })
 })
+
+describe('voice-timed subtitles', () => {
+  it('shows a subtitle only while its line is spoken, and labels the film as AI-generated', async () => {
+    const { buildAss } = await import('../src/lib/titles.js')
+    const ass = buildAss([
+      { start: 0, end: 5, title: '冰感', subtitle: '冰凉落进掌心', subtitleStart: 0.45, subtitleEnd: 2.9 },
+      { start: 0, end: 3, label: '内容由 AI 生成' },
+    ], 1920, 1080)
+    expect(ass).toContain('Dialogue: 0,0:00:00.45,0:00:02.90,Sub')
+    expect(ass).toMatch(/Dialogue: 2,0:00:00\.00,0:00:03\.00,Label,,0,0,0,,内容由 AI 生成/)
+  })
+})

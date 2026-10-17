@@ -93,8 +93,6 @@ export async function finishFilm(input: FinishInput): Promise<string> {
   const onScreen = cues.map((cue) => `${cue.title ?? ''}${cue.subtitle ?? ''}`).join('') + closing + AI_LABEL
   const coverage = await fontCovers(TITLE_FONT, onScreen)
   if (!coverage.ok) throw new Error(`The title font ${TITLE_FONT} has no glyph for: ${coverage.missing.join(' ')}. Refusing to render boxes on screen.`)
-  const ass = join(dir, 'cut', 'titles.ass')
-  await writeFile(ass, buildAss(cues, width, height, TITLE_FONT))
 
   // Sound: offline voiceover per beat over a generated instrumental bed that ducks under the voice.
   let soundtrack: string | undefined
@@ -115,7 +113,12 @@ export async function finishFilm(input: FinishInput): Promise<string> {
       return synthesizeVoices(lines)
     })
     for (const [index, beat] of script.beats.entries()) {
-      voices.push({ path: lines[index]!.output, start: clipStart(index, durations, overlaps) + 0.45 })
+      const voiceStart = clipStart(index, durations, overlaps) + 0.45
+      voices.push({ path: lines[index]!.output, start: voiceStart })
+      // Subtitles follow the voice: on when the line starts, off a breath after it ends - never on screen in silence.
+      const cue = cues[index] as (typeof cues)[number] & { subtitleStart?: number; subtitleEnd?: number }
+      cue.subtitleStart = voiceStart
+      cue.subtitleEnd = Math.min(voiceStart + spoken[index]!.seconds + 0.25, cue.end - 0.1)
       await record('cut', 'voiceover', undefined, { beat: beat.beat, seconds: spoken[index]!.seconds, speed: spoken[index]!.speed, model: spoken[index]!.model })
     }
     let music = options.audio
@@ -130,6 +133,9 @@ export async function finishFilm(input: FinishInput): Promise<string> {
     soundtrack = join(dir, 'audio', 'soundtrack.wav')
     await mixSoundtrack({ voices, music, totalSeconds: total, output: soundtrack })
   }
+
+  const ass = join(dir, 'cut', 'titles.ass')
+  await writeFile(ass, buildAss(cues, width, height, TITLE_FONT))
 
   const finalCut = join(dir, 'cut', 'final.mp4')
   const industry = brief.industry ?? industryOf(`${brief.product} ${brief.title}`)
