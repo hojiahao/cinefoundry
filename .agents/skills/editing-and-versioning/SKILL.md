@@ -64,14 +64,15 @@ The edit is where generated shots become a performance. A model gives five secon
 
 ## Ad cutdowns: 30 s master to 15 s and 6 s
 
-A cutdown is a new film made from the master's shots, not a trimmed master.
+A cutdown is a new film made from the master's shots, not a trimmed master. The ad pipeline's `versions` stage runs this section after the cut: the versioning editor (this skill with `ad-script-writing`) returns one plan per version, code checks it (`src/crafts/versions.ts`), and the cut reuses the master's finishing pass.
 
-1. **Choose shots.** 15 s keeps the hook, the single proof and the product hero; 6 s keeps one image that carries the proposition and the end card. Choose the strongest frames, not the first ones.
-2. **Durations to the frame.** Spots are exact: Σ durations − Σ overlaps = 30.0, 15.0 or 6.0 s. Example 6 s: hero shot 3.5 s + end card 3.0 s − 0.5 s dissolve. Example 15 s: 4.0 + 4.0 + 4.5 + 3.0 − 0.5. Trim tails to fit; never speed up picture.
-3. **Rewrite the copy separately** with `ad-script-writing`: a 15 s line is a new English line - with its own Chinese subtitle and title - that fits 15 s, not the master's first half; 6 s has at most one short line or none, with the brand on screen throughout.
-4. **Re-run compliance** (`ad-compliance-review`) on the new copy. Shorter copy drops qualifiers; a claim safe in 30 s can become absolute in 6 s.
-5. **Re-voice** with the master's cast announcer, run pronunciation QC (`dialogue-and-voice`), re-mix with the same score, edited to resolve on the new end card - not faded.
-6. Re-time subtitles from the new voice (`bilingual-subtitles`) and run `delivery-qc` on every version.
+1. **Which versions.** 15 s (three shots) and 6 s (one shot), each only from a master at least twice its length - from a 30 s master both, from 15-25 s only the 6 s (*checked*).
+2. **Choose shots.** 15 s keeps the hook, the single proof and the product hero; 6 s keeps one image that carries the proposition and the end card. Choose the strongest frames, not the first ones: the gate score of every shot is in the brief. Every shot is a shot of the master and is used once per version (*checked*).
+3. **Durations to the frame.** Spots are exact: Σ durations − Σ overlaps = 15.0 or 6.0 s, end card included: 6 s = hero 3.5 s + end card 3.0 s − 0.5 s dissolve; 15 s = 4.0 + 4.0 + 4.5 + 3.0 − 0.5 (*checked*). Each shot holds 3-5 s from the head of its clip and lands on a frame at the delivery rate (*checked*). Trim tails to fit; never speed up picture.
+4. **Rewrite the copy separately** with `ad-script-writing`: a 15 s line is a new line that fits 15 s, not the master's first half; 6 s has one short line, with the brand on screen throughout. The beat shape is the master's - an English line, its Chinese subtitle, a Chinese title, one beat per shot - and every master script check applies (*checked*). A line holds at most the master's 13 words scaled to its shot's voice slot: 5 s 13, 4.5 s 11, 4 s 9, 3.5 s 8, 3 s 6 (*checked*).
+5. **Re-run compliance** (`ad-compliance-review`) on the new copy, through the same reviewer path as the master; a reviewer's rewrite is kept only if it still passes the version's checks, and copy with a `block` finding is not cut (*checked*). Shorter copy drops qualifiers; a claim safe in 30 s can become absolute in 6 s.
+6. **Re-voice** with the master's cast announcer, run pronunciation QC (`dialogue-and-voice`), re-mix with the same score back-timed so it ends where the master's does - resolving on the new end card, not faded mid-phrase (*checked*: the version takes the last seconds of the master's bed).
+7. Re-time subtitles from the new voice (`bilingual-subtitles`) and run `delivery-qc` on every version (*checked*: the `qc` stage measures master and cutdowns). A version whose plan or copy cannot be made to pass is not cut; it is reported as an open item and the master still ships.
 
 ## Frame rates per format
 
@@ -86,13 +87,14 @@ Never mix frame rates inside one film, and never interpolate a lip-synced drama 
 
 ## Output format
 
+One plan per version (`cut/version_<id>.json` keeps it with the compliance result):
+
 ```json
 {
   "version": "15s",
-  "target_seconds": 15.0,
-  "fps": 60,
-  "shots": [{"clip": "clips/shot_002.hfr.mp4", "seconds": 4.0, "join": {"type": "cut", "overlap": 0}, "why": "hook"}],
-  "lines": [{"id": "vo_1", "at": 0.45}],
+  "target_seconds": 15,
+  "shots": [{"shot": 2, "seconds": 4.0, "why": "hook"}, {"shot": 4, "seconds": 4.0, "why": "proof"}, {"shot": 6, "seconds": 4.5, "why": "product hero"}],
+  "script": {"structure": "hook -> proof -> hero", "beats": [{"beat": 1, "job": "hook", "see": "what is on screen", "vo": "English line", "zh": "中文字幕", "text": "标题"}]},
   "notes": ["retention risk: 0:08-0:13 single held shot"]
 }
 ```

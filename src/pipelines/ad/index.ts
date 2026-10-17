@@ -19,6 +19,8 @@ import { storyboardStage } from './storyboard.js'
 import { framesStage } from './frames.js'
 import { clipsStage } from './clips.js'
 import { cutStage } from './cut.js'
+import { versionsStage } from './versions.js'
+import { adQcStage } from './qc.js'
 
 const VIDEO_MODEL_IDS: VideoModel[] = ['ltx25-fast-nvfp4', 'ltx25-fast', 'wan22-14b', 'wan22-5b', 'seedance']
 
@@ -52,8 +54,9 @@ export async function preflight(options: AdOptions): Promise<void> {
 const media = (ctx: AdContext) => !ctx.options.planOnly
 
 /**
- * The ad film: brief -> creative -> script -> compliance -> storyboard -> frames + gate -> clips -> cut.
- * A 30-second master by default (six 5-second shots and an end card), 16:9, native 1080p, 60 fps.
+ * The ad film: brief -> creative -> script -> compliance -> storyboard -> frames + gate -> clips -> cut -> versions -> qc.
+ * A 30-second master by default (six 5-second shots and an end card), 16:9, native 1080p, 60 fps, with its 15- and
+ * 6-second cutdowns, every deliverable measured by delivery QC.
  */
 export const adPipeline: PipelineDef<AdOptions, AdContext, AdResult> = {
   id: 'ad',
@@ -69,13 +72,15 @@ export const adPipeline: PipelineDef<AdOptions, AdContext, AdResult> = {
     { id: 'frames', label: '生图', alsoMarks: ['qa'], when: media, run: framesStage },
     { id: 'clips', label: '生视频', when: media, run: clipsStage },
     { id: 'cut', label: '成片', when: media, run: cutStage },
+    { id: 'versions', label: '版本', when: media, run: versionsStage },
+    { id: 'qc', label: '技术质检', when: media, run: adQcStage },
   ],
   init: async (options, engine) => {
     const { planner, reviewer, editor } = endpoints()
-    return Object.assign(engine, { options, planner, reviewer, editor, jev: jevConfig(), jevReview: [], rejectedAttempts: {}, qaRegenerations: 0, frames: new Map<number, string>() }) as AdContext
+    return Object.assign(engine, { options, planner, reviewer, editor, jev: jevConfig(), jevReview: [], rejectedAttempts: {}, qaRegenerations: 0, frames: new Map<number, string>(), versions: [] }) as AdContext
   },
   finish: async (ctx) => {
-    const result: AdResult = { projectId: ctx.projectId!, dir: ctx.dir!, finalCut: ctx.finalCut, rejectedAttempts: ctx.rejectedAttempts, qaRegenerations: ctx.qaRegenerations, wallSeconds: 0 }
+    const result: AdResult = { projectId: ctx.projectId!, dir: ctx.dir!, finalCut: ctx.finalCut, versions: Object.fromEntries(ctx.versions.map((v) => [v.spec.id, v.cut.path])), ...(ctx.qc ? { qc: ctx.qc } : {}), rejectedAttempts: ctx.rejectedAttempts, qaRegenerations: ctx.qaRegenerations, wallSeconds: 0 }
     if (ctx.finalCut) {
       // The language models were woken while the film was being finished; make sure both are back before we return.
       await ctx.waking

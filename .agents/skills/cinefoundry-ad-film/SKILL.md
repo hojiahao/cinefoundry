@@ -15,7 +15,7 @@ metadata:
 
 # Cinefoundry ad film
 
-This is the entry point for any agent - Claude Code, Codex, Gemini CLI, or Cinefoundry's own director - that wants a finished ad. It does not do the stages itself: it runs the ad pipeline, which goes brief -> creative -> script -> compliance -> storyboard -> frames + quality gate -> clips -> cut, each stage an agent with its own skill, and checks every result before the next stage starts.
+This is the entry point for any agent - Claude Code, Codex, Gemini CLI, or Cinefoundry's own director - that wants a finished ad. It does not do the stages itself: it runs the ad pipeline, which goes brief -> creative -> script -> compliance -> storyboard -> frames + quality gate -> clips -> cut -> versions (15 s and 6 s) -> delivery QC, each stage an agent with its own skill, and checks every result before the next stage starts.
 
 What comes out: a 16:9, native-1080p, 60 fps film of `duration + 3 - 0.5` seconds (32.5 s for the 30-second master): six 5-second shots, hard cuts, a dissolve into a 3-second end card on the product; an English voiceover read by the announcer the creative director cast; the Chinese subtitle large over the English line; a Chinese title per beat; a generated score mixed to -16 LUFS; the explicit AI label and the AIGC metadata. The 15- and 6-second cutdowns are cut from the master afterwards (`editing-and-versioning`).
 
@@ -50,7 +50,7 @@ pgrep -af "cli.js (ad|short|drama|harness)"; curl -sf 127.0.0.1:8001/v1/models >
 
    Generation time is dominated by the clips: measured on this machine, 247 s per native-1080p LTX-2.5 clip and 49 s per RIFE interpolation, six of each for the master. The delivery report records the measured total; do not quote one before it exists. Run it in the background and report progress from the `▸` lines it prints, or point the user at the Studio (`node dist/cli.js studio`, port 3090) where the same run is visible.
 4. Use `--plan-only` when the user wants the treatment, script and storyboard to approve before any GPU time is spent.
-5. When it finishes, read `projects/<id>/reports/delivery.md` and tell the user: where the film is (`projects/<id>/cut/final.mp4`), what each shot's gate said, the measured total, and every open item the report lists (a shot kept after failing the gate, a compliance item for human confirmation). Do not describe the film as flawless if the report says otherwise.
+5. When it finishes, read `projects/<id>/reports/delivery.md` and tell the user: where the film is (`projects/<id>/cut/final.mp4`, and the cutdowns `cut/final_15s.mp4` and `cut/final_06s.mp4` when the master is long enough), what each shot's gate said, the measured total, and every open item the report lists (a shot kept after failing the gate, a compliance item for human confirmation). Do not describe the film as flawless if the report says otherwise.
 
 ## Voice
 

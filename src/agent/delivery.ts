@@ -16,9 +16,11 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const runId = [...all].reverse().find((row) => row.stage === 'brief' && row.agent === 'intake')?.runId
   const thisRun = runId ? all.filter((row) => row.runId === runId) : all
   // A re-cut appends new voice and music rows: keep the latest per beat.
+  // Cutdowns voice their own beats: the key carries the version so a cutdown's beat 1 never hides the master's.
+  const audioKey = (row: Row) => `${row.agent}:${row.version ?? ''}:${row.beat ?? ''}`
   const latestAudio = new Map<string, Row>()
-  for (const row of thisRun) if (row.agent === 'voiceover' || row.agent === 'music') latestAudio.set(`${row.agent}:${row.beat ?? ''}`, row)
-  const rows = thisRun.filter((row) => !(row.agent === 'voiceover' || row.agent === 'music') || latestAudio.get(`${row.agent}:${row.beat ?? ''}`) === row)
+  for (const row of thisRun) if (row.agent === 'voiceover' || row.agent === 'music') latestAudio.set(audioKey(row), row)
+  const rows = thisRun.filter((row) => !(row.agent === 'voiceover' || row.agent === 'music') || latestAudio.get(audioKey(row)) === row)
   const gates = rows.filter((row) => row.agent === 'quality-gate' || row.agent === 'product-hero')
   const clips = rows.filter((row) => row.agent === 'video')
   const cloud = rows.filter((row) => row.execution === 'cloud')
@@ -42,7 +44,19 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   }).join('\n')
   const stageSeconds = (stage: string) => rows.filter((row) => row.stage === stage && typeof row.seconds === 'number').reduce((sum, row) => sum + (row.seconds as number), 0)
   const memory = rows.filter((row) => row.agent === 'scheduler' && typeof row.availableBeforeGb === 'number').map((row) => `| ${row.phase} | ${row.availableBeforeGb} GB | ${row.availableAfterFreeGb} GB |`).join('\n')
-  const audio = rows.filter((row) => row.agent === 'voiceover' || row.agent === 'music')
+  const audio = rows.filter((row) => (row.agent === 'voiceover' || row.agent === 'music') && row.version === undefined)
+  // The latest cut of each version, and the latest QC of the run.
+  const versionCuts = [...new Map(rows.filter((row) => row.stage === 'versions' && row.agent === 'cut').map((row) => [row.version as string, row])).values()]
+  const versionVoices = rows.filter((row) => row.stage === 'versions' && row.agent === 'voiceover')
+  const versionVoiced = versionVoices.length > 0
+  const versionVoice = (versionVoices.find((row) => typeof row.voice === 'string')?.voice as string | undefined) ?? '默认播音员'
+  const qc = [...rows].reverse().find((row) => row.stage === 'qc' && row.agent === 'delivery-qc')
+  const qcFiles = (qc?.files as Array<{ label: string; verdict: string; fails: string[]; warns: string[] }> | undefined) ?? []
+  const versionRows = versionCuts.map((row) => {
+    const shots = (row.shots as Array<{ shot: number; seconds: number; why: string }>).map((s) => `${s.shot}（${s.seconds} s，${s.why}）`).join(' · ')
+    return `| ${row.version} | \`${row.path}\` | ${seconds(row.fileSeconds)} | ${shots} | ${((row.copy as string[] | undefined) ?? []).join(' / ')} |`
+  }).join('\n')
+  const qcRows = qcFiles.map((file) => `| ${file.label} | ${file.verdict} | ${file.fails.join('、') || '-'} | ${file.warns.join('、') || '-'} |`).join('\n')
   const resolution = brief.resolution ?? DEFAULT_RESOLUTION
   const fps = brief.fps ?? DEFAULT_FPS
   const [width, height] = deliverySize(resolution, brief.ratio)
@@ -73,6 +87,22 @@ ${shotRows}
 | 配音 · 音乐 | ${audio.map((row) => `${row.agent} ${seconds(row.seconds)}${row.model ? ` (${row.model})` : ''}`).join(' · ') || '无声'} |
 | 总耗时 | ${director ? `${(director.wallSeconds as number).toFixed(0)} s` : '-'} |
 
+## 版本
+
+${versionRows ? `| 版本 | 文件 | 时长 | 镜头（时长，用途） | 字幕 |
+|---|---|---:|---|---|
+${versionRows}
+
+每个版本的文案单独撰写并单独通过合规审核，${versionVoiced ? `由母版的配音（${versionVoice}）重新配音，` : '无声，'}沿用母版的素材、定版、调色、字幕样式与 AI 标识${versionVoiced ? '，响度相同，配乐倒算对齐至定版结束' : ''}。剪辑决策见 \`cut/version_<版本>.json\`。` : (rows.find((row) => row.stage === 'versions' && typeof row.skipped === 'string') ? '本片时长不足以剪出 15 秒或 6 秒版本（版本最长为母版的一半）。' : '无。')}
+
+## 技术质检
+
+${qcRows ? `| 文件 | 结论 | 未通过 | 警告 |
+|---|---|---|---|
+${qcRows}
+
+逐项测量值见 \`reports/qc.json\`（ffprobe / ffmpeg ebur128、astats、blackdetect、silencedetect、freezedetect）。` : '未运行。'}
+
 ## 内存（阶段切换时）
 
 | 阶段 | 释放前可用 | 释放后可用 |
@@ -94,6 +124,12 @@ ${[
     ...((row.unrevisedFlaggedBeats as number[] | undefined) ?? []).map((beat) => `- 合规审稿点名了第 ${beat} 拍，但没有得到合格的改写稿，发布前请人工复核该句`),
     ...(row.unapprovedWithoutBeats ? [`- 合规审稿未通过文案但没有指明具体拍号（${((row.issues as string[] | undefined) ?? []).join('；').slice(0, 120)}），发布前请人工复核全部文案`] : []),
   ]),
+  ...rows.filter((row) => row.stage === 'versions' && row.agent === 'reviewer').flatMap((row) => [
+    ...((row.unrevisedFlaggedBeats as number[] | undefined) ?? []).map((beat) => `- ${row.version} 版本：合规审稿点名了第 ${beat} 拍，但没有得到合格的改写稿，发布前请人工复核该句`),
+    ...(row.unapprovedWithoutBeats ? [`- ${row.version} 版本：合规审稿未通过文案但没有指明具体拍号（${((row.issues as string[] | undefined) ?? []).join('；').slice(0, 120)}），发布前请人工复核该版本文案`] : []),
+  ]),
+  // Cutdowns that could not be made and every QC fail or warn, recorded as they happened.
+  ...rows.filter((row) => (row.stage === 'versions' || (row.stage === 'qc' && row === qc)) && Array.isArray(row.openItems)).flatMap((row) => (row.openItems as unknown[]).filter((item): item is string => typeof item === 'string').map((item) => `- ${item}`)),
   userPhoto ? '- 本片的画面由 AI 依据用户提供的产品照片生成，配音与音乐为 AI 生成；对外发布时须按平台规范标注' : '- 本片的画面、配音与音乐均为 AI 生成；对外发布时须按平台规范标注',
 ].join('\n')}
 `

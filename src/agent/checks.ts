@@ -139,12 +139,18 @@ export function checkBrief(brief: Brief): string[] {
  */
 export const AI_CLICHES = /开启[^，。]{0,6}(新篇章|新旅程|新时代)|焕新|赋能|不止于|满满的|让[^，。]{0,8}成为可能|臻享|尽享|非凡体验|品质生活|美好生活|全新升级|极致体验|匠心之作|邂逅|一站式|颠覆|重新定义|引领潮流|点亮生活|治愈|氛围感|高级感|仪式感|灵感迸发|无限可能|梦想起航|触手可及/
 
-export function checkScript(script: Script, brief: Brief): string[] {
+/**
+ * `options.beats` is the beat count of a cutdown, whose shots are not 5 s each (a 6 s version has one beat); a master
+ * has one beat per 5 seconds of its duration.
+ */
+export function checkScript(script: Script, brief: Brief, options: { beats?: number } = {}): string[] {
   const problems: string[] = []
-  const expected = brief.durationSeconds / 5
+  const expected = options.beats ?? brief.durationSeconds / 5
   const beats = Array.isArray(script.beats) ? script.beats : []
   if (!script.structure?.trim()) problems.push('structure is missing: name the one structure the script follows')
-  if (beats.length !== expected) problems.push(`the script must have exactly ${expected} beats of 5 seconds (one beat becomes one generated clip); it has ${beats.length}`)
+  if (beats.length !== expected) problems.push(options.beats === undefined
+    ? `the script must have exactly ${expected} beats of 5 seconds (one beat becomes one generated clip); it has ${beats.length}`
+    : `the version must have exactly ${expected} beat${expected === 1 ? '' : 's'}, one per shot; it has ${beats.length}`)
   for (const beat of beats) {
     const label = `beat ${beat.beat}`
     if (!beat.see?.trim()) problems.push(`${label}: "see" is empty`)

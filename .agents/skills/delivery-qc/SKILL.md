@@ -29,7 +29,7 @@ Nothing leaves the studio on the strength of "it rendered". Every deliverable - 
 
 Codec for all: H.264 High profile, yuv420p, BT.709 primaries, transfer and matrix tagged, constant frame rate, `moov` atom at the front (faststart); AAC-LC stereo 48 kHz (320 kb/s from the cut); MP4. YouTube recommends 2 consecutive B-frames and CABAC (research, 4.3); the x264 preset used may differ on B-frames - warn, do not fail.
 
-Bitrate: the cut encodes crf 16 under a ceiling of 0.2 bits per pixel per frame - about 25 Mb/s at 1080p60, 12 at 1080×1920×30, 10 at 1080p24. Fail above the ceiling by more than 10%. Warn below YouTube's 1080p SDR reference (8 Mb/s at standard frame rates, 12 at high frame rates; research 4.3) - a static drama scene can legitimately fall under it, but a whole file that does is under-encoded for upload.
+Bitrate: the cut encodes crf 16 under a ceiling of 0.2 bits per pixel per frame, never under 8 Mb/s - about 25 Mb/s at 1080p60, 12 at 1080×1920×30, 10 at 1080p24 (`bitrateCeilingMbps`, shared by the encoder and QC). Fail above the ceiling by more than 10% (*checked*). Warn below YouTube's 1080p SDR reference (8 Mb/s at standard frame rates, 12 at high frame rates; research 4.3) - a static drama scene can legitimately fall under it, but a whole file that does is under-encoded for upload.
 
 ## Loudness per destination
 
@@ -45,22 +45,22 @@ ffmpeg's `ebur128` has no dialogue gating: for `netflix-class`, measure the dial
 
 ## The checks
 
-Run on the file as delivered, never on an intermediate.
+Run on the file as delivered, never on an intermediate. The `qc` craft (`src/crafts/qc.ts`) runs every check marked *checked* with ffprobe and ffmpeg only - one probe, one decoding pass with every detector chained - at the end of the ad pipeline (master and cutdowns, stage `qc`) and of every narrative cut. Fails and warns become open items in the log, `run.jsonl` and `delivery.md`; nothing is re-encoded to pass.
 
 | Check | How | Fail when |
 |---|---|---|
-| Container and streams | `ffprobe -v error -show_streams -show_format -of json` | codec, profile, pix_fmt, colour tags, size, `r_frame_rate` or `avg_frame_rate` off spec (variable frame rate); audio not AAC 48 kHz stereo |
-| Duration | format duration and video frame count | outside the duration rule; frame count ≠ duration × fps |
-| Loudness, true peak | `ffmpeg -i f -af ebur128=peak=true -f null -` | outside the profile window |
-| Clipping | `astats` peak level and flat factor | sample peak ≥ -0.1 dBFS or flat factor > 0 (flat-topped waveform) |
-| Black frames | `blackdetect=d=0.1:pix_th=0.10` | black ≥ 0.1 s anywhere except the head fade (0.35 s), the tail fade (0.5 s) and a cut to black marked in the edit |
-| Silence | `silencedetect=noise=-60dB:d=0.5` | digital silence ≥ 0.5 s outside the head (0.3 s) and tail (0.8 s) fades: the ambience bed is always on, so silence means a dropped layer |
-| Frozen picture | `freezedetect=n=0.003:d=1.5` | warn only: locked-off shots can be still, but a frozen clip from a failed generation reads as a glitch |
-| Subtitles | parse the `.ass`; render width per event | any event breaking `bilingual-subtitles` limits: chars per line (zh 16 / en 42 on 16:9, zh 12 / en 32 on 9:16), reading speed (zh 9 / en 20 per s), duration 5/6-7 s, gap < 2 frames, zh commas or full stops, rendered width outside the safe area (9:16: x ∈ [60, 900], baseline ≤ y 1440) |
+| Container and streams | `ffprobe -v error -show_streams -show_format -of json`; MP4 box order | codec, profile, pix_fmt, colour tags, size, `r_frame_rate` or `avg_frame_rate` off spec (variable frame rate); audio not AAC 48 kHz stereo; `moov` after `mdat` (*checked*) |
+| Duration | video stream duration and frame count | outside the edit's length ±1 frame; frame count ≠ duration × fps ±1 (*checked*) |
+| Loudness, true peak | `ffmpeg -i f -af ebur128=peak=true -f null -` | outside the profile window: ads `web`, shorts and dramas `web-platform`; LRA above the limit warns (*checked*) |
+| Clipping | `astats` peak level and flat factor | sample peak ≥ -0.1 dBFS or flat factor > 0 (flat-topped waveform) (*checked*) |
+| Black frames | `blackdetect=d=0.1:pix_th=0.10` | black ≥ 0.1 s anywhere except the head fade (0.35 s), the tail fade (0.5 s) and a cut to black marked in the edit (*checked*; no edit marks cuts to black yet) |
+| Silence | `silencedetect=noise=-60dB:d=0.5` | digital silence ≥ 0.5 s overlapping a voiceover or dialogue line's window: a dropped voice (*checked*). Elsewhere outside the head (0.3 s) and tail (0.8 s) fades it warns: the bed is meant to be always on, so silence means a dropped layer, but a supplied track may breathe (*checked*) |
+| Frozen picture | `freezedetect=n=0.003:d=1.5` | warn only: locked-off shots can be still, but a frozen clip from a failed generation reads as a glitch; the end card's push-in is exempt (*checked*) |
+| Subtitles | parse the `.ass`; render width per event (*checked* so far: a subtitle event over every voiced line) | any event breaking `bilingual-subtitles` limits: chars per line (zh 16 / en 42 on 16:9, zh 12 / en 32 on 9:16), reading speed (zh 9 / en 20 per s), duration 5/6-7 s, gap < 2 frames, zh commas or full stops, rendered width outside the safe area (9:16: x ∈ [60, 900], baseline ≤ y 1440) |
 | Overlap | event rectangles | a subtitle, title or closing line overlapping the AI label |
-| Explicit AI label | `.ass` Label events, then the vision model on frames at 0.5 s, 2.5 s and mid end card | “内容由 AI 生成” missing from 0-3 s, missing on the end card (ads) or episode opening (drama), illegible, or on 9:16 placed in the platform's top UI band (y < 380). **Warn** when its right edge passes x = 900 (the code sets a 5 % right margin, x = 1026 on a 1080-wide frame): confirm in each platform's preview that the button column does not cover it |
+| Explicit AI label | `.ass` Label events (*checked*: a Label event over 0-3 s and one of at least 2 s reaching the end), then the vision model on frames at 0.5 s, 2.5 s and mid end card (not automated yet) | “内容由 AI 生成” missing from 0-3 s, missing on the end card (ads) or episode opening (drama), illegible, or on 9:16 placed in the platform UI band (y < 380 or x > 900) |
 | Label size | rendered glyph height / shortest frame side | **warn** below 5%, or on screen under 2 s: the research's reading of GB 45438-2025 (secondhand, **unverified**, research 3.5). The Label style sets the font size to 5% of the short side (54 px at 1080p); measure the rendered glyph height, which runs below the font size, and report it |
-| Implicit metadata | `ffprobe -show_format` tag `AIGC` (JSON) and `comment` | not valid JSON; `Label` ≠ "1"; `ContentProducer` or `ProduceID` empty or not this project; `ContentPropagator` / `PropagateID` keys absent; comment missing 内容由 AI 生成 |
+| Implicit metadata | `ffprobe -show_format` tag `AIGC` (JSON) and `comment` | not valid JSON; `Label` ≠ "1"; `ContentProducer` or `ProduceID` empty or not this deliverable's (`<project>`, `<project>-15s`, `<project>-ep01`); `ContentPropagator` / `PropagateID` keys absent; comment missing 内容由 AI 生成 (*checked*) |
 | Fonts | glyph coverage of every on-screen character | any missing glyph (the cut already fails on this; re-check after copy edits) |
 
 The implicit fields follow the TC260 video metadata guide (`Label`, `ContentProducer`, `ProduceID`, `ContentPropagator`, `PropagateID`; research 3.5, secondary sources). The cut writes the propagator pair empty: the studio produces, the platform propagates. That reading is ours and unverified; flag it in the report, never fill the fields with invented values. Any remux or re-encode after the cut must carry the tags through (`-movflags use_metadata_tags`, `-map_metadata 0`); a step that drops them fails QC. Nobody removes, alters or hides either label (标识办法, research 3.5).
@@ -90,16 +90,21 @@ deliver/<project-id>/
 
 ## qc.json
 
+One entry per deliverable, written by the `qc` craft to `reports/qc.json` (paths relative to the project; values illustrative):
+
 ```json
-{
-  "file": "masters/spark_30s_1920x1080_60p.mp4",
-  "spec": {"width": 1920, "height": 1080, "fps": 60, "seconds": 30.0, "profile": "web"},
-  "measured": {"codec": "h264", "profile": "High", "pix_fmt": "yuv420p", "seconds": 30.0, "frames": 1800, "video_mbps": 18.4,
-               "integrated_lufs": -16.1, "true_peak_dbtp": -1.6, "lra_lu": 6.2, "black": [], "silence": [], "clipped_samples": 0},
-  "labels": {"explicit_opening": true, "explicit_end": true, "label_height_ratio": 0.024, "implicit": {"Label": "1", "ContentProducer": "Cinefoundry", "ProduceID": "spark"}},
-  "results": [{"check": "label_size", "status": "warn", "detail": "2.4% of short side; 5% reading unverified"}],
+[{
+  "label": "15s",
+  "file": "cut/final_15s.mp4",
+  "spec": {"width": 1920, "height": 1080, "fps": 60, "seconds": 15.0, "loudness": {"profile": "web", "integrated": -16, "tolerance": 1, "truePeak": -1.5},
+           "speech": [{"start": 0.45, "end": 2.9}], "ass": "cut/titles_15s.ass", "produceId": "spark-15s", "stillWindows": [{"start": 12.0, "end": 15.0}]},
+  "measured": {"probe": {"video": {"codec": "h264", "profile": "High", "pixFmt": "yuv420p", "rFrameRate": 60, "avgFrameRate": 60, "seconds": 15.0, "frames": 900, "bitrateMbps": 18.4},
+                         "audio": {"codec": "aac", "sampleRate": 48000, "channels": 2}, "tags": {"AIGC": "{...}", "comment": "内容由 AI 生成 · Cinefoundry · spark-15s"}},
+               "faststart": true, "loudness": {"integrated": -16.1, "lra": 6.2, "truePeak": -1.6}, "astats": {"peakDb": -2.3, "flatFactor": 0},
+               "black": [{"start": 0, "end": 0.2}], "silence": [], "freeze": [], "ass": [{"start": 0, "end": 3, "style": "Label", "text": "内容由 AI 生成"}]},
+  "results": [{"check": "loudness", "status": "pass", "detail": "-16.1 LUFS, target -16 ±1 (web)"}, {"check": "frozen_picture", "status": "warn", "detail": "frozen 5.00-7.00 s: a failed generation reads as a glitch"}],
   "verdict": "pass-with-warnings"
-}
+}]
 ```
 
 `verdict` is `pass`, `pass-with-warnings` (each warn needs a named sign-off in `delivery.md`) or `fail`.
