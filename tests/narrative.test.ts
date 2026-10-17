@@ -172,3 +172,32 @@ describe('subtitle editor', () => {
     expect(normalizeSubtitle('等等！别走')).toBe('等等 别走')
   })
 })
+
+import { checkScriptNotes } from '../src/crafts/narrative/writing.js'
+import { sceneRange } from '../src/crafts/narrative/checks.js'
+
+describe('script editor', () => {
+  const page = 'SCENE 1. INT. PERFUME SHOP - MORNING\nlin-xia: Over my dead body.\ngu-yan: Literal. I like that.'
+  const scores = { story: 8, hook: 8, structure: 7, dialogue: 9 }
+  it('approves only when every score reaches the floor, and every note quotes the page', () => {
+    expect(checkScriptNotes({ approve: true, scores, issues: [] }, page)).toEqual([])
+    expect(checkScriptNotes({ approve: true, scores: { ...scores, dialogue: 5 }, issues: [] }, page).join(' ')).toMatch(/every score is 7/)
+    expect(checkScriptNotes({ approve: false, scores: { ...scores, dialogue: 4 }, issues: ['"Literal. I like that." - a non-sequitur after a threat'] }, page)).toEqual([])
+    expect(checkScriptNotes({ approve: false, scores, issues: ['the dialogue is flat'] }, page).join(' ')).toMatch(/quote the exact words/)
+    expect(checkScriptNotes({ approve: true, scores: { story: 8 } as never, issues: [] }, page).join(' ')).toMatch(/"scores" needs/)
+  })
+})
+
+describe('episode shape', () => {
+  it('gives a two-minute episode three to five scenes and keeps a quarter of the shots free of dialogue', () => {
+    expect(sceneRange(120)).toEqual({ min: 3, max: 5 })
+    expect(sceneRange(60)).toEqual({ min: 1, max: 3 })
+    const scene = (n: number, lines: number) => ({ scene: n, heading: 'INT. SHOP - DAY', characters: ['mia', 'leo'], action: 'Mia waits.', lines: Array.from({ length: lines }, (_, i) => ({ speaker: i % 2 ? 'leo' : 'mia', en: 'Not today.', zh: '今天不行' })) })
+    const two = { episode: 1, title: 't', scenes: [scene(1, 8), scene(2, 7)] }
+    expect(checkScreenplay(two, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/write 3 to 5/)
+    const crowded = { episode: 1, title: 't', scenes: [scene(1, 7), scene(2, 7), scene(3, 6)] }
+    expect(checkScreenplay(crowded, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/at most 18/)
+    const good = { episode: 1, title: 't', scenes: [scene(1, 6), scene(2, 6), scene(3, 4)] }
+    expect(checkScreenplay(good, bible, { seconds: 120, ratio: '9:16' })).toEqual([])
+  })
+})

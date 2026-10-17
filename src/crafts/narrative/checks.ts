@@ -113,7 +113,17 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
   // Every line is one shot and every scene needs at least one shot without dialogue (an establishing view, a reaction).
   if (lines + scenes.length > budget) problems.push(`${lines} lines in ${scenes.length} scenes need ${lines + scenes.length} shots (one per line, one more per scene) but ${want.seconds} seconds hold ${budget}: cut lines or merge scenes`)
   if (lines === 0) problems.push('no dialogue: characters speak on screen in this format')
+  // Wall-to-wall dialogue leaves no shot for the look that lands a line: about two thirds of the shots carry lines.
+  const maxLines = Math.round(budget * 0.75)
+  if (lines > maxLines) problems.push(`${lines} lines in ${budget} shots: at most ${maxLines}, so a quarter of the shots are looks, reactions and inserts`)
+  const range = sceneRange(want.seconds)
+  if (scenes.length && (scenes.length < range.min || scenes.length > range.max)) problems.push(`${scenes.length} scene(s) in ${want.seconds} seconds: write ${range.min} to ${range.max}, so the episode has room to set up, turn and end on its cliffhanger`)
   return problems
+}
+
+/** Scenes an episode of this length holds: a two-minute episode three to five, a minute one to three. */
+export function sceneRange(seconds: number): { min: number; max: number } {
+  return { min: seconds >= 90 ? 3 : 1, max: Math.max(2, Math.ceil(seconds / 24)) }
 }
 
 export function checkShots(shots: NarrativeShot[], play: Screenplay, want: { seconds: number }): string[] {

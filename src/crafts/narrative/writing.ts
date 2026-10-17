@@ -112,6 +112,52 @@ export async function englishActions(ctx: NarrativeContext, play: Screenplay): P
   return { ...play, scenes: play.scenes.map((s) => { const a = run.value.actions.find((x) => x.scene === s.scene); return a && !/[㐀-鿿]/.test(a.action) ? { ...s, action: a.action } : s }) }
 }
 
+/** Rounds of script notes before the best draft is kept and reported as an open item. */
+export const SCRIPT_NOTE_ROUNDS = 2
+/** A draft is approved when every craft score reaches this and the editor approves. */
+export const SCRIPT_FLOOR = 7
+const NOTE_KEYS = ['story', 'hook', 'structure', 'dialogue'] as const
+export interface ScriptNotes { approve: boolean; scores: Record<(typeof NOTE_KEYS)[number], number>; issues: string[]; inconclusive?: boolean }
+const lowest = (n: ScriptNotes) => Math.min(...Object.values(n.scores))
+
+/** The script editor's reply: four scores, approval only when every score reaches the floor, every note quoting the page. */
+export function checkScriptNotes(notes: ScriptNotes, source: string): string[] {
+  if (!notes?.scores || NOTE_KEYS.some((k) => typeof notes.scores[k] !== 'number' || notes.scores[k] < 0 || notes.scores[k] > 10)) return [`"scores" needs ${NOTE_KEYS.join(', ')}, each 0-10`]
+  const problems = checkReviewEvidence({ approve: notes.approve, issues: notes.issues }, source)
+  if (notes.approve && NOTE_KEYS.some((k) => notes.scores[k] < SCRIPT_FLOOR)) problems.push(`approve only when every score is ${SCRIPT_FLOOR} or more`)
+  return problems
+}
+
+/** The script editor reads a draft against the bible and the episode plan, on the reviewer model: it did not write it. */
+async function reviewScreenplay(ctx: NarrativeContext, play: Screenplay, plan: SeriesBible['episodes'][number]): Promise<ScriptNotes> {
+  const bible = ctx.bible!
+  const page = play.scenes.map((s) => `SCENE ${s.scene}. ${s.heading}\n${s.action}\n${s.lines.map((l) => `${l.speaker}: ${l.en} [${l.zh}]${l.delivery ? ` (${l.delivery})` : ''}`).join('\n')}`).join('\n\n')
+  const source = `${page}\n${plan.synopsis}\n${plan.hook}\n${plan.cliffhanger}\n${bible.world}`
+  const run = await chatJson<ScriptNotes>(ctx.editor, {
+    system: await ctx.agentPrompt('script editor of a top streaming studio. You did not write this draft', 'screenwriting'), thinking: false, maxTokens: 3000, temperature: 0.2,
+    user: `World: ${bible.world}
+Characters: ${bible.characters.map((c) => `${c.id} (${c.name}, ${c.role}): ${c.arc}`).join(' | ')}
+Episode plan: ${plan.synopsis}
+Hook: ${plan.hook}
+Cliffhanger: ${plan.cliffhanger}
+
+Draft (${ctx.episodeSeconds} seconds, every line one 5-second shot):
+${page}
+
+Score the draft 0-10 as a script editor would before it goes to production:
+- story: the scenes play in the world and sets of the bible, and the plan's events happen, in its order;
+- hook: the first moment is the plan's hook and grips within three seconds;
+- structure: setup, at least one reversal, escalation, and it ends on the plan's cliffhanger; nothing is resolved before it is earned;
+- dialogue: every line answers or turns the one before it, sounds like a real person in a well-made series, and makes sense; no non-sequiturs, stock lines or ping-pong insults; each character sounds like themselves; the subtitles say what the English says.
+Approve only when every score is ${SCRIPT_FLOOR} or more. Every note quotes the exact words it is about, in quotation marks, and says what to change.
+Return JSON only: {"approve": true|false, "scores": {"story": 0, "hook": 0, "structure": 0, "dialogue": 0}, "issues": ["\\"quoted words\\" - what to change"]}`,
+  }, (n) => checkScriptNotes(n, source), 3).catch(() => undefined)
+  const notes: ScriptNotes = run && !run.unresolved.length ? run.value : { approve: false, scores: { story: 0, hook: 0, structure: 0, dialogue: 0 }, issues: ['the script editor gave no usable notes'], inconclusive: true }
+  await ctx.record('screenplay', 'script-editor', ctx.editor, { episode: play.episode, approve: notes.approve, scores: notes.scores, issues: notes.issues })
+  ctx.log(`  script editor: ${notes.approve ? 'approved' : 'notes'} (${Object.entries(notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')})`)
+  return notes
+}
+
 /** Screenplay: one per produced episode, written against the bible; every line fits one shot and carries its subtitle. */
 export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
@@ -135,11 +181,29 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
       (value) => checkScreenplay(value, bible, screenplayWant(ctx)).filter((p) => !p.endsWith(ACTION_IN_CHINESE)),
       6,
     )
-    run.value = await englishActions(ctx, run.value)
     // Subtitles are the subtitle editor's craft, not a reason to throw the screenplay away: punctuation is normalised by
     // rule, and only the lines still too long go to a subtitle editor to tighten.
-    const play = await fitSubtitles(ctx, { ...run.value, episode })
+    const finish = async (value: Screenplay) => fitSubtitles(ctx, { ...(await englishActions(ctx, value)), episode })
+    let play = await finish(run.value)
     failIfHardProblems(`screenplay ${episode}`, checkScreenplay(play, bible, screenplayWant(ctx)), run.attempts)
+    // The script editor, on another model, reads the draft as a studio reads a writer's draft; notes go back at most twice.
+    let notes = await reviewScreenplay(ctx, play, plan)
+    let best = { play, notes }
+    for (let round = 1; !notes.approve && !notes.inconclusive && round <= SCRIPT_NOTE_ROUNDS; round++) {
+      ctx.log(`  script notes (${Object.entries(notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')}): ${notes.issues.join(' | ').slice(0, 200)}`)
+      const redo = await chatJson<Screenplay>(ctx.planner, {
+        system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting']), thinking: false, maxTokens: 5000, temperature: 0.7,
+        user: `Series bible:\n${json(bible)}\n\nEpisode ${episode} plan: "${plan.title}" - ${plan.synopsis}. Hook: ${plan.hook}. Cliffhanger: ${plan.cliffhanger}.\n\nYour draft:\n${json(play)}\n\nThe script editor's notes:\n${notes.issues.map((i) => `- ${i}`).join('\n')}\nRewrite the episode so every note is answered: keep what works, change what the notes name, and keep every rule of the format. Return the screenplay as JSON only, same shape.`,
+      }, (value) => checkScreenplay(value, bible, screenplayWant(ctx)).filter((p) => !p.endsWith(ACTION_IN_CHINESE)), 4).catch(() => undefined)
+      if (!redo) break
+      const next = await finish(redo.value)
+      if (checkScreenplay(next, bible, screenplayWant(ctx)).length) break
+      play = next
+      notes = await reviewScreenplay(ctx, play, plan)
+      if (lowest(notes) > lowest(best.notes) || notes.approve) best = { play, notes }
+    }
+    play = best.play
+    if (!best.notes.approve) ctx.log(`  open item: episode ${episode} screenplay kept without the script editor's approval (${Object.entries(best.notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')})`)
     ctx.plays.push(play)
     await writeFile(join(ctx.dir!, 'story', `ep${String(episode).padStart(2, '0')}.screenplay.json`), json(play))
     await ctx.record('screenplay', 'screenwriter', ctx.planner, { episode, seconds: run.seconds, attempts: run.attempts, scenes: play.scenes.length, lines: play.scenes.reduce((n, s) => n + s.lines.length, 0) })

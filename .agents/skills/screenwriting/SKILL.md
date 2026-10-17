@@ -29,15 +29,16 @@ Dialogue at the level of a well-made American cable drama: people talk past each
 ## Workflow
 
 1. **Beat the episode.** From the synopsis, write for yourself the beats: hook (first three seconds), first reversal (inside 30 s), a turn every 20-30 s, the cliffhanger. Each beat is one moment between two people.
-2. **Budget the shots.** Spend about two thirds of the budget on lines; the rest is establishing, reaction and insert shots with no dialogue. 90 s → about 12 lines; 60 s → about 8; 30 s → about 4. Never reach the ceiling: a scene of wall-to-wall lines has no room for the look that lands it.
-3. **Scenes.** Two to four per episode, in the bible's sets. Number them 1..n in order (*checked*). For each:
+2. **Budget the shots.** Spend about two thirds of the budget on lines; the rest is establishing, reaction and insert shots with no dialogue. 90 s → about 12 lines; 60 s → about 8; 30 s → about 4. Never reach the ceiling: a scene of wall-to-wall lines has no room for the look that lands it. At most three quarters of the shots carry a line (*checked*).
+3. **Scenes.** Three to five in a two-minute episode, one to three in a minute (*checked*: at least three from 90 seconds, at most one per 24 seconds), in the bible's sets - a perfume-shop story is shot in the perfume shop and its lane, not in a café the bible never names. Number them 1..n in order (*checked*). For each:
    - `heading`: `INT.` or `EXT.` (or `INT./EXT.` for a car) + PLACE + ` - ` + TIME, in capitals (*checked* prefix): "INT. NIGHT PHARMACY - 3 AM" is wrong (digits paint into frames downstream); "INT. NIGHT PHARMACY - LATE NIGHT" is right.
    - `characters`: ids from the bible only (*checked*), at most three, everyone who appears even silently.
    - `action` (English, *checked* no Chinese): present tense, what the camera sees, in the order it sees it. Where people are, where the light comes from, the one physical detail that carries the scene (a coat still on, a second cup untouched). Two to four sentences. No camera directions, no inner thoughts ("she feels betrayed" cannot be shot - "she sets the cup down without drinking" can).
 4. **Lines.** For each: `speaker` (an id in this scene's `characters` - *checked* - or `vo` for an unseen narrator or a voice on a phone), `en`, `zh`, `delivery`.
 5. **Place the hook and the cliffhanger.** The episode's first shot or first line is the plan's hook, with no throat-clearing before it. The last line or the last action is the cliffhanger; nothing after it.
 6. **Read it aloud** in English, at speaking pace, alternating voices. Cut every line that only restates the action, every name used as punctuation, every "Well," and "I mean,". Then read the Chinese alone, as if there were no English.
-7. Count (words, characters, lines) and hand the screenplay to `content-compliance`.
+7. Count (words, characters, lines) and hand the draft to the script editor.
+8. **Script notes.** An independent script editor on the reviewer model, who did not write the draft, scores it 0-10 on story (the bible's world and sets, the plan's events in order), hook, structure (setup, a reversal, escalation, the plan's cliffhanger last) and dialogue (every line answers or turns the one before, no non-sequiturs, stock lines or ping-pong insults). It approves only at 7 or more on every score, and every note quotes the draft (*checked*). Notes go back to the screenwriter at most twice; a draft still not approved is kept as the best-scoring one and reported as an open item (*checked*). Then the screenplay goes to `content-compliance`.
 
 ## English dialogue
 

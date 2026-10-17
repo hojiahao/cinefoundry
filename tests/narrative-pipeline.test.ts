@@ -78,6 +78,7 @@ let episodeReview: 'approve' | 'reject' | 'unreachable' = 'approve'
 /** Every chat call, in order: the role it was routed by (or "gate" for an image) and the user prompt. */
 const calls: Array<{ role: string; user: string }> = []
 let developmentCalls = 0
+let editorCalls = 0
 
 let llm: Server
 let comfy: Awaited<ReturnType<typeof startFakeComfy>>
@@ -89,6 +90,12 @@ function reply(role: string, user: string): unknown {
     return episodeReview === 'reject' ? { approve: false, issues: ['scene 1 line 1: "some things never change" - read as mocking the lead in this test'] } : { approve: true, issues: [] }
   }
   if (role === 'screenwriter') return screenplay
+  // The script editor sends the first draft back with a quoted note and approves the rewrite.
+  if (role.startsWith('script editor')) {
+    return ++editorCalls === 1
+      ? { approve: false, scores: { story: 8, hook: 6, structure: 7, dialogue: 7 }, issues: ['"I guess some things never change." - open on the shattering bottle before the first line'] }
+      : { approve: true, scores: { story: 8, hook: 8, structure: 8, dialogue: 8 }, issues: [] }
+  }
   if (role.startsWith('director working with')) return { shots }
   if (role === 'character designer and casting director') return briefs
   if (role === 'sound designer and composer') return sound
@@ -137,7 +144,7 @@ beforeAll(async () => {
   delete process.env.STEPFUN_API_KEY
 })
 afterAll(() => { llm.close(); comfy.close() })
-beforeEach(() => { calls.length = 0; audioCalls.length = 0; logs = []; developmentCalls = 0; episodeReview = 'approve' })
+beforeEach(() => { calls.length = 0; audioCalls.length = 0; logs = []; developmentCalls = 0; editorCalls = 0; episodeReview = 'approve' })
 
 const options = (brief: string, id: string, extra: Partial<NarrativeOptions> = {}): NarrativeOptions => ({ brief, id, resolution: '720p', episodeSeconds: 15, candidates: 1, log: (line) => logs.push(line), ...extra })
 let logs: string[] = []
@@ -159,7 +166,7 @@ describe('micro-drama end to end', () => {
     const dir = projectDir('drama-test')
 
     // Stage order: every agent in production order, each stage recorded done.
-    expect(roles()).toEqual(['showrunner and head writer', 'compliance reviewer. You did not write this series', 'screenwriter', 'compliance reviewer. You did not write this screenplay', 'director working with the director of photography and the script supervisor', 'character designer and casting director', 'gate', 'sound designer and composer'])
+    expect(roles()).toEqual(['showrunner and head writer', 'compliance reviewer. You did not write this series', 'screenwriter', 'script editor of a top streaming studio. You did not write this draft', 'screenwriter', 'script editor of a top streaming studio. You did not write this draft', 'compliance reviewer. You did not write this screenplay', 'director working with the director of photography and the script supervisor', 'character designer and casting director', 'gate', 'sound designer and composer'])
     const order = ['▸ development', '▸ compliance   series premise', '▸ screenplay', '▸ compliance   episode 1', '▸ shots', '▸ cast lin-xia', '▸ pack lin-xia', '▸ voice', '▸ frame 1.1', '▸ clip 1.1', '▸ cut']
     expect(order.map(firstAt).every((index, i, all) => index >= 0 && (i === 0 || index > all[i - 1]!))).toBe(true)
     const project = state('drama-test')
@@ -169,6 +176,10 @@ describe('micro-drama end to end', () => {
     expect(project.stages.casting.note).toBe('2 characters · 2 cast · 0 reused')
 
     // The client's names were enforced: the renamed draft was sent back with the reason, and the bible keeps 林夏.
+    // The script editor's note goes back to the screenwriter, and the rewrite is read again before compliance.
+    expect(calls.filter((c) => c.role.startsWith('script editor'))).toHaveLength(2)
+    const rewrite = calls.filter((c) => c.role === 'screenwriter')[1]
+    expect(rewrite?.user).toContain('open on the shattering bottle')
     const development = calls.filter((c) => c.role === 'showrunner and head writer')
     expect(development).toHaveLength(2)
     expect(development[1]!.user).toContain('the client named a character "林夏"')
@@ -272,7 +283,7 @@ describe('creator short end to end', () => {
     const result = await runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-test'))
     const dir = projectDir('short-test')
 
-    expect(roles()).toEqual(['creator-content writer', 'compliance reviewer. You did not write this series', 'screenwriter', 'compliance reviewer. You did not write this screenplay', 'director working with the director of photography and the script supervisor', 'character designer and casting director', 'gate', 'sound designer and composer', 'packaging editor'])
+    expect(roles()).toEqual(['creator-content writer', 'compliance reviewer. You did not write this series', 'screenwriter', 'script editor of a top streaming studio. You did not write this draft', 'screenwriter', 'script editor of a top streaming studio. You did not write this draft', 'compliance reviewer. You did not write this screenplay', 'director working with the director of photography and the script supervisor', 'character designer and casting director', 'gate', 'sound designer and composer', 'packaging editor'])
     const project = state('short-test')
     expect(project.format).toBe('short')
     expect(Object.keys(project.stages)).toEqual(['development', 'screenplay', 'compliance', 'shots', 'casting', 'frames', 'dialogue', 'clips', 'sound', 'cut', 'packaging'])
