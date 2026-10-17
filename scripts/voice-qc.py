@@ -104,8 +104,13 @@ def main() -> None:
         best = min(passing, key=lambda e: (e['error'], abs(e['seconds'] - median)))
         shutil.copy(best['path'], os.path.join(args.voices, f'{voice_id}.wav'))
         chosen[voice_id] = os.path.basename(best['path'])
-    with open(os.path.join(args.voices, 'qc.json'), 'w', encoding='utf8') as handle:
-        json.dump({'chosen': chosen, 'takes': report}, handle, ensure_ascii=False, indent=2)
+    # A re-run for some voices updates the report instead of replacing the whole library's record.
+    path = os.path.join(args.voices, 'qc.json')
+    previous = json.load(open(path, encoding='utf8')) if os.path.exists(path) else {'chosen': {}, 'takes': {}}
+    previous['chosen'].update(chosen)
+    previous['takes'].update(report)
+    with open(path, 'w', encoding='utf8') as handle:
+        json.dump(previous, handle, ensure_ascii=False, indent=2)
     print(json.dumps({'chosen': sum(1 for c in chosen.values() if c), 'failed': [k for k, c in chosen.items() if not c]}, ensure_ascii=False))
 
 

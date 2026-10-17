@@ -10,7 +10,7 @@
       300
     ],
     "male": [
-      80,
+      65,
       180
     ]
   },
@@ -481,7 +481,7 @@
         "announcer",
         "presenter"
       ],
-      "design": "A young American man about twenty-four with an energetic, athletic, driving voice, breath in the delivery, the voice of a sports drink or sneaker commercial.",
+      "design": "A young American man about twenty-four with an unmistakably male, mid-low chest voice, energetic and driving but never high-pitched, breath in the delivery, the voice of a sports drink or sneaker commercial.",
       "description": "male, about 24, energetic, athletic; sports, sneakers, fitness"
     },
     {
@@ -558,7 +558,7 @@
         "presenter",
         "announcer"
       ],
-      "design": "三十一岁左右的男声，清亮的男高音，口齿清楚，积极明快，像犀利的数码测评或产品讲解主持。",
+      "design": "三十一岁左右的男性嗓音，明确的成年男声，音区中等偏低，声音清亮有穿透力但不尖细，口齿清楚，积极明快，像犀利的数码测评或产品讲解主持。",
       "description": "male, about 31, clear tenor, upbeat; tech reviews, explainers (Mandarin)"
     },
     {
