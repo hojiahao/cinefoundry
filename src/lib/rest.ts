@@ -15,7 +15,7 @@ import { env } from './config.js'
  */
 
 /** Per service: 'awake', 'asleep', or 'none' for a server without sleep mode (asked once). */
-const state = new Map<string, 'awake' | 'asleep' | 'none'>()
+const state = new Map<string, 'awake' | 'asleep' | 'none' | 'retired'>()
 /** The sleep level each service was put to by us: level 2 discards the weights and they must be reloaded after wake_up. */
 const level = new Map<string, 1 | 2>()
 /** The wake in flight per service: every caller that needs the model while it wakes waits for this one wake. */
@@ -56,6 +56,7 @@ export async function ensureAwake(baseUrl: string): Promise<{ wokeSeconds?: numb
   if (!baseUrl.startsWith('http://127.0.0.1') && !baseUrl.startsWith('http://localhost')) return {}
   const known = state.get(baseUrl)
   if (known === 'awake' || known === 'none') return {}
+  if (known === 'retired') throw new Error(`${baseUrl} was released for this run (its weights do not survive a reload); it is restarted at the next run`)
   const inFlight = waking.get(baseUrl)
   if (inFlight) {
     await inFlight
@@ -124,4 +125,21 @@ export async function wakeService(baseUrl: string): Promise<{ wokeSeconds?: numb
 /** Wake the language models a GPU phase put to sleep, underneath whatever runs next (finishing needs neither). */
 export function wakeAll(targets: Array<{ baseUrl: string }>): Promise<unknown> {
   return Promise.all(targets.map((target) => wakeService(target.baseUrl).catch(() => undefined)))
+}
+
+/**
+ * Sleep a model for the rest of this run and refuse to wake it: Nemotron 3.5 Super answers nonsense after a level-2
+ * sleep and weight reload on this vLLM build (measured: "The perfume shop in the rain, where the rain is the perfume
+ * shop."), so a released writers' room is restarted by the next run instead of reloaded.
+ */
+export async function retireService(baseUrl: string): Promise<boolean> {
+  const slept = await sleepService(baseUrl)
+  if (slept) state.set(baseUrl, 'retired')
+  return slept
+}
+
+/** Forget what we recorded about a service (after it was restarted from outside). */
+export function forgetService(baseUrl: string): void {
+  state.delete(baseUrl)
+  level.delete(baseUrl)
 }

@@ -55,9 +55,10 @@ services:
     ports:
       - "127.0.0.1:8001:8000"
 
-  # NVIDIA's vision-language flagship, one model for both the writers and the quality gate (opt-in: --profile super).
+  # NVIDIA's vision-language flagship, the writers' room (opt-in: --profile super, CINEFOUNDRY_WRITER_URL=http://127.0.0.1:8003/v1).
   # Flags follow the model card's DGX Spark recipe (LiLiCorr speculative drafter). It claims most of the pool, so it
-  # runs with sleep mode: the engine sleeps it (weights released) while diffusion models work and wakes it after.
+  # writes while the other models sleep and is put to sleep for the rest of the run before the first picture; its
+  # weights do not survive a level-2 reload on this build, so the next run restarts the container instead.
   nemotron-super:
     <<: *gpu
     profiles: ["super"]

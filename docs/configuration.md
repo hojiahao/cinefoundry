@@ -10,6 +10,9 @@ Cinefoundry is configured by environment variables only. This table is generated
 | `CINEFOUNDRY_PLANNER_URL` | `http://127.0.0.1:8001/v1` | OpenAI-compatible base URL of the planner model that writes briefs, scripts, screenplays and shot lists. |
 | `CINEFOUNDRY_PLANNER_MODEL` | `nemotron-3.5-lightning` | Model name sent to the planner endpoint. |
 | `CINEFOUNDRY_PLANNER_KEY` | `local` | Bearer token sent to the planner endpoint. |
+| `CINEFOUNDRY_WRITER_URL` | unset | OpenAI-compatible base URL of the writers' room model (Nemotron 3.5 Super VL, compose profile `super`). When set, the story of a narrative film - development, screenplay, script notes, compliance, shot list and casting briefs - is written and reviewed on it; unset, on the planner. |
+| `CINEFOUNDRY_WRITER_MODEL` | `nemotron-3.5-super-vl` | Model name sent to the writers' room endpoint. |
+| `CINEFOUNDRY_WRITER_CONTAINER` | `cinefoundry-nemotron-super-1` | Docker container of the writers' room model. A run restarts it when it was left asleep: its weights do not survive a level-2 sleep. |
 | `CINEFOUNDRY_VISION_URL` | `http://127.0.0.1:8002/v1` | OpenAI-compatible base URL of the vision model behind every quality gate. |
 | `CINEFOUNDRY_VISION_MODEL` | `step3-vl-10b` | Model name sent to the vision endpoint. |
 | `CINEFOUNDRY_VISION_KEY` | `local` | Bearer token sent to the vision endpoint. |

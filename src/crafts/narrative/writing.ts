@@ -7,7 +7,8 @@ import { scanBrandWords, scanCopy } from '../../lib/compliance.js'
 import { brandBibleProblems, brandForCopy, brandForStory, brandPresenters } from '../brand.js'
 import { EN_ABSOLUTES } from '../../agent/checks.js'
 import { checkBible, checkScreenplay, checkShots, maxZhChars } from './checks.js'
-import { produced, type NarrativeContext } from './context.js'
+import { produced, writersRoom, type NarrativeContext } from './context.js'
+import { openWritersRoom } from '../../lib/writers-room.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
 const json = (value: unknown) => JSON.stringify(value, null, 2)
@@ -18,13 +19,14 @@ const screenplayWant = (ctx: NarrativeContext) => ({ seconds: ctx.episodeSeconds
 /** Development: the showrunner (or the creator-content writer) writes the bible - logline, world, look, cast, episode plan. */
 export async function developmentStage(ctx: NarrativeContext): Promise<string> {
   const episodes = ctx.options.episodes ?? 1
-  ctx.log(`▸ development  ${ctx.writer.role} · nemotron`)
+  await openWritersRoom(writersRoom(ctx))
+  ctx.log(`▸ development  ${ctx.writer.role} · ${ctx.author.name}`)
   // Under a brand kit: its product, voice and wording frame the story, and its recurring presenters are in the cast.
   if (ctx.brand) ctx.brand.presenters = await brandPresenters(ctx.brand)
   const brandNote = ctx.brand ? `\n\n${brandForStory(ctx.brand, ctx.brand.product, ctx.brand.presenters)}\n` : ''
   const bibleProblems = (value: SeriesBible & { clientNames?: string[] }) => [...checkBible(value, { episodes, request: ctx.request }), ...(ctx.brand ? brandBibleProblems(value, ctx.brand.presenters) : [])]
   const run = await chatJson<SeriesBible & { id?: string; title?: string }>(
-    ctx.planner,
+    ctx.author,
     {
       system: await ctx.agentPrompt(ctx.writer.role, [ctx.writer.skill, 'content-compliance']),
       thinking: false,
@@ -52,7 +54,7 @@ Return JSON only:
   let premise = await reviewPremise(ctx, draft)
   for (let round = 1; !premise.approve && round <= 2; round++) {
     ctx.log(`  premise sent back (${premise.issues.join(' | ').slice(0, 160)})`)
-    const redo = await chatJson<SeriesBible & { id?: string; title?: string; clientNames?: string[] }>(ctx.planner, {
+    const redo = await chatJson<SeriesBible & { id?: string; title?: string; clientNames?: string[] }>(ctx.author, {
       system: await ctx.agentPrompt(ctx.writer.role, [ctx.writer.skill, 'content-compliance']), thinking: false, maxTokens: 5000, temperature: 0.6,
       user: `Your series bible:\n${json(draft)}\n\nThe compliance reviewer did not clear it:\n${premise.issues.map((i) => `- ${i}`).join('\n')}\nKeep the client's story and names; change only what the findings name. Return the corrected bible as JSON only, same shape.`,
     }, bibleProblems, 4)
@@ -69,7 +71,7 @@ Return JSON only:
   ctx.bible = bible
   if (ctx.brand) await ctx.record('development', 'brand-kit', undefined, { brand: ctx.brand.id, version: ctx.brand.version, product: ctx.brand.product.id, presenters: ctx.brand.presenters.map((p) => p.id) })
   await writeFile(join(dir, 'story', 'bible.json'), json(bible))
-  await ctx.record('development', ctx.writer.role, ctx.planner, { seconds: run.seconds, attempts: run.attempts, characters: bible.characters.map((c) => c.id), episodes: bible.episodes.length })
+  await ctx.record('development', ctx.writer.role, ctx.author, { seconds: run.seconds, attempts: run.attempts, characters: bible.characters.map((c) => c.id), episodes: bible.episodes.length })
   return `${bible.characters.length} characters · ${bible.episodes.length} episodes`
 }
 
@@ -87,12 +89,12 @@ export async function fitSubtitles(ctx: NarrativeContext, play: Screenplay): Pro
   const tooLong = long()
   if (!tooLong.length) return fitted
   ctx.log(`  subtitle editor: ${tooLong.length} subtitle(s) over ${max} characters`)
-  const run = await chatJson<{ subtitles: Array<{ scene: number; line: number; zh: string }> }>(ctx.planner, {
+  const run = await chatJson<{ subtitles: Array<{ scene: number; line: number; zh: string }> }>(ctx.author, {
     system: await ctx.agentPrompt('subtitle editor', 'bilingual-subtitles'), thinking: false, maxTokens: 1500, temperature: 0.3,
     user: `Tighten each Chinese subtitle to at most ${max} characters (spaces do not count; no commas or full stops - use a space), keeping what the English line says and how the character says it:\n${tooLong.map((l) => `${l.scene}.${l.line} EN: ${l.en}\n${l.scene}.${l.line} ZH (${[...l.zh.replace(/\s/g, '')].length}): ${l.zh}`).join('\n')}\nReturn JSON only: {"subtitles": [{"scene": 1, "line": 1, "zh": "..."}]}`,
   }, (r) => (Array.isArray(r.subtitles) ? r.subtitles.flatMap((x) => (!x.zh?.trim() ? [`${x.scene}.${x.line} is empty`] : [...normalizeSubtitle(x.zh).replace(/\s/g, '')].length > max ? [`${x.scene}.${x.line} "${x.zh}" is still over ${max} characters`] : [])).concat(tooLong.filter((t) => !r.subtitles.some((x) => x.scene === t.scene && x.line === t.line)).map((t) => `return ${t.scene}.${t.line} too`)) : ['"subtitles" must be an array']), 4).catch(() => undefined)
   if (run) fitted = { ...fitted, scenes: fitted.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const fix = run.value.subtitles.find((x) => x.scene === s.scene && x.line === n + 1); return fix ? { ...l, zh: normalizeSubtitle(fix.zh) } : l }) })) }
-  await ctx.record('screenplay', 'subtitle-editor', ctx.planner, { episode: play.episode, tightened: tooLong.length, left: long().length })
+  await ctx.record('screenplay', 'subtitle-editor', ctx.author, { episode: play.episode, tightened: tooLong.length, left: long().length })
   return fitted
 }
 
@@ -103,11 +105,11 @@ export async function englishActions(ctx: NarrativeContext, play: Screenplay): P
   const chinese = (play.scenes ?? []).filter((s) => /[㐀-鿿]/.test(s.action ?? ''))
   if (!chinese.length) return play
   ctx.log(`  script supervisor: ${chinese.length} scene action(s) into English`)
-  const run = await chatJson<{ actions: Array<{ scene: number; action: string }> }>(ctx.planner, {
+  const run = await chatJson<{ actions: Array<{ scene: number; action: string }> }>(ctx.author, {
     system: await ctx.agentPrompt('script supervisor', 'screenwriting'), thinking: false, maxTokens: 2500, temperature: 0.2,
     user: `Write each scene action in English as picture words: what the camera sees and hears, present tense, no Chinese characters, no dialogue.\n${chinese.map((s) => `${s.scene} (${s.heading}): ${s.action}`).join('\n')}\nReturn JSON only: {"actions": [{"scene": 1, "action": "..."}]}`,
   }, (r) => (Array.isArray(r.actions) ? [...r.actions.flatMap((a) => (!a.action?.trim() || /[㐀-鿿]/.test(a.action) ? [`scene ${a.scene}: English only`] : [])), ...chinese.filter((s) => !r.actions.some((a) => a.scene === s.scene)).map((s) => `return scene ${s.scene} too`)] : ['"actions" must be an array']), 4).catch(() => undefined)
-  await ctx.record('screenplay', 'script-supervisor', ctx.planner, { episode: play.episode, translated: chinese.length, done: Boolean(run && !run.unresolved.length) })
+  await ctx.record('screenplay', 'script-supervisor', ctx.author, { episode: play.episode, translated: chinese.length, done: Boolean(run && !run.unresolved.length) })
   if (!run) return play
   return { ...play, scenes: play.scenes.map((s) => { const a = run.value.actions.find((x) => x.scene === s.scene); return a && !/[㐀-鿿]/.test(a.action) ? { ...s, action: a.action } : s }) }
 }
@@ -164,10 +166,10 @@ export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
   for (const episode of produced(ctx)) {
     const plan = bible.episodes.find((e) => e.episode === episode)!
-    ctx.log(`▸ screenplay   episode ${episode} · screenwriter · nemotron`)
+    ctx.log(`▸ screenplay   episode ${episode} · screenwriter · ${ctx.author.name}`)
     const previous = ctx.plays.at(-1)
     const run = await chatJson<Screenplay>(
-      ctx.planner,
+      ctx.author,
       {
         system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting']),
         thinking: false,
@@ -192,7 +194,7 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
     let best = { play, notes }
     for (let round = 1; !notes.approve && !notes.inconclusive && round <= SCRIPT_NOTE_ROUNDS; round++) {
       ctx.log(`  script notes (${Object.entries(notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')}): ${notes.issues.join(' | ').slice(0, 200)}`)
-      const redo = await chatJson<Screenplay>(ctx.planner, {
+      const redo = await chatJson<Screenplay>(ctx.author, {
         system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting']), thinking: false, maxTokens: 5000, temperature: 0.7,
         user: `Series bible:\n${json(bible)}\n\nEpisode ${episode} plan: "${plan.title}" - ${plan.synopsis}. Hook: ${plan.hook}. Cliffhanger: ${plan.cliffhanger}.\n\nYour draft:\n${json(play)}\n\nThe script editor's notes:\n${notes.issues.map((i) => `- ${i}`).join('\n')}\nRewrite the episode so every note is answered: keep what works, change what the notes name, and keep every rule of the format. Return the screenplay as JSON only, same shape.`,
       }, (value) => checkScreenplay(value, bible, screenplayWant(ctx)).filter((p) => !p.endsWith(ACTION_IN_CHINESE)), 4).catch(() => undefined)
@@ -207,7 +209,7 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
     if (!best.notes.approve) ctx.log(`  open item: episode ${episode} screenplay kept without the script editor's approval (${Object.entries(best.notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')})`)
     ctx.plays.push(play)
     await writeFile(join(ctx.dir!, 'story', `ep${String(episode).padStart(2, '0')}.screenplay.json`), json(play))
-    await ctx.record('screenplay', 'screenwriter', ctx.planner, { episode, seconds: run.seconds, attempts: run.attempts, scenes: play.scenes.length, lines: play.scenes.reduce((n, s) => n + s.lines.length, 0) })
+    await ctx.record('screenplay', 'screenwriter', ctx.author, { episode, seconds: run.seconds, attempts: run.attempts, scenes: play.scenes.length, lines: play.scenes.reduce((n, s) => n + s.lines.length, 0) })
   }
   return `${ctx.plays.length} episode(s)`
 }
@@ -350,7 +352,7 @@ export async function shotsStage(ctx: NarrativeContext): Promise<string> {
       const sceneOnly: Screenplay = { ...play, scenes: [{ ...scene, scene: 1 }] }
       const previous = shots.at(-1)
       const run = await chatJson<{ shots: NarrativeShot[] }>(
-        ctx.planner,
+        ctx.author,
         {
           system, thinking: false, maxTokens: 4000, temperature: 0.4,
           user: `Series look: ${bible.look}. World: ${bible.world}.
@@ -374,7 +376,7 @@ Return JSON only: {"shots": [{"shot": 1, "scene": 1, "framing": "wide|medium|clo
     ctx.shots.set(play.episode, numbered)
     total += numbered.length
     await writeFile(join(ctx.dir!, 'storyboard', `ep${String(play.episode).padStart(2, '0')}.shots.json`), json(numbered))
-    await ctx.record('shots', 'director', ctx.planner, { episode: play.episode, seconds, scenes: play.scenes.length, perScene: counts, shots: numbered.length, dialogue: numbered.filter((s) => s.line !== undefined).length })
+    await ctx.record('shots', 'director', ctx.author, { episode: play.episode, seconds, scenes: play.scenes.length, perScene: counts, shots: numbered.length, dialogue: numbered.filter((s) => s.line !== undefined).length })
   }
   return `${total} shots`
 }

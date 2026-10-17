@@ -13,15 +13,20 @@ export interface ModelEndpoint {
   execution: 'local-dgx-spark' | 'cloud'
 }
 
-export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; editor: ModelEndpoint } {
+export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; editor: ModelEndpoint; author: ModelEndpoint } {
   const planner = plannerEndpoint()
+  // The writers' room: the story is written on the flagship when one is configured, on the planner otherwise.
+  const author: ModelEndpoint = env('CINEFOUNDRY_WRITER_URL')
+    ? { name: 'nemotron-super', baseUrl: env('CINEFOUNDRY_WRITER_URL')!.replace(/\/+$/, ''), model: env('CINEFOUNDRY_WRITER_MODEL')!, apiKey: env('CINEFOUNDRY_PLANNER_KEY')!, execution: 'local-dgx-spark' }
+    : planner
   return {
+    author,
     // Text review goes to StepFun's hosted Step-3.7-Flash when a key is configured. The local 10B vision
     // model always reasons first at ~18 tok/s and cannot finish a text review inside a request timeout,
     // so without a key a separate Nemotron agent reviews instead.
     editor: env('STEPFUN_API_KEY')
       ? { name: 'step-3.7-flash', baseUrl: 'https://api.stepfun.com/v1', model: env('CINEFOUNDRY_EDITOR_MODEL')!, apiKey: env('STEPFUN_API_KEY')!, execution: 'cloud' }
-      : { ...planner, name: 'nemotron-reviewer' },
+      : { ...author, name: author === planner ? 'nemotron-reviewer' : 'nemotron-super-reviewer' },
     planner,
     reviewer: {
       name: 'step3-vl',

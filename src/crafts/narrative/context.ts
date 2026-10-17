@@ -1,4 +1,5 @@
-import type { ComfyClient } from '../../comfy/client.js'
+import type { WritersRoom } from '../../lib/writers-room.js'
+import { ComfyClient } from '../../comfy/client.js'
 import type { ModelEndpoint } from '../../agent/llm.js'
 import type { EngineContext } from '../../engine/pipeline.js'
 import type { EngineOptions } from '../../engine/run.js'
@@ -38,6 +39,8 @@ export interface NarrativeOptions extends EngineOptions {
 export interface NarrativeContext extends EngineContext {
   options: NarrativeOptions
   planner: ModelEndpoint
+  /** The writers' room: development, screenplay, script notes, shot list and casting briefs (the planner when none is configured). */
+  author: ModelEndpoint
   reviewer: ModelEndpoint
   editor: ModelEndpoint
   /** Which writing skill frames the story: series-development for dramas, short-video-scripting for shorts. */
@@ -68,3 +71,14 @@ export interface NarrativeContext extends EngineContext {
 
 export const key = (...parts: number[]) => parts.join(':')
 export const produced = (ctx: NarrativeContext) => (ctx.bible?.episodes ?? []).slice(0, ctx.options.produce ?? ctx.bible?.episodes.length ?? 1).map((e) => e.episode)
+
+/** This run's writers' room: the author works while the planner and the vision reviewer sleep. */
+export function writersRoom(ctx: NarrativeContext): WritersRoom {
+  return {
+    author: ctx.author,
+    others: [ctx.planner, ctx.reviewer],
+    log: ctx.log,
+    record: (detail) => ctx.record('run', 'writers-room', ctx.author, detail),
+    freeDiffusion: async () => { await (ctx.comfy ??= new ComfyClient()).free() },
+  }
+}

@@ -42,9 +42,9 @@ export async function narrativePreflight(options: NarrativeOptions, limits: { ma
 
 export function narrativeContext(options: NarrativeOptions, engine: EngineContext, defaults: { writer: NarrativeContext['writer']; seconds: number; ratio: NarrativeContext['ratio'] }): NarrativeContext {
   if (options.brand && !options.brandKit) throw new Error(`internal: --brand ${options.brand} was not checked in preflight`)
-  const { planner, reviewer, editor } = endpoints()
+  const { planner, reviewer, editor, author } = endpoints()
   return Object.assign(engine, {
-    options, planner, reviewer, editor, writer: defaults.writer,
+    options, planner, author, reviewer, editor, writer: defaults.writer,
     episodeSeconds: options.episodeSeconds ?? defaults.seconds,
     ratio: (options.ratio as NarrativeContext['ratio'] | undefined) ?? defaults.ratio,
     cast: new Map(), sheets: new Map(), voices: new Map(), plays: [], shots: new Map(), frames: new Map(), clips: new Map(), lines: new Map(), sound: new Map(), outputs: new Map(), qaRegenerations: 0,
