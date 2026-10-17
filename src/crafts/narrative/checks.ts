@@ -88,6 +88,8 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
     const at = `scene ${index + 1}`
     if (scene.scene !== index + 1) problems.push('scenes must be numbered 1..n in order')
     if (!/^(INT|EXT|INT\.\/EXT)\./.test(scene.heading ?? '')) problems.push(`${at}: heading must start INT. or EXT. ("INT. CAFÉ - MORNING")`)
+    // Four "scenes" at one table in one afternoon are one scene cut into pieces: a new scene is a new place or time.
+    if (index > 0 && scene.heading?.trim() && scene.heading.trim().toUpperCase() === scenes[index - 1]!.heading?.trim().toUpperCase()) problems.push(`${at}: same place and time as scene ${index} ("${scene.heading}"); that is one scene - merge them, or move this one to another place or time`)
     if (!scene.action?.trim()) problems.push(`${at}: action is empty`)
     else if (CJK.test(scene.action)) problems.push(`${at}: action must be in English (picture words)`)
     for (const id of scene.characters ?? []) if (!ids.has(id)) problems.push(`${at}: unknown character "${id}" (cast them in the bible first)`)
@@ -104,6 +106,9 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
       else {
         if (zhLength(line.zh) > zhMax) problems.push(`${where}: subtitle "${line.zh}" is ${zhLength(line.zh)} characters; at most ${zhMax} on a ${want.ratio} frame`)
         if (/[，。,.]/.test(line.zh)) problems.push(`${where}: Chinese subtitles use a space instead of commas and full stops`)
+        // "我不给地产商做 favor": a subtitle is Chinese; only a name set in capitals (a brand, "AI") stays in Latin letters.
+        const latin = (line.zh.match(/[A-Za-z][A-Za-z'-]*/g) ?? []).filter((w) => w !== w.toUpperCase() || w.length < 2)
+        if (latin.length) problems.push(`${where}: subtitle "${line.zh}" mixes in English ("${latin.join(' ')}"); write it in Chinese`)
       }
       if (want.forbidden) for (const finding of scanBrandWords(`${line.en ?? ''}\n${line.zh ?? ''}`, want.forbidden.words, want.forbidden.brand)) problems.push(`${where}: restricted wording "${finding.text}" (${finding.rule}): ${finding.reason}`)
     })
@@ -113,8 +118,11 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
   // Every line is one shot and every scene needs at least one shot without dialogue (an establishing view, a reaction).
   if (lines + scenes.length > budget) problems.push(`${lines} lines in ${scenes.length} scenes need ${lines + scenes.length} shots (one per line, one more per scene) but ${want.seconds} seconds hold ${budget}: cut lines or merge scenes`)
   if (lines === 0) problems.push('no dialogue: characters speak on screen in this format')
-  // Wall-to-wall dialogue leaves no shot for the look that lands a line: about two thirds of the shots carry lines.
+  // Wall-to-wall dialogue leaves no shot for the look that lands a line, and too little leaves the story unspoken:
+  // between half and three quarters of the shots carry a line.
   const maxLines = Math.round(budget * 0.75)
+  const minLines = Math.round(budget * 0.5)
+  if (lines && lines < minLines) problems.push(`${lines} lines in ${budget} shots: at least ${minLines}, so the episode is carried by its dialogue`)
   if (lines > maxLines) problems.push(`${lines} lines in ${budget} shots: at most ${maxLines}, so a quarter of the shots are looks, reactions and inserts`)
   const range = sceneRange(want.seconds)
   if (scenes.length && (scenes.length < range.min || scenes.length > range.max)) problems.push(`${scenes.length} scene(s) in ${want.seconds} seconds: write ${range.min} to ${range.max}, so the episode has room to set up, turn and end on its cliffhanger`)

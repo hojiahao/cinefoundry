@@ -29,8 +29,8 @@ Dialogue at the level of a well-made American cable drama: people talk past each
 ## Workflow
 
 1. **Beat the episode.** From the synopsis, write for yourself the beats: hook (first three seconds), first reversal (inside 30 s), a turn every 20-30 s, the cliffhanger. Each beat is one moment between two people.
-2. **Budget the shots.** Spend about two thirds of the budget on lines; the rest is establishing, reaction and insert shots with no dialogue. 90 s → about 12 lines; 60 s → about 8; 30 s → about 4. Never reach the ceiling: a scene of wall-to-wall lines has no room for the look that lands it. At most three quarters of the shots carry a line (*checked*).
-3. **Scenes.** Three to five in a two-minute episode, one to three in a minute (*checked*: at least three from 90 seconds, at most one per 24 seconds), in the bible's sets - a perfume-shop story is shot in the perfume shop and its lane, not in a café the bible never names. Number them 1..n in order (*checked*). For each:
+2. **Budget the shots.** Spend about two thirds of the budget on lines; the rest is establishing, reaction and insert shots with no dialogue. 90 s → about 12 lines; 60 s → about 8; 30 s → about 4. Never reach the ceiling: a scene of wall-to-wall lines has no room for the look that lands it. Between half and three quarters of the shots carry a line (*checked*).
+3. **Scenes.** Three to five in a two-minute episode, one to three in a minute (*checked*: at least three from 90 seconds, at most one per 24 seconds), in the bible's sets - a perfume-shop story is shot in the perfume shop and its lane, not in a café the bible never names. A new scene is a new place or time: two scenes in a row under the same heading are one scene cut into pieces and are refused (*checked*). Number them 1..n in order (*checked*). For each:
    - `heading`: `INT.` or `EXT.` (or `INT./EXT.` for a car) + PLACE + ` - ` + TIME, in capitals (*checked* prefix): "INT. NIGHT PHARMACY - 3 AM" is wrong (digits paint into frames downstream); "INT. NIGHT PHARMACY - LATE NIGHT" is right.
    - `characters`: ids from the bible only (*checked*), at most three, everyone who appears even silently.
    - `action` (English, *checked* no Chinese): present tense, what the camera sees, in the order it sees it. Where people are, where the light comes from, the one physical detail that carries the scene (a coat still on, a second cup untouched). Two to four sentences. No camera directions, no inner thoughts ("she feels betrayed" cannot be shot - "she sets the cup down without drinking" can).
@@ -54,6 +54,7 @@ Dialogue at the level of a well-made American cable drama: people talk past each
 
 - **A translation an audience reads, not a gloss.** "Since when?" → "什么时候的事"; not "从什么时候".
 - **At most 16 characters** (*checked*); in a 9:16 frame aim for 12 or fewer, since the vertical line is narrow. Spaces do not count.
+- **Chinese only** (*checked*): no English word in a subtitle ("做 favor" is refused); only a name set in capitals, such as a brand or "AI", stays in Latin letters.
 - **No full stop** at the end (*checked*), and no commas inside: use a space where the voice pauses ("我知道 你别说了"). Keep question marks; use exclamation marks rarely; quotes are full-width “ ”.
 - **Names** as the bible's Chinese name, and only when the English says the name.
 - **Register matches the character**: an older doctor does not speak internet slang; a twenty-something does not speak 书面语.

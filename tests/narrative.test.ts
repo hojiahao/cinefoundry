@@ -197,7 +197,15 @@ describe('episode shape', () => {
     expect(checkScreenplay(two, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/write 3 to 5/)
     const crowded = { episode: 1, title: 't', scenes: [scene(1, 7), scene(2, 7), scene(3, 6)] }
     expect(checkScreenplay(crowded, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/at most 18/)
-    const good = { episode: 1, title: 't', scenes: [scene(1, 6), scene(2, 6), scene(3, 4)] }
+    const sparse = { episode: 1, title: 't', scenes: [scene(1, 3), scene(2, 3), scene(3, 2)] }
+    expect(checkScreenplay(sparse, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/at least 12/)
+    const split = { episode: 1, title: 't', scenes: [scene(1, 6), scene(2, 6), { ...scene(3, 4), heading: 'EXT. LANE - NIGHT' }] }
+    expect(checkScreenplay(split, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/scene 2: same place and time as scene 1/)
+    const mixed = { episode: 1, title: 't', scenes: [{ ...scene(1, 1), lines: [{ speaker: 'mia', en: 'I do not do favors.', zh: '我不给地产商做 favor' }, { speaker: 'leo', en: 'Ask the AI.', zh: '问问 AI' }] }] }
+    const mixedProblems = checkScreenplay(mixed, bible, { seconds: 15, ratio: '9:16' }).join(' ')
+    expect(mixedProblems).toMatch(/mixes in English \("favor"\)/)
+    expect(mixedProblems).not.toMatch(/"AI"/)
+    const good = { episode: 1, title: 't', scenes: [scene(1, 6), { ...scene(2, 6), heading: 'EXT. LANE - DUSK' }, scene(3, 4)] }
     expect(checkScreenplay(good, bible, { seconds: 120, ratio: '9:16' })).toEqual([])
   })
 })
