@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
  * docs/configuration.md is generated from this table (`npm run docs:config`) and a test keeps the two in step.
  */
 
-export type SettingGroup = 'Local services' | 'Cloud routes' | 'Paths' | 'Generation models' | 'Voice and audio' | 'Scheduling and memory' | 'Quality' | 'Studio'
+export type SettingGroup = 'Local services' | 'Cloud routes' | 'Paths' | 'Generation models' | 'Voice and audio' | 'Scheduling and memory' | 'Quality' | 'Install' | 'Studio'
 
 export interface Setting {
   readonly name: string
@@ -80,6 +80,16 @@ export const SETTINGS = [
   { name: 'CINEFOUNDRY_EXEC_TIMEOUT_MS', group: 'Scheduling and memory', default: String(45 * 60 * 1000), meaning: 'Longest any child process (ffmpeg, a container) may run before it is killed. Read once at start-up.' },
   // Quality
   { name: 'CINEFOUNDRY_CRAFT_FLOOR', group: 'Quality', default: '6', meaning: 'Lowest craft rating (light, composition, realism; 0-10) a gated frame may have. A value that is not a number keeps 6. Read once at start-up.' },
+  // Install (scripts/install.sh, cinefoundry setup, cinefoundry doctor)
+  { name: 'CINEFOUNDRY_MODEL_MANIFEST', group: 'Install', default: '<package>/deploy/models.json', fallback: () => join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', 'deploy', 'models.json'), meaning: 'Model manifest the installer downloads and verifies (every file pinned to a revision and identified by sha256 or git blob id).' },
+  { name: 'HF_ENDPOINT', group: 'Install', default: 'https://huggingface.co', meaning: 'Hugging Face endpoint or mirror the weights are downloaded from, e.g. `https://hf-mirror.com`.' },
+  { name: 'HF_TOKEN', group: 'Install', meaning: 'Hugging Face token for the gated LTX-2.5 repository; unset, the token file under HF_HOME, $SPARK_MODEL_DIR/hf or ~/.cache/huggingface is used if present. Sent for gated files only.' },
+  { name: 'HF_HOME', group: 'Install', meaning: 'Hugging Face home whose `token` file is read when HF_TOKEN is unset.' },
+  { name: 'CINEFOUNDRY_PROXY', group: 'Install', meaning: 'Proxy URL for every installer download, or `none` to ignore a proxy set in the environment; unset, curl and aria2c use http(s)_proxy.' },
+  { name: 'CINEFOUNDRY_REGISTRY_MIRRORS', group: 'Install', default: 'docker.m.daocloud.io', meaning: 'Comma-separated registry mirrors tried, in order, when the vLLM image cannot be pulled from Docker Hub; the pulled image is re-tagged to its canonical name.' },
+  { name: 'CINEFOUNDRY_GITHUB_MIRROR', group: 'Install', meaning: 'Prefix put in front of GitHub URLs (source checkouts, aria2c), e.g. `https://ghfast.top/`.' },
+  { name: 'PIP_INDEX_URL', group: 'Install', meaning: 'Python package index written to a new deploy/spark/spark.env for the image builds; unset, the example\'s value.' },
+  { name: 'SPARK_REQUIRED_FREE_GB', group: 'Install', default: '95', meaning: 'Unified memory (GB) that must be available to start the stack; also read by scripts/spark-up.sh.' },
   // Studio
   { name: 'CINEFOUNDRY_STUDIO_TOKEN', group: 'Studio', meaning: 'When set, starting a job from the studio requires this value in the `x-cinefoundry-token` header.' },
 ] as const satisfies readonly Setting[]

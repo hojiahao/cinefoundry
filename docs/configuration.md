@@ -86,6 +86,20 @@ Cinefoundry is configured by environment variables only. This table is generated
 |---|---|---|
 | `CINEFOUNDRY_CRAFT_FLOOR` | `6` | Lowest craft rating (light, composition, realism; 0-10) a gated frame may have. A value that is not a number keeps 6. Read once at start-up. |
 
+## Install
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `CINEFOUNDRY_MODEL_MANIFEST` | `<package>/deploy/models.json` | Model manifest the installer downloads and verifies (every file pinned to a revision and identified by sha256 or git blob id). |
+| `HF_ENDPOINT` | `https://huggingface.co` | Hugging Face endpoint or mirror the weights are downloaded from, e.g. `https://hf-mirror.com`. |
+| `HF_TOKEN` | unset | Hugging Face token for the gated LTX-2.5 repository; unset, the token file under HF_HOME, $SPARK_MODEL_DIR/hf or ~/.cache/huggingface is used if present. Sent for gated files only. |
+| `HF_HOME` | unset | Hugging Face home whose `token` file is read when HF_TOKEN is unset. |
+| `CINEFOUNDRY_PROXY` | unset | Proxy URL for every installer download, or `none` to ignore a proxy set in the environment; unset, curl and aria2c use http(s)_proxy. |
+| `CINEFOUNDRY_REGISTRY_MIRRORS` | `docker.m.daocloud.io` | Comma-separated registry mirrors tried, in order, when the vLLM image cannot be pulled from Docker Hub; the pulled image is re-tagged to its canonical name. |
+| `CINEFOUNDRY_GITHUB_MIRROR` | unset | Prefix put in front of GitHub URLs (source checkouts, aria2c), e.g. `https://ghfast.top/`. |
+| `PIP_INDEX_URL` | unset | Python package index written to a new deploy/spark/spark.env for the image builds; unset, the example's value. |
+| `SPARK_REQUIRED_FREE_GB` | `95` | Unified memory (GB) that must be available to start the stack; also read by scripts/spark-up.sh. |
+
 ## Studio
 
 | Variable | Default | Meaning |

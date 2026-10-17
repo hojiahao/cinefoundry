@@ -11,9 +11,9 @@ export interface ExecResult {
 /** No child runs forever: a hung ffmpeg or a stuck container used to hang the harness for good. */
 const DEFAULT_TIMEOUT_MS = Number(env('CINEFOUNDRY_EXEC_TIMEOUT_MS')) || 45 * 60 * 1000
 
-export function exec(command: string, args: string[], options: { allowFailure?: boolean; timeoutMs?: number } = {}): Promise<ExecResult> {
+export function exec(command: string, args: string[], options: { allowFailure?: boolean; timeoutMs?: number; env?: NodeJS.ProcessEnv; cwd?: string } = {}): Promise<ExecResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'], env: options.env ?? process.env, cwd: options.cwd })
     const timer = setTimeout(() => {
       child.kill('SIGKILL')
       reject(new Error(`${command} did not finish within ${Math.round((options.timeoutMs ?? DEFAULT_TIMEOUT_MS) / 1000)} s and was stopped`))

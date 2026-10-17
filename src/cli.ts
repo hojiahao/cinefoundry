@@ -28,7 +28,9 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
   cinefoundry qa --frame <img> [--ref img ...] [--expect text] [--project id --shot n]
   cinefoundry cut --project <id> [--audio file] [--silent] [--end-still img] re-run end card, titles, sound and grade
   cinefoundry mem <status|plan|free> [--need name=GB ...]
-  cinefoundry doctor
+  cinefoundry setup [--check | --dry-run] [--models-only] [--no-start] [--formats ad,short,drama] [--with extra,...]   (scripts/install.sh runs this)
+  cinefoundry setup manifest [--refresh]                         compare deploy/models.json with the Hub, or rebuild it
+  cinefoundry doctor [--verify]
   cinefoundry studio [--port 3090] [--host 127.0.0.1]
 `
 
