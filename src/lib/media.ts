@@ -21,7 +21,7 @@ const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: 
 }
 export const VIDEO_SEGMENT_SECONDS = 5
 /** What the video models drift into on their own; industry anchors extend it (src/agent/checks.ts). */
-export const VIDEO_NEGATIVE = 'blurry, overexposed, static frame, warped product, morphing label, changing text, subtitles, watermark, extra fingers, deformed hands, jitter, low quality'
+export const VIDEO_NEGATIVE = 'blurry, overexposed, static frame, warped product, morphing label, changing text, subtitles, watermark, extra fingers, deformed hands, distorted face, jitter, flicker, sudden camera shake, fast erratic motion, morphing, melting, CGI look, plastic texture, oversaturated, HDR glow, low quality'
 
 const VIDEO_SIZES: Record<string, [number, number]> = {
   '480p/16:9': [832, 480],

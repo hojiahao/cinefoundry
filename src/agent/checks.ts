@@ -351,11 +351,20 @@ const INDUSTRY_ANCHOR: Record<Industry, string> = {
   // "Cool rim light" turned a gold DGX Spark blue: the image and video models read cool as blue and spread it over the whole metal body.
   computing: 'Premium computer commercial photography: dark studio, soft warm golden key light and rim light along the edges, at most a faint green accent far in the background, reflective dark tabletop, shallow depth of field so any small printed legends fall softly out of focus, no blue or cyan light, no neon, no rainbow lighting',
   electronics: ELECTRONICS_ANCHOR,
-  drink: 'Beverage commercial photography: backlit, crisp condensation, clean highlights, shallow depth of field',
-  skincare: 'Skincare commercial photography: soft diffused light, clean pale surfaces, gentle highlights, shallow depth of field',
-  food: 'Food commercial photography: warm directional light, appetising texture, shallow depth of field',
-  general: 'Commercial product photography: controlled studio light, clean composition, shallow depth of field',
+  drink: 'High-end beverage commercial cinematography: strong backlight and a hard edge light carving the silhouette, crisp condensation beads with tiny specular highlights, liquid glowing where the light passes through, deep controlled shadows, clean gradient backdrop, shallow depth of field with smooth round bokeh',
+  skincare: 'Luxury skincare commercial cinematography: large soft wrap-around key light, gentle highlight roll-off along the jar, pale stone, glass and silk surfaces, rich creamy texture detail, airy low-contrast palette, shallow depth of field',
+  food: 'Premium food commercial cinematography: warm low side light raking across the texture, backlit steam, rich true-to-life colour, appetising micro-detail, dark natural surface, shallow depth of field',
+  general: 'Premium lifestyle commercial cinematography: motivated practical light such as a window or a lamp, subtle warm and cool contrast, layered depth with a soft out-of-focus foreground, shallow depth of field',
 }
+
+/**
+ * What separates a top commercial from generated art, appended to every frame: real materials, real light, no CGI sheen.
+ * Words only - the image model paints numbers and lens specs into the picture.
+ */
+const REALISM = 'Photorealistic, shot like a top-tier commercial: real materials with fine micro-detail and natural imperfections, physically accurate reflections and refraction, natural light falloff, deep clean blacks, fine film grain, balanced composition with calm negative space in the upper third. Not CGI, no plastic sheen, no oversaturation, no HDR glow'
+/** For shots with a person: what makes a face read as photographed, not generated. */
+const PEOPLE = 'The person looks real: natural skin texture with pores, relaxed candid expression, unposed natural body language, no beauty retouching'
+const HAS_PERSON = /\b(person|people|man|woman|girl|boy|student|worker|developer|model|face|hand|hands|holding|drinking|sipping|wearing)\b/i
 
 const NO_TEXT = 'No captions, no subtitles, no slogans, no watermark, no numbers and no lettering anywhere except the label printed on the product itself'
 
@@ -389,8 +398,10 @@ const VIDEO_NEGATIVE_EXTRA: Record<Industry, string> = {
 }
 export const composeVideoNegative = (base: string, industry: Industry = 'general') => `${base}, ${VIDEO_NEGATIVE_EXTRA[industry]}`
 
+/** Camera and physics that read as a real crew's move, appended to every clip. */
+const CINEMATIC_MOTION = 'Cinematic, weighty camera motion at a slow constant speed with smooth start and stop; natural physics and real light; every surface keeps its shape'
 export function composeVideoPrompt(shot: Shot, industry: Industry = 'general'): string {
-  return `${shot.video_prompt.trim().replace(/[.。]$/, '')}. ${VIDEO_ANCHOR[industry]}`
+  return `${shot.video_prompt.trim().replace(/[.。]$/, '')}. ${VIDEO_ANCHOR[industry]}. ${CINEMATIC_MOTION}`
 }
 
 /**
@@ -404,5 +415,5 @@ export function composeImagePrompt(shot: Shot, storyboard: Storyboard, withRefer
   const product = withReference
     ? 'Image 1 is the product: keep its shape, proportions, colours, material and label exactly as in image 1'
     : `The product: ${storyboard.product.trim().replace(/[.。]$/, '')}`
-  return `${scene}. ${product}. ${NO_TEXT}. ${INDUSTRY_ANCHOR[industry]}. ${sanitizeStyle(storyboard.style)}`
+  return `${scene}. ${product}. ${NO_TEXT}. ${INDUSTRY_ANCHOR[industry]}. ${HAS_PERSON.test(scene) ? `${PEOPLE}. ` : ''}${REALISM}. ${sanitizeStyle(storyboard.style)}`
 }
