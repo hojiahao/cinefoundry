@@ -79,10 +79,10 @@ beforeAll(async () => {
 })
 afterAll(() => { llm.close(); comfy.close() })
 
-describe('CineLoom Harness', () => {
+describe('Spotfoundry Harness', () => {
   it('takes a brief to a finished film, rewriting a bad script and regenerating a rejected frame', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'cineloom-harness-'))
-    Object.assign(process.env, { CINELOOM_PROJECTS: projects, COMFYUI_URL: comfy.url, CINELOOM_PLANNER_URL: llmUrl, CINELOOM_VISION_URL: llmUrl })
+    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-harness-'))
+    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects, COMFYUI_URL: comfy.url, SPOTFOUNDRY_PLANNER_URL: llmUrl, SPOTFOUNDRY_VISION_URL: llmUrl })
     delete process.env.STEPFUN_API_KEY
     const { runHarness } = await import('../src/agent/harness.js')
     const log: string[] = []
@@ -122,8 +122,8 @@ describe('CineLoom Harness', () => {
   })
 
   it('uses a supplied product photo as the hero still instead of generating one', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'cineloom-photo-'))
-    Object.assign(process.env, { CINELOOM_PROJECTS: projects })
+    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-photo-'))
+    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects })
     const photo = join(projects, 'photo.jpg')
     execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gold:s=2000x1500', '-frames:v', '1', photo])
     const { runHarness } = await import('../src/agent/harness.js')
@@ -162,8 +162,8 @@ describe('CineLoom Harness', () => {
   })
 
   it('takes the brand lettering printed on the photo over the intake agent\'s', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'cineloom-lettering-'))
-    Object.assign(process.env, { CINELOOM_PROJECTS: projects })
+    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-lettering-'))
+    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects })
     const photo = join(projects, 'photo.jpg')
     execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gold:s=800x600', '-frames:v', '1', photo])
     const { runHarness } = await import('../src/agent/harness.js')
@@ -178,8 +178,8 @@ describe('CineLoom Harness', () => {
   })
 
   it('carries on without the judge when it cannot be reached, instead of rewriting the copy', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'cineloom-jev-'))
-    Object.assign(process.env, { CINELOOM_PROJECTS: projects, TYPESAFE_API_KEY: 'test', TYPESAFE_ENDPOINT: `${llmUrl}/jev` })
+    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-jev-'))
+    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects, TYPESAFE_API_KEY: 'test', TYPESAFE_ENDPOINT: `${llmUrl}/jev` })
     const { runHarness } = await import('../src/agent/harness.js')
     scriptCalls = 1
     try {
@@ -195,8 +195,8 @@ describe('CineLoom Harness', () => {
   })
 
   it('marks the stage that was running as failed when a run stops', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'cineloom-failed-'))
-    Object.assign(process.env, { CINELOOM_PROJECTS: projects })
+    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-failed-'))
+    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects })
     const { runHarness } = await import('../src/agent/harness.js')
     storyboardBroken = true
     try {

@@ -4,13 +4,13 @@
     "question": "我上传了一条竞品广告 ref.mp4，照这个节奏给我的产品做一条。",
     "expected_skill": "ad-reference-breakdown",
     "expected_script": null,
-    "ground_truth": "The agent runs `cineloom shots` to cut the video and export keyframes, describes keyframes with the local vision model in batches of at most 12, derives pacing numbers from shots.json rather than from the model, maps every shot to a storyboard slot keeping duration, framing and camera move, and states that the reference brand's logo, slogan and talent likeness are not carried over."
+    "ground_truth": "The agent runs `spotfoundry shots` to cut the video and export keyframes, describes keyframes with the local vision model in batches of at most 12, derives pacing numbers from shots.json rather than from the model, maps every shot to a storyboard slot keeping duration, framing and camera move, and states that the reference brand's logo, slogan and talent likeness are not carried over."
   },
   {
     "id": "ad-reference-breakdown-eval-002-one-shot-result",
     "question": "拉片结果只有 1 个镜头，但视频明显剪了很多刀。",
     "expected_skill": "ad-reference-breakdown",
     "expected_script": null,
-    "ground_truth": "The agent identifies the threshold as too high and reruns `cineloom shots` with a lower --threshold instead of proceeding with one shot."
+    "ground_truth": "The agent identifies the threshold as too high and reruns `spotfoundry shots` with a lower --threshold instead of proceeding with one shot."
   }
 ]

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Record an agent (Claude Code) producing an ad through the cineloom-ad-film skill, for the demo video.
-# The session runs in tmux, may use only the Skill tool, file reading and CineLoom's own commands
+# Record an agent (Claude Code) producing an ad through the spotfoundry-ad-film skill, for the demo video.
+# The session runs in tmux, may use only the Skill tool, file reading and Spotfoundry's own commands
 # (dontAsk mode: anything else is refused without a prompt), and its terminal is rendered to an image
 # every few seconds until the film is finished and the agent has reported.
 #   scripts/record-agent.sh "<request in plain words>" [out-dir]
 set -uo pipefail
 cd "$(dirname "$0")/.."
 REQUEST="$1"
-OUT="${2:-$HOME/cineloom-demo/agent-rec}"
-SESSION=cineloom-agent
+OUT="${2:-$HOME/spotfoundry-demo/agent-rec}"
+SESSION=spotfoundry-agent
 COLS=112; ROWS=34
 rm -rf "$OUT"; mkdir -p "$OUT/ansi" "$OUT/frames"
 tmux kill-session -t $SESSION 2>/dev/null
@@ -28,9 +28,9 @@ from rich.text import Text
 src, dst, cols = sys.argv[1], sys.argv[2], int(sys.argv[3])
 console = Console(record=True, width=cols, file=open('/dev/null', 'w'))
 console.print(Text.from_ansi(open(src, encoding='utf8', errors='replace').read()), end='')
-console.save_svg(dst, title='Claude Code · ~/cineloom')
+console.save_svg(dst, title='Claude Code · ~/spotfoundry')
 PY
-  timeout 60 firefox --headless --profile "$HOME/cineloom-demo/ffprofile" --screenshot "$OUT/frames/$id.png" \
+  timeout 60 firefox --headless --profile "$HOME/spotfoundry-demo/ffprofile" --screenshot "$OUT/frames/$id.png" \
     --window-size=1600,1000 "file://$OUT/ansi/$id.svg" >/dev/null 2>&1
 }
 

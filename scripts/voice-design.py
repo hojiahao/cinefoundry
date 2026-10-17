@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Design fictional narrator voices with Qwen3-TTS VoiceDesign, inside the cineloom/qwen-tts container.
+"""Design fictional narrator voices with Qwen3-TTS VoiceDesign, inside the spotfoundry/qwen-tts container.
 
 Each voice is generated from a written description: it is nobody's recording. The resulting clip is
 the reference that Step-Audio-EditX clones for every voiceover line, so a whole film keeps one voice.

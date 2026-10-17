@@ -60,7 +60,7 @@ const frameSize = (resolution: string, ratio: string) => videoSize(resolution, r
 const MAX_QA_REGENERATIONS = 2
 
 /**
- * CineLoom Harness: the runtime that hosts the director and its sub-agents. Eight stages in
+ * Spotfoundry Harness: the runtime that hosts the director and its sub-agents. Eight stages in
  * a fixed order, each handed to an agent that works under one skill. Code owns the order and
  * the acceptance checks; models own the judgement.
  */
@@ -76,7 +76,7 @@ export async function runHarness(options: HarnessOptions): Promise<HarnessResult
 /**
  * One GPU, one film at a time, enforced here rather than left to whoever starts the run: a second run
  * makes both slow and can fail a model load, and agents asked to check first with pgrep skipped it
- * (eval/skill-bench, cineloom-ad-film: 32 of 32 plans). A lock whose process is gone is stale and is taken over.
+ * (eval/skill-bench, spotfoundry-ad-film: 32 of 32 plans). A lock whose process is gone is stale and is taken over.
  */
 async function takeRunLock(brief: string): Promise<() => Promise<void>> {
   const lock = join(projectsRoot(), '.harness.lock')
@@ -169,6 +169,7 @@ Return JSON only:
     if (problems.length) log(`  tagline "${tagline}" cannot be typeset (${problems[0]}); the end card shows the message instead`)
     else brief.tagline = tagline
   }
+  if (brief.appearance) brief.appearance = faithfulLabel(brief.appearance, options.brief, brief.brandText)
   if (options.proof?.trim()) brief.proof = options.proof.trim()
   rejectedAttempts.brief = briefRun.rejected.length
   await createProject({ id: brief.id, title: brief.title, brief: options.brief, ratio: brief.ratio, durationSeconds: brief.durationSeconds })
@@ -267,6 +268,8 @@ Return JSON only: {"description": "one to three English sentences: overall shape
   failIfHardProblems('script', checkScript(scriptRun.value, brief), scriptRun.attempts)
   if (scriptRun.unresolved.length) log(`  script accepted with ${scriptRun.unresolved.length} unresolved semantic finding(s) after ${scriptRun.attempts} attempts`)
   let script = scriptRun.value
+  // The copywriter's draft, kept so a report (or a demo video) can show what compliance changed.
+  await writeFile(join(dir, 'script', 'script.draft.json'), JSON.stringify(script, null, 2))
   rejectedAttempts.script = scriptRun.rejected.length
   await record('script', 'copywriter', planner, { seconds: scriptRun.seconds, attempts: scriptRun.attempts, rejected: scriptRun.rejected })
   await setStage(brief.id, 'script', 'done', `${script.beats.length} beats · ${script.structure}`)
@@ -294,20 +297,70 @@ Line lengths are checked elsewhere; do not count characters. Return JSON only:
     log(`  reviewer unavailable (${error.message.slice(0, 120)}); continuing with the deterministic scan only`)
     return undefined
   })
-  if (reviewRun?.value.revised?.length) {
-    const revisedBeats = script.beats.map((beat) => {
-      const change = reviewRun.value.revised!.find((item) => item.beat === beat.beat)
-      return change ? { ...beat, vo: change.vo ?? beat.vo, text: change.text ?? beat.text } : beat
-    })
-    // The reviewer's edits are accepted only if they still pass every script check.
-    if (checkScript({ ...script, beats: revisedBeats }, brief).length === 0) script = { ...script, beats: revisedBeats }
+  // A flagged beat needs a replacement line: the earphone review flagged "一键开启全网降噪" as an unprovable absolute
+  // claim but revised only another beat, and the flagged line went into the film unchanged. Ask once more for the
+  // flagged beats it left alone.
+  const revised = [...(reviewRun?.value.revised ?? [])]
+  const flagged = reviewRun && !reviewRun.value.approve ? flaggedBeats(reviewRun.value.issues ?? [], script.beats.length) : []
+  const missing = flagged.filter((beat) => !revised.some((item) => item.beat === beat))
+  if (missing.length) {
+    const followUp = await chatJson<{ revised: Array<{ beat: number; vo: string; text: string }> }>(
+      editor,
+      {
+        system: await agentPrompt('compliance reviewer and Chinese copy editor. You did not write this script', 'ad-compliance-review'),
+        thinking: false,
+        maxTokens: 1500,
+        temperature: 0.2,
+        user: `You flagged these lines but gave no replacement:\n${missing.map((beat) => { const line = script.beats.find((b) => b.beat === beat)!; return `Beat ${beat} VO: ${line.vo}\nBeat ${beat} text: ${line.text}\nIssue: ${(reviewRun!.value.issues ?? []).filter((issue) => flaggedBeats([issue], script.beats.length).includes(beat)).join(' ')}` }).join('\n')}
+Proof points the brand can substantiate: ${brief.proof ?? 'none supplied'}.
+Rewrite each line so the issue is gone, keeping its meaning, rhythm and length. Return JSON only: {"revised": [{"beat": 2, "vo": "...", "text": "..."}]}`,
+      },
+      (reply) => (Array.isArray(reply.revised) && missing.every((beat) => reply.revised.some((item) => item.beat === beat)) ? [] : [`return a revised line for every beat in ${missing.join(', ')}`]),
+      2,
+    ).catch(() => undefined)
+    for (const item of followUp?.value.revised ?? []) if (missing.includes(item.beat)) revised.push(item)
   }
+  const merge = (items: Array<{ beat: number; vo: string; text: string }>) => script.beats.map((beat) => {
+    const change = items.find((item) => item.beat === beat.beat)
+    return change ? { ...beat, vo: change.vo ?? beat.vo, text: change.text ?? beat.text } : beat
+  })
+  if (revised.length) {
+    // The reviewer's edits are accepted only if they still pass every script check. A rewrite that fails them goes
+    // back to the reviewer with the failures: "脆爽一夏" was too short for a voiceover, so "补脑增强免疫力" stood.
+    let problems = checkScript({ ...script, beats: merge(revised) }, brief)
+    if (problems.length) {
+      const fix = await chatJson<{ revised: Array<{ beat: number; vo: string; text: string }> }>(
+        editor,
+        {
+          system: await agentPrompt('compliance reviewer and Chinese copy editor. You did not write this script', 'ad-compliance-review'),
+          thinking: false,
+          maxTokens: 1500,
+          temperature: 0.3,
+          user: `Your rewrites:\n${revised.map((item) => `Beat ${item.beat} VO: ${item.vo}\nBeat ${item.beat} text: ${item.text}`).join('\n')}
+They fail the script checks: ${problems.join('; ')}
+Original lines and your reasons: ${(reviewRun?.value.issues ?? []).join(' ')}
+Proof points the brand can substantiate: ${brief.proof ?? 'none supplied'}.
+Rewrite the same beats so the compliance issue stays fixed AND every check passes. Return JSON only: {"revised": [{"beat": 1, "vo": "...", "text": "..."}]}`,
+        },
+        (reply) => (Array.isArray(reply.revised) ? checkScript({ ...script, beats: merge([...revised.filter((r) => !reply.revised.some((x) => x.beat === r.beat)), ...reply.revised]) }, brief) : ['"revised" must be an array']),
+        3,
+      ).catch(() => undefined)
+      if (fix && Array.isArray(fix.value.revised)) {
+        const next = [...revised.filter((r) => !fix.value.revised.some((x) => x.beat === r.beat)), ...fix.value.revised]
+        if (checkScript({ ...script, beats: merge(next) }, brief).length === 0) { revised.splice(0, revised.length, ...next); problems = [] }
+      }
+    }
+    if (problems.length === 0) script = { ...script, beats: merge(revised) }
+    else log(`  reviewer rewrites still fail the script checks (${problems[0]}); the copywriter's lines stand and the scan decides`)
+  }
+  const unrevised = flagged.filter((beat) => !revised.some((item) => item.beat === beat))
+  if (unrevised.length) log(`  open item: the reviewer flagged beat ${unrevised.join(', ')} but no compliant rewrite came back; check those lines before release`)
   const copy = script.beats.map((beat) => `${beat.vo}\n${beat.text}`).join('\n')
   const findings = scanCopy(copy, brief.category)
   await writeFile(join(dir, 'script', 'script.json'), JSON.stringify(script, null, 2))
   await writeFile(join(dir, 'script', 'copy.txt'), copy)
   await writeFile(join(dir, 'reports', 'compliance.json'), JSON.stringify({ scan: findings, reviewer: reviewRun?.value ?? null }, null, 2))
-  await record('compliance', 'reviewer', editor, { seconds: reviewRun?.seconds ?? 0, approve: reviewRun?.value.approve, issues: reviewRun?.value.issues, scanFindings: findings.length })
+  await record('compliance', 'reviewer', editor, { seconds: reviewRun?.seconds ?? 0, approve: reviewRun?.value.approve, issues: reviewRun?.value.issues, scanFindings: findings.length, revisedBeats: revised.map((item) => item.beat), unrevisedFlaggedBeats: unrevised })
   if (findings.some((finding) => finding.severity === 'block')) {
     await setStage(brief.id, 'compliance', 'failed', 'blocked wording remains after review')
     throw new Error(`Compliance blocked the script: ${findings.filter((finding) => finding.severity === 'block').map((finding) => finding.text).join(', ')}`)
@@ -567,4 +620,26 @@ export function statedFormat(request: string): { ratio?: Brief['ratio']; duratio
   const seconds = /(\d+)\s*秒/.exec(request)?.[1]
   const durationSeconds = seconds && Number(seconds) % 5 === 0 && Number(seconds) >= 5 && Number(seconds) <= 30 ? Number(seconds) : undefined
   return { ratio, durationSeconds }
+}
+
+/**
+ * The lettering quoted in the intake agent's `appearance` must be lettering the request actually quotes: asked for
+ * 黑色书法字“岩”, the agent wrote “岁”, and the storyboard check then demanded both "岩" (the label) and "岁" (the look),
+ * which no storyboard can satisfy. A quoted string the request never contains is replaced by the label text when the
+ * request does contain that.
+ */
+export function faithfulLabel(appearance: string, request: string, brandText?: string): string {
+  if (!brandText || !request.includes(brandText)) return appearance
+  return appearance.replace(/([“"「『])([^”"」』]{1,12})([”"」』])/g, (all, open: string, text: string, close: string) =>
+    request.includes(text) ? all : `${open}${brandText}${close}`)
+}
+
+/** Beat numbers a reviewer's issues name ("Beat 2 VO ...", "beat 3:", "第2拍"). */
+export function flaggedBeats(issues: string[], beats: number): number[] {
+  const found = new Set<number>()
+  for (const issue of issues) for (const m of issue.matchAll(/\bbeat\s*(\d+)|第\s*(\d+)\s*[拍幕]/gi)) {
+    const n = Number(m[1] ?? m[2])
+    if (n >= 1 && n <= beats) found.add(n)
+  }
+  return [...found].sort((a, b) => a - b)
 }

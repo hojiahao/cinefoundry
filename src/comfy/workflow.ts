@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 export type WorkflowGraph = Record<string, { class_type: string; inputs: Record<string, unknown> }>
 
-const WORKFLOW_DIR = process.env.CINELOOM_WORKFLOWS ?? join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', 'workflows')
+const WORKFLOW_DIR = process.env.SPOTFOUNDRY_WORKFLOWS ?? join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', 'workflows')
 
 export async function loadWorkflow(name: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(join(WORKFLOW_DIR, `${name}.json`), 'utf8')) as Record<string, unknown>

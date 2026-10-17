@@ -17,7 +17,7 @@
 - 代理间歇性 503，Hugging Face 直连几乎为零；改用 hf-mirror 直连实测约 43 MB/s。
 - DeepSeek Harness 的 `sdk-minimal` 配置只带 DeepSeek 专用适配器，调本地 OpenAI 兼容端点返回 HTTP 400。本地模型应走“自定义提供方 + openai-completions”，待验证。
 
-**写代码。** TypeScript CLI `cineloom`（10 个子命令）、Studio 看板、4 个 ComfyUI 工作流模板、9 个 Skill 和 20 条评测任务。16 个测试通过，其中端到端测试用真实 ffmpeg 加 ComfyUI 桩服务，从立项走到成片。
+**写代码。** TypeScript CLI `spotfoundry`（10 个子命令）、Studio 看板、4 个 ComfyUI 工作流模板、9 个 Skill 和 20 条评测任务。16 个测试通过，其中端到端测试用真实 ffmpeg 加 ComfyUI 桩服务，从立项走到成片。
 
 **实测数据。** 本机统一内存 121.7 GB；内存预算 Nemotron 30 + Step3-VL 20 + ComfyUI 45 = 95 GB，预留 10 GB 后余量 16.7 GB。
 
@@ -25,20 +25,20 @@
 - 本机 Docker 通过 CDI（`nvidia.com/gpu=all`）暴露 GPU，没有注册 `nvidia` 运行时，compose 里的 `runtime: nvidia` 直接报错，改成 CDI 设备声明。
 - Nemotron 一次启动成功。实测端到端解码 98–106 tok/s，工具调用 1.0 s 且参数正确；服务实占约 35 GB，比计划的 30 GB 多，预算表按实测改。900 个 token 全部用在推理上、正文为空，说明 `max_tokens` 要给够。
 - Step3-VL-10B-FP8 连续崩溃重启。第一层原因是 DeepGEMM 的 FP8 内核在 GB10 上断言失败（Unknown SF transformation），设 `VLLM_USE_DEEP_GEMM=0` 解决。第二层原因是我给的内存比例 0.17 只剩约 2 GiB 给 KV cache。先试着降上下文长度，降了两次都差一点，方向错了；改成把比例提到 0.20，KV cache 47,616 token，32K 上下文保住。
-- `cineloom qa` 在本地 Step3-VL 上跑通：同一张图，要求相符给 90 分通过，要求不符给 30 分拒绝并说出缺了什么。首次 26 s，之后 10 s。
+- `spotfoundry qa` 在本地 Step3-VL 上跑通：同一张图，要求相符给 90 分通过，要求不符给 30 分拒绝并说出缺了什么。首次 26 s，之后 10 s。
 - 两个 LLM 常驻后可用统一内存 47.6 GB，够扩散模型用。
 
 **README。** 横幅改成 ANSI Shadow 方块字，方块画成矩形、文字转成 Google Sans Code 轮廓，不依赖访问者字体。架构图用 archify 生成，showcase 档 9/9 通过；横向五列放进 README 后字太小，改成竖向主线。截图时抹像素去工具栏连错两次，最后改为在临时副本里用 CSS 隐藏控件。
 
-**明天。** 启动 ComfyUI，过 `cineloom doctor`；生成第一张首帧和第一段视频并记录耗时；接通 Harness 到本地模型。
+**明天。** 启动 ComfyUI，过 `spotfoundry doctor`；生成第一张首帧和第一段视频并记录耗时；接通 Harness 到本地模型。
 
 ## Day 1（续）· 傍晚到夜里：第一支成片，以及它暴露的一切
 
-**ComfyUI 起来了。** 镜像直接建在 vLLM 镜像上，复用已经在 GB10 上验证过的 PyTorch 2.13 + CUDA 13。清华镜像缺 ComfyUI 示例模板包的一个新子包，改成不带子依赖安装。`cineloom doctor` 对着真实服务把 5 个工作流模板逐节点核对，全过。
+**ComfyUI 起来了。** 镜像直接建在 vLLM 镜像上，复用已经在 GB10 上验证过的 PyTorch 2.13 + CUDA 13。清华镜像缺 ComfyUI 示例模板包的一个新子包，改成不带子依赖安装。`spotfoundry doctor` 对着真实服务把 5 个工作流模板逐节点核对，全过。
 
 **第一批真实数字。** Qwen-Image 首帧 1080×1920：首次 45.8 s，之后 22.7 s。Wan2.2 5B 的 5 秒 720p 片段 365 s。罐身上的“冷”字在整段视频里没有变形。但我要的是“泠”，模型画成了“冷”——生僻字靠不住。
 
-**决定不依赖外部 Agent 框架。** 写了 CineLoom 自己的智能体运行框架，后来定名 **CineLoom Harness**（Harness 是业界对智能体运行框架的通称，也是织机上提经线的“综框”，正好是 Loom 的一个部件）：八个阶段由代码保证顺序，每个阶段交给一个带 Skill 的子智能体，产出先过确定性校验。
+**决定不依赖外部 Agent 框架。** 写了 Spotfoundry 自己的智能体运行框架，后来定名 **Spotfoundry Harness**（Harness 是业界对智能体运行框架的通称，）：八个阶段由代码保证顺序，每个阶段交给一个带 Skill 的子智能体，产出先过确定性校验。
 
 **踩坑连环。**
 - Nemotron 开着思考时，脚本和分镜阶段把 8000–10000 token 的额度全用在推理上，正文为空。关掉思考 0.3 s 出结果，改由校验器和重试兜底。
@@ -63,7 +63,7 @@
 
 **四支案例片重启。** 昨夜的批次随会话一起被中止，只走到第一支的生图阶段。今天改用 `setsid` 脱离会话运行，不再受终端影响。
 
-**全面复盘。** 逐个对照 9 个 Skill 与 Harness 代码：三处脱节（Skill 说写 `brief.md`/`script.md`，代码写的是 JSON；合规 Skill 还保留“图中要渲染的文字”这一步，而画面早已不让模型画字；三份评测集的判定标准描述的是旧行为）全部修正。README 顶部改成“痛点 → 现有做法 → CineLoom 做法”的对照表，下面放 `leng-soda-v2` 的真实运行记录（每阶段耗时、被拒次数、总 2044 s），删掉了假的示意块。
+**全面复盘。** 逐个对照 9 个 Skill 与 Harness 代码：三处脱节（Skill 说写 `brief.md`/`script.md`，代码写的是 JSON；合规 Skill 还保留“图中要渲染的文字”这一步，而画面早已不让模型画字；三份评测集的判定标准描述的是旧行为）全部修正。README 顶部改成“痛点 → 现有做法 → Spotfoundry 做法”的对照表，下面放 `leng-soda-v2` 的真实运行记录（每阶段耗时、被拒次数、总 2044 s），删掉了假的示意块。
 
 **Studio 访问。** 用户在 Windows 上一直进不去：`127.0.0.1` 指的是他自己的电脑，SSH 隧道又没保持。发现两台机器在同一个 Tailscale 网络，改为监听所有网卡、加访问令牌（看片免令牌，“开拍”需要），直接用 Tailscale 地址打开。
 

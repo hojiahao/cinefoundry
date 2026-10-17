@@ -19,14 +19,14 @@ export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; 
     // model always reasons first at ~18 tok/s and cannot finish a text review inside a request timeout,
     // so without a key a separate Nemotron agent reviews instead.
     editor: process.env.STEPFUN_API_KEY
-      ? { name: 'step-3.7-flash', baseUrl: 'https://api.stepfun.com/v1', model: process.env.CINELOOM_EDITOR_MODEL ?? 'step-3.7-flash', apiKey: process.env.STEPFUN_API_KEY, execution: 'cloud' }
+      ? { name: 'step-3.7-flash', baseUrl: 'https://api.stepfun.com/v1', model: process.env.SPOTFOUNDRY_EDITOR_MODEL ?? 'step-3.7-flash', apiKey: process.env.STEPFUN_API_KEY, execution: 'cloud' }
       : { ...planner, name: 'nemotron-reviewer' },
     planner,
     reviewer: {
       name: 'step3-vl',
-      baseUrl: (process.env.CINELOOM_VISION_URL ?? 'http://127.0.0.1:8002/v1').replace(/\/+$/, ''),
-      model: process.env.CINELOOM_VISION_MODEL ?? 'step3-vl-10b',
-      apiKey: process.env.CINELOOM_VISION_KEY ?? 'local',
+      baseUrl: (process.env.SPOTFOUNDRY_VISION_URL ?? 'http://127.0.0.1:8002/v1').replace(/\/+$/, ''),
+      model: process.env.SPOTFOUNDRY_VISION_MODEL ?? 'step3-vl-10b',
+      apiKey: process.env.SPOTFOUNDRY_VISION_KEY ?? 'local',
       execution: 'local-dgx-spark',
     },
   }
@@ -35,9 +35,9 @@ export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; 
 function plannerEndpoint(): ModelEndpoint {
   return {
     name: 'nemotron',
-    baseUrl: (process.env.CINELOOM_PLANNER_URL ?? 'http://127.0.0.1:8001/v1').replace(/\/+$/, ''),
-    model: process.env.CINELOOM_PLANNER_MODEL ?? 'nemotron-3.5-lightning',
-    apiKey: process.env.CINELOOM_PLANNER_KEY ?? 'local',
+    baseUrl: (process.env.SPOTFOUNDRY_PLANNER_URL ?? 'http://127.0.0.1:8001/v1').replace(/\/+$/, ''),
+    model: process.env.SPOTFOUNDRY_PLANNER_MODEL ?? 'nemotron-3.5-lightning',
+    apiKey: process.env.SPOTFOUNDRY_PLANNER_KEY ?? 'local',
     execution: 'local-dgx-spark',
   }
 }

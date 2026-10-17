@@ -6119,7 +6119,7 @@
    ]
   },
   "film": {
-   "skill": "cineloom-ad-film",
+   "skill": "spotfoundry-ad-film",
    "cases": 16,
    "withoutSkill": {
     "runs": 32,

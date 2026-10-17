@@ -70,8 +70,8 @@ export async function startStudio(port: number, host: string): Promise<void> {
         // The studio binds to localhost; refuse cross-site form posts all the same.
         if (!(request.headers['content-type'] ?? '').includes('application/json')) return send(415, { error: 'send application/json' })
         // Optional shared secret so the studio can sit on a LAN / Tailscale address without letting anyone start GPU jobs.
-        const token = process.env.CINELOOM_STUDIO_TOKEN
-        if (token && request.headers['x-cineloom-token'] !== token) return send(401, { error: '服务端设置了 CINELOOM_STUDIO_TOKEN，请求需带 x-cineloom-token 头。' })
+        const token = process.env.SPOTFOUNDRY_STUDIO_TOKEN
+        if (token && request.headers['x-spotfoundry-token'] !== token) return send(401, { error: '服务端设置了 SPOTFOUNDRY_STUDIO_TOKEN，请求需带 x-spotfoundry-token 头。' })
         if (job?.status === 'running') return send(409, { error: '已有一支片子在制作中，请等它完成。' })
         const body = await readJson(request)
         const brief = String(body.brief ?? '').trim()
@@ -100,6 +100,6 @@ export async function startStudio(port: number, host: string): Promise<void> {
     }
   })
   await new Promise<void>((done) => server.listen(port, host, done))
-  console.log(`CineLoom studio: http://${host}:${port}`)
+  console.log(`Spotfoundry studio: http://${host}:${port}`)
 }
 

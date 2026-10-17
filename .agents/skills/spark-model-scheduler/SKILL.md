@@ -2,9 +2,9 @@
 name: spark-model-scheduler
 version: "0.1.0"
 description: Plan and check unified-memory use on a single DGX Spark (GB10, one memory pool shared by CPU and GPU) before starting or switching inference services - LLM, vision model, ComfyUI image or video generation. Use before bringing the stack up, before a video generation stage, when a model load fails or the machine starts swapping, or when the user asks whether a model "fits" next to the others.
-license: MIT
+license: BUSL-1.1
 metadata:
-  author: 方舟团队 (Team Ark)
+  author: 贺家豪 (Jiahao He)
   tags:
     - dgx-spark
     - unified-memory
@@ -23,7 +23,7 @@ budget first, then start things.
 1. Measure before acting:
 
    ```bash
-   cineloom mem status
+   spotfoundry mem status
    ```
 
    It reports total and available unified memory, per-container memory, and ComfyUI's
@@ -34,22 +34,22 @@ budget first, then start things.
 2. Check the plan against the budget:
 
    ```bash
-   cineloom mem plan --need nemotron=30 --need stepvl=20 --need comfyui=45
+   spotfoundry mem plan --need nemotron=30 --need stepvl=20 --need comfyui=45
    ```
 
    Exit code 1 means the plan does not fit with the reserve (default 10 GB). Reduce
    `--gpu-memory-utilization` / `--max-model-len` on the vLLM services, or stage the work.
 3. Keep one diffusion family resident at a time. With the image, edit and video models all left in ComfyUI next to the two LLMs, the GPU driver started failing allocations (`NV_ERR_NO_MEMORY` in the kernel log) and a 25-minute job died on a request timeout. Release at every phase boundary: hero still -> frames -> clips -> music.
-4. Stage work by phase when it does not fit at once. The CineLoom pipeline is naturally
+4. Stage work by phase when it does not fit at once. The Spotfoundry pipeline is naturally
    phased: text planning -> images -> video -> composition. Diffusion memory is only
    needed in the middle two phases, and the vision model only for breakdown and QA.
 5. Release diffusion memory at each boundary:
 
    ```bash
-   cineloom mem free
+   spotfoundry mem free
    ```
 6. Do not run a second GPU workload (an eval, another film) next to a film job; they share one pool and one GPU.
-7. Record `cineloom mem status` before and after each phase into `eval/` - these numbers are
+7. Record `spotfoundry mem status` before and after each phase into `eval/` - these numbers are
    the platform evidence for the submission. Report measured values only.
 
 ## Reference budget (measure and replace)
@@ -63,7 +63,7 @@ budget first, then start things.
 | ComfyUI, Wan2.2 I2V A14B fp8 | 30 GB | two 14.3 GB experts loaded in turn + 6.7 GB text encoder + activations |
 | ComfyUI, Wan2.2 TI2V-5B | 20 GB | 10 GB model + 6.7 GB text encoder + activations |
 | ComfyUI, ACE-Step music | 9 GB | 7.7 GB checkpoint |
-| OS, CineLoom, reserve | 15 GB | |
+| OS, Spotfoundry, reserve | 15 GB | |
 
 vLLM's `--gpu-memory-utilization` is a fraction of the whole pool and is claimed at
 startup, so start LLM services first and let ComfyUI allocate on demand.

@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument("--out", required=True)
     parser.add_argument("--voice", default="zf_001")
     parser.add_argument("--speed", type=float, default=1.0)
-    parser.add_argument("--model-dir", default=os.environ.get("CINELOOM_TTS_MODEL", os.path.join(os.environ.get("SPARK_MODEL_DIR", os.path.expanduser("~/models")), "tts/Kokoro-82M-v1.1-zh")))
+    parser.add_argument("--model-dir", default=os.environ.get("SPOTFOUNDRY_TTS_MODEL", os.path.join(os.environ.get("SPARK_MODEL_DIR", os.path.expanduser("~/models")), "tts/Kokoro-82M-v1.1-zh")))
     args = parser.parse_args()
 
     model_dir = Path(args.model_dir)

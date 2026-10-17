@@ -2,9 +2,9 @@
 name: shot-quality-gate
 version: "0.1.0"
 description: Inspect a generated advertisement frame with the local vision model and decide whether it may proceed to video generation - product identity against references, warped text or logos, anatomy errors, and whether the required content is present. Use after every generated frame and before any clip is made from it, or when the user asks to check, QA or verify generated shots.
-license: MIT
+license: BUSL-1.1
 metadata:
-  author: 方舟团队 (Team Ark)
+  author: 贺家豪 (Jiahao He)
   tags:
     - dgx-spark
     - stepfun
@@ -23,7 +23,7 @@ eyes that did not write the prompt, on a different model from the one that did.
 1. Gate every frame against the approved product hero still and the storyboard's `must_show`:
 
    ```bash
-   cineloom qa --project <id> --shot 1 --frame projects/<id>/frames/shot_001.png \
+   spotfoundry qa --project <id> --shot 1 --frame projects/<id>/frames/shot_001.png \
      --ref projects/<id>/refs/product.png --expect "the can upright in ice with its label readable"
    ```
 

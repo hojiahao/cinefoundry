@@ -6,14 +6,14 @@ import { loadWorkflow, renderWorkflow } from '../comfy/workflow.js'
 import { exec } from './exec.js'
 import { probeDuration } from './ffmpeg.js'
 
-const TTS_PYTHON = () => resolve(process.env.CINELOOM_TTS_PYTHON ?? 'runtime-data/tts-venv/bin/python')
-const TTS_SCRIPT = () => resolve(process.env.CINELOOM_TTS_SCRIPT ?? 'scripts/tts.py')
+const TTS_PYTHON = () => resolve(process.env.SPOTFOUNDRY_TTS_PYTHON ?? 'runtime-data/tts-venv/bin/python')
+const TTS_SCRIPT = () => resolve(process.env.SPOTFOUNDRY_TTS_SCRIPT ?? 'scripts/tts.py')
 
 /**
  * Offline Mandarin voiceover for one line. If the line runs longer than its slot it is
  * re-synthesised faster (up to 1.25x) rather than cut off.
  */
-export async function synthesizeVoice(text: string, output: string, maxSeconds: number, voice = process.env.CINELOOM_TTS_VOICE ?? 'zf_001'): Promise<{ seconds: number; speed: number }> {
+export async function synthesizeVoice(text: string, output: string, maxSeconds: number, voice = process.env.SPOTFOUNDRY_TTS_VOICE ?? 'zf_001'): Promise<{ seconds: number; speed: number }> {
   await mkdir(dirname(output), { recursive: true })
   let speed = 1.0
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -34,7 +34,7 @@ export interface VoiceResult { seconds: number; speed: number; model: string }
  * written description with Qwen3-TTS VoiceDesign (scripts/voice-design.py), so no real person's voice is involved.
  */
 export const ttsEngine = (): 'kokoro' | 'step-audio' | 'qwen-tts' => {
-  const engine = process.env.CINELOOM_TTS_ENGINE
+  const engine = process.env.SPOTFOUNDRY_TTS_ENGINE
   return engine === 'step-audio' || engine === 'qwen-tts' ? engine : 'kokoro'
 }
 
@@ -47,7 +47,7 @@ export const BROADCAST_VOICE_CHAIN = 'highpass=f=70,acompressor=threshold=-22dB:
 /**
  * All voiceover lines of a film. Kokoro synthesises them one by one; Step-Audio-EditX loads its
  * model once for the whole batch (scripts/step-audio.sh batch), cloning the reference voice given by
- * CINELOOM_TTS_REF_WAV / CINELOOM_TTS_REF_TEXT and, with CINELOOM_TTS_STYLE, re-voicing each line in
+ * SPOTFOUNDRY_TTS_REF_WAV / SPOTFOUNDRY_TTS_REF_TEXT and, with SPOTFOUNDRY_TTS_STYLE, re-voicing each line in
  * that style. A line that overruns its slot is time-stretched, at most 1.25x, never cut.
  */
 export async function synthesizeVoices(lines: VoiceLine[]): Promise<VoiceResult[]> {
@@ -57,21 +57,21 @@ export async function synthesizeVoices(lines: VoiceLine[]): Promise<VoiceResult[
     for (const line of lines) results.push({ ...(await synthesizeVoice(line.text, line.output, line.maxSeconds)), model: 'Kokoro-82M-v1.1-zh' })
     return results
   }
-  const work = resolve(process.env.CINELOOM_STEP_AUDIO_DIR ?? 'runtime-data/step-audio')
-  const reference = resolve(process.env.CINELOOM_TTS_REF_WAV ?? '')
-  const referenceText = process.env.CINELOOM_TTS_REF_TEXT ?? ''
-  if (!process.env.CINELOOM_TTS_REF_WAV || !referenceText) throw new Error(`CINELOOM_TTS_ENGINE=${engine} needs CINELOOM_TTS_REF_WAV (a wav under runtime-data/step-audio/) and CINELOOM_TTS_REF_TEXT (what it says)`)
+  const work = resolve(process.env.SPOTFOUNDRY_STEP_AUDIO_DIR ?? 'runtime-data/step-audio')
+  const reference = resolve(process.env.SPOTFOUNDRY_TTS_REF_WAV ?? '')
+  const referenceText = process.env.SPOTFOUNDRY_TTS_REF_TEXT ?? ''
+  if (!process.env.SPOTFOUNDRY_TTS_REF_WAV || !referenceText) throw new Error(`SPOTFOUNDRY_TTS_ENGINE=${engine} needs SPOTFOUNDRY_TTS_REF_WAV (a wav under runtime-data/step-audio/) and SPOTFOUNDRY_TTS_REF_TEXT (what it says)`)
   if (!reference.startsWith(`${work}/`)) throw new Error(`the reference voice must live under ${work} so the container can read it`)
   const inside = (path: string) => `/work/${relative(work, path)}`
   const jobDir = join(work, 'jobs', `${Date.now().toString(36)}`)
   await mkdir(jobDir, { recursive: true })
-  const jobs = { prompt_audio: inside(reference), prompt_text: referenceText, style: process.env.CINELOOM_TTS_STYLE || null,
+  const jobs = { prompt_audio: inside(reference), prompt_text: referenceText, style: process.env.SPOTFOUNDRY_TTS_STYLE || null,
     lines: lines.map((line, index) => ({ text: line.text, output: inside(join(jobDir, `vo_${index + 1}.wav`)) })) }
   await writeFile(join(jobDir, 'jobs.json'), JSON.stringify(jobs, null, 2))
   if (engine === 'qwen-tts') {
-    await exec('docker', ['run', '--rm', '--device', 'nvidia.com/gpu=all', '--ipc=host', '-v', `${resolve('.')}:/repo:ro`, '-v', `${resolve(process.env.CINELOOM_TTS_MODEL_DIR ?? join(process.env.SPARK_MODEL_DIR ?? join(homedir(), 'models'), 'tts'))}:/models:ro`, '-v', `${work}:/work`,
-      process.env.CINELOOM_QWEN_TTS_IMAGE ?? 'cineloom/qwen-tts:local', '/repo/scripts/qwen-clone.py', '--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(join(jobDir, 'jobs.json'))])
-  } else await exec('bash', [resolve(process.env.CINELOOM_STEP_AUDIO_SCRIPT ?? 'scripts/step-audio.sh'), 'batch', inside(join(jobDir, 'jobs.json'))])
+    await exec('docker', ['run', '--rm', '--device', 'nvidia.com/gpu=all', '--ipc=host', '-v', `${resolve('.')}:/repo:ro`, '-v', `${resolve(process.env.SPOTFOUNDRY_TTS_MODEL_DIR ?? join(process.env.SPARK_MODEL_DIR ?? join(homedir(), 'models'), 'tts'))}:/models:ro`, '-v', `${work}:/work`,
+      process.env.SPOTFOUNDRY_QWEN_TTS_IMAGE ?? 'spotfoundry/qwen-tts:local', '/repo/scripts/qwen-clone.py', '--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(join(jobDir, 'jobs.json'))])
+  } else await exec('bash', [resolve(process.env.SPOTFOUNDRY_STEP_AUDIO_SCRIPT ?? 'scripts/step-audio.sh'), 'batch', inside(join(jobDir, 'jobs.json'))])
   const results: VoiceResult[] = []
   for (const [index, line] of lines.entries()) {
     const raw = join(jobDir, `vo_${index + 1}.wav`)
@@ -81,7 +81,7 @@ export async function synthesizeVoices(lines: VoiceLine[]): Promise<VoiceResult[
     await exec('ffmpeg', ['-y', '-v', 'error', '-i', raw, '-af', 'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse', trimmed])
     let seconds = await probeDuration(trimmed)
     const speed = seconds > line.maxSeconds ? Math.min(1.25, seconds / line.maxSeconds) : 1
-    const chain = [speed > 1 ? `atempo=${speed.toFixed(3)}` : '', process.env.CINELOOM_VOICE_CHAIN === '0' ? '' : BROADCAST_VOICE_CHAIN].filter(Boolean).join(',')
+    const chain = [speed > 1 ? `atempo=${speed.toFixed(3)}` : '', process.env.SPOTFOUNDRY_VOICE_CHAIN === '0' ? '' : BROADCAST_VOICE_CHAIN].filter(Boolean).join(',')
     if (chain) await exec('ffmpeg', ['-y', '-v', 'error', '-i', trimmed, '-af', chain, line.output])
     else await copyFile(trimmed, line.output)
     seconds = await probeDuration(line.output)
@@ -98,7 +98,7 @@ export async function generateMusic(comfy: ComfyClient, request: { tags: string;
       tags: request.tags,
       seconds: Math.ceil(request.seconds) + 2,
       seed: Math.floor(Math.random() * 2 ** 31),
-      filename_prefix: `cineloom/music_${Date.now()}`,
+      filename_prefix: `spotfoundry/music_${Date.now()}`,
     }),
   )
   await mkdir(dirname(request.output), { recursive: true })

@@ -6,7 +6,7 @@ them is black. The top of each capture (run log, stage chips) is right; this kee
 draws, underneath, the project's real hero still and shot frames, each shown from the moment its
 file was written. Timing comes from file modification times, nothing is invented.
 
-    python3 scripts/compose-recording.py --rec ~/cineloom-demo/studio-rec --project projects/summer-cool-soda
+    python3 scripts/compose-recording.py --rec ~/spotfoundry-demo/studio-rec --project projects/summer-cool-soda
 """
 import argparse
 import os

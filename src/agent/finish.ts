@@ -42,7 +42,7 @@ export interface FinishInput {
   log: (line: string) => void
 }
 
-/** The cut stage: end card, typography, sound and the finishing pass. Used by the harness and by `cineloom cut`. */
+/** The cut stage: end card, typography, sound and the finishing pass. Used by the harness and by `spotfoundry cut`. */
 export async function finishFilm(input: FinishInput): Promise<string> {
   const { dir, brief, script, storyboard, comfy, record, log } = input
   const hero = { path: input.heroPath }
@@ -83,7 +83,18 @@ export async function finishFilm(input: FinishInput): Promise<string> {
     const total = filmLength(durations, CROSSFADE_SECONDS)
     const voices: Array<{ path: string; start: number }> = []
     const lines = script.beats.map((beat, index) => ({ text: beat.vo, output: join(dir, 'audio', `vo_${index + 1}.wav`), maxSeconds: durations[index]! - 0.9 }))
-    const spoken = await synthesizeVoices(lines)
+    // The voice model runs in its own container on the same memory pool. Free what the video phase left in ComfyUI
+    // first: the nuts film died here with "CUDA error: out of memory" after all three clips were done. One retry
+    // after another free covers a model that was still releasing.
+    await enterPhase(comfy, 'voiceover (TTS)', record)
+    const spoken = await synthesizeVoices(lines).catch(async (error: Error) => {
+      if (!/out of memory|CUDA error/i.test(error.message)) throw error
+      log('  voiceover ran out of memory; freeing ComfyUI and retrying once')
+      await comfy.free()
+      await new Promise((resolve) => setTimeout(resolve, 20000))
+      await record('run', 'scheduler', undefined, { phase: 'voiceover retry', availableBeforeGb: (await memoryStatus()).availableGb })
+      return synthesizeVoices(lines)
+    })
     for (const [index, beat] of script.beats.entries()) {
       voices.push({ path: lines[index]!.output, start: clipStart(index, durations, CROSSFADE_SECONDS) + 0.45 })
       await record('cut', 'voiceover', undefined, { beat: beat.beat, seconds: spoken[index]!.seconds, speed: spoken[index]!.speed, model: spoken[index]!.model })

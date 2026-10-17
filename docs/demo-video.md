@@ -4,12 +4,12 @@
 
 ```bash
 # 旁白音色与样片相同（见 README“部署说明”中的配音一节）
-export CINELOOM_TTS_ENGINE=qwen-tts CINELOOM_TTS_REF_WAV=runtime-data/step-audio/voices/male-2.wav
-export CINELOOM_TTS_REF_TEXT="$(python3 -c "import json;print(json.load(open('runtime-data/step-audio/voices/voices.json'))['male-2']['text'])")"
-python3 scripts/demo-reel.py --out ~/cineloom-demo/cineloom-demo.mp4
+export SPOTFOUNDRY_TTS_ENGINE=qwen-tts SPOTFOUNDRY_TTS_REF_WAV=runtime-data/step-audio/voices/male-2.wav
+export SPOTFOUNDRY_TTS_REF_TEXT="$(python3 -c "import json;print(json.load(open('runtime-data/step-audio/voices/voices.json'))['male-2']['text'])")"
+python3 scripts/demo-reel.py --out ~/spotfoundry-demo/spotfoundry-demo.mp4
 ```
 
-Skill 调用段落由 Playwright 驱动 DeepSeek Harness 网页（本机 NVIDIA Nemotron，工作区为 CineLoom 仓库，仅“工作区内修改”权限）实录，三段录像在 `~/cineloom-demo/agent-rec/recording.mp4` 合成后由生成脚本放入。
+Skill 调用段落由 Playwright 驱动 DeepSeek Harness 网页（本机 NVIDIA Nemotron，工作区为 Spotfoundry 仓库，仅“工作区内修改”权限）实录，三段录像在 `~/spotfoundry-demo/agent-rec/recording.mp4` 合成后由生成脚本放入。
 
 Studio 录屏段落来自 Studio 的录制模式：`scripts/record-studio.sh "<创意>"` 在工作台上真实提交一条创意，运行期间每隔几秒截一次 `?record=1` 页面；`scripts/compose-recording.py` 把截图排成 1920×1080 画面，右侧同步显示流水线最新写出的图片（按文件写入时间），右下角标注“实时录屏 · 约 35 分钟压缩播放”。
 
@@ -17,11 +17,11 @@ Studio 录屏段落来自 Studio 的录制模式：`scripts/record-studio.sh "<�
 
 | 时间 | 段落 | 画面 | 旁白要点 |
 |---|---|---|---|
-| 0:00 | 片头 | CineLoom 影织标题卡 | 把一句创意，织成一支成片 |
+| 0:00 | 片头 | Spotfoundry 广告工坊标题卡 | 把一句创意，做成一支成片 |
 | 0:07 | 痛点 | 三栏：素材不能上云、返工按次计费、没人把关 | 现有工具的三个问题 |
 | 0:30 | 两种开拍方式 | 工作台截图与八个阶段 | 网页工作台或任何支持 Agent Skills 的智能体；背后都是同一个 Harness |
 | 0:54 | 方式一：Studio 实录 | 创意逐字输入，运行日志逐行增加，右侧显示最新生成的图 | 真实的一次运行，约 35 分钟压缩为 40 秒 |
-| 1:34 | 方式二：Skill 调用实录 | DeepSeek Harness 网页：输入需求，本地 Nemotron 加载 `cineloom-ad-film`、启动 Harness、失败后自行重试，最后读交付报告作答 | 任何支持 Agent Skills 的智能体都能调用；三段录像按内容变速，共约 46 秒 |
+| 1:34 | 方式二：Skill 调用实录 | DeepSeek Harness 网页：输入需求，本地 Nemotron 加载 `spotfoundry-ad-film`、启动 Harness、失败后自行重试，最后读交付报告作答 | 任何支持 Agent Skills 的智能体都能调用；三段录像按内容变速，共约 46 秒 |
 | 2:16 | 先审后生成 | 咖啡第 1 稿被审稿智能体退回的理由、Jev 判读概率、通过稿 | 广告法扫描、独立审稿、Jev 三道关 |
 | 2:37 | 定妆图与质检 | 定妆图、被拒的候选与理由、通过的候选、四格画面 | 整支片子是同一只罐；返工拦在生图阶段 |
 | 3:00 | 四支成片 | 饮料、数码、护肤、食品各一支，有声 | 画面、配音、配乐全部本机生成 |

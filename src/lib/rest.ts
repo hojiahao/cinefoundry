@@ -18,12 +18,12 @@ const state = new Map<string, 'awake' | 'asleep' | 'none'>()
 const level = new Map<string, 1 | 2>()
 
 /** 2 (default): release weights and KV cache, reload from disk on wake. 1: keep the weights in host memory (frees nothing on a unified-memory machine). */
-export const sleepLevel = (): 1 | 2 => (process.env.CINELOOM_SLEEP_LEVEL === '1' ? 1 : 2)
+export const sleepLevel = (): 1 | 2 => (process.env.SPOTFOUNDRY_SLEEP_LEVEL === '1' ? 1 : 2)
 
 /** `http://host:port/v1` -> `http://host:port` */
 export const serviceRoot = (baseUrl: string) => baseUrl.replace(/\/v1\/?$/, '')
 
-export const sleepEnabled = () => process.env.CINELOOM_SLEEP_LLMS !== '0'
+export const sleepEnabled = () => process.env.SPOTFOUNDRY_SLEEP_LLMS !== '0'
 
 /** Whether the service is asleep; `undefined` when it has no sleep mode (or is not a vLLM server). */
 export async function isSleeping(baseUrl: string): Promise<boolean | undefined> {

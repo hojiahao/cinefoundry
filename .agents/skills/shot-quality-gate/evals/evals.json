@@ -4,7 +4,7 @@
     "question": "镜头 1 的图出来了，检查一下能不能拿去生视频。",
     "expected_skill": "shot-quality-gate",
     "expected_script": null,
-    "ground_truth": "The agent runs `cineloom qa` with the shot's references and its storyboard must_show as --expect, reads pass, score and issues, and on rejection changes the prompt according to the issue type before regenerating (references first for product mismatch, shorter text or subtitle for warped text), with at most two regenerations."
+    "ground_truth": "The agent runs `spotfoundry qa` with the shot's references and its storyboard must_show as --expect, reads pass, score and issues, and on rejection changes the prompt according to the issue type before regenerating (references first for product mismatch, shorter text or subtitle for warped text), with at most two regenerations."
   },
   {
     "id": "shot-quality-gate-eval-002-third-failure",

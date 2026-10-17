@@ -19,5 +19,5 @@ docker run --rm --device nvidia.com/gpu=all --ipc=host --network host \
   -v "$PWD/runtime-data/Step-Audio-EditX:/app" \
   -v "$PWD/runtime-data/step-audio:/work" -v "$HF:/root/.cache/huggingface:ro" \
   -e STEP_AUDIO_ATTENTION_BACKEND="${STEP_AUDIO_ATTENTION_BACKEND:-TRITON_ATTN}" -e HF_HUB_OFFLINE=1 -e HF_MODULES_CACHE=/work/.hf_modules -e MODELSCOPE_CACHE=/work/.modelscope -e PYTHONPATH=/app \
-  cineloom/step-audio:local "$ENTRY" --model-path "$EDITX" --tokenizer-path "$TOK" --model-source local \
+  spotfoundry/step-audio:local "$ENTRY" --model-path "$EDITX" --tokenizer-path "$TOK" --model-source local \
   --gpu-memory-utilization "${STEP_AUDIO_GPU_MEM:-0.12}" --max-model-len 3072 --enforce-eager --cosyvoice-dtype bfloat16 "$@"

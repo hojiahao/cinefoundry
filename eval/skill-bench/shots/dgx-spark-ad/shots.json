@@ -1,5 +1,5 @@
 {
- "source": "/home/orion/repos/dgx-spark-hackathon/cineloom/projects/dgx-spark-ad/cut/final.mp4",
+ "source": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/projects/dgx-spark-ad/cut/final.mp4",
  "duration": 14.21,
  "shots": [
   {
@@ -7,28 +7,28 @@
    "start": 0.0,
    "end": 4.8,
    "duration": 4.8,
-   "keyframe": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/dgx-spark-ad/shot_001.jpg"
+   "keyframe": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/dgx-spark-ad/shot_001.jpg"
   },
   {
    "index": 2,
    "start": 4.8,
    "end": 9.4,
    "duration": 4.6,
-   "keyframe": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/dgx-spark-ad/shot_002.jpg"
+   "keyframe": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/dgx-spark-ad/shot_002.jpg"
   },
   {
    "index": 3,
    "start": 9.4,
    "end": 11.01,
    "duration": 1.61,
-   "keyframe": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/dgx-spark-ad/shot_003.jpg"
+   "keyframe": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/dgx-spark-ad/shot_003.jpg"
   },
   {
    "index": 4,
    "start": 11.01,
    "end": 14.21,
    "duration": 3.2,
-   "keyframe": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/dgx-spark-ad/shot_004.jpg"
+   "keyframe": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/dgx-spark-ad/shot_004.jpg"
   }
  ]
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Voice every line of a job file with Qwen3-TTS Base, cloning one reference clip (inside cineloom/qwen-tts).
+"""Voice every line of a job file with Qwen3-TTS Base, cloning one reference clip (inside spotfoundry/qwen-tts).
 
 Job file (same shape as scripts/step-audio-batch.py):
     {"prompt_audio": "/work/voices/male-2.wav", "prompt_text": "...", "lines": [{"text": "...", "output": "/work/jobs/x/vo_1.wav"}]}

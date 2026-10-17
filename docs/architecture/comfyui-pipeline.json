@@ -2,12 +2,12 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "影织如何驱动 ComfyUI：四个工作流与阶段切换",
+    "title": "广告工坊如何驱动 ComfyUI：四个工作流与阶段切换",
     "output": "docs/architecture/comfyui-pipeline.html",
     "locale": "zh-CN",
     "quality_profile": "showcase",
     "repository": {
-      "url": "git@github.com:hojiahao/cineloom.git",
+      "url": "git@github.com:hojiahao/spotfoundry.git",
       "link_mode": "local-only",
       "revision": "88829427c7bde0ce3c287a8b34104be8b05813b7"
     }
@@ -16,7 +16,7 @@
     {
       "id": "harness",
       "type": "backend",
-      "label": "影织 Harness",
+      "label": "广告工坊 Harness",
       "sublabel": "按阶段顺序调用",
       "pos": [
         40,
@@ -271,7 +271,7 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "cineloom-comfyui-1 容器",
+      "label": "spotfoundry-comfyui-1 容器",
       "wraps": [
         "comfy",
         "wf-hero",

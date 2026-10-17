@@ -5,7 +5,7 @@ import { loadWorkflow, renderWorkflow } from '../comfy/workflow.js'
 import { cloudVideoConfig, generateCloudVideo } from './cloudvideo.js'
 import { concatCopy, extractLastFrame, scaleImage } from './ffmpeg.js'
 
-export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.CINELOOM_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
+export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.SPOTFOUNDRY_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
 export const VIDEO_FPS = 24
 
 export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'ltx25-fast' | 'ltx25-fast-nvfp4' | 'seedance'
@@ -30,6 +30,10 @@ const VIDEO_SIZES: Record<string, [number, number]> = {
   '720p/16:9': [1280, 704],
   '720p/9:16': [704, 1280],
   '720p/1:1': [960, 960],
+  // Native 1080p: LTX samples at half size (544x960) and its latent upscaler doubles it, so both halves must divide by 32.
+  '1080p/16:9': [1920, 1088],
+  '1080p/9:16': [1088, 1920],
+  '1080p/1:1': [1088, 1088],
 }
 
 export interface MediaResult {
@@ -78,7 +82,7 @@ export async function generateImage(
     width: nativeWidth,
     height: nativeHeight,
     seed: request.seed ?? seed(),
-    filename_prefix: `cineloom/${Date.now()}`,
+    filename_prefix: `spotfoundry/${Date.now()}`,
   }
   // The edit graph has three reference slots; with fewer references the last one repeats.
   for (let slot = 0; slot < 3 && references.length > 0; slot++) {
@@ -111,7 +115,7 @@ export async function generateVideo(
   request: { prompt: string; negative?: string; output: string; resolution: string; ratio: string; durationSeconds: number; firstFrame?: string; freeAfter?: boolean; model?: VideoModel },
 ): Promise<MediaResult> {
   const started = Date.now()
-  const modelName = request.model ?? (process.env.CINELOOM_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
+  const modelName = request.model ?? (process.env.SPOTFOUNDRY_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
   if (modelName === 'seedance') {
     // Opt-in cloud route. The first frame leaves the machine, so callers record this asset as cloud.
     const config = cloudVideoConfig()
@@ -145,7 +149,7 @@ export async function generateVideo(
       negative: request.negative ?? VIDEO_NEGATIVE,
       fps: model.fps,
       seed: seed(),
-      filename_prefix: `cineloom/${Date.now()}_${index}`,
+      filename_prefix: `spotfoundry/${Date.now()}_${index}`,
     }
     if (startFrame) values.start_image = await comfy.uploadImage(await readFile(startFrame), `start_${Date.now()}_${index}.png`)
     const outputs = await comfy.run(renderWorkflow(await loadWorkflow(workflow), values))

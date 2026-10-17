@@ -2,9 +2,9 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "CineLoom 影织 · 系统架构",
+    "title": "Spotfoundry 广告工坊 · 系统架构",
     "locale": "zh-CN",
-    "output": "cineloom-architecture.html",
+    "output": "spotfoundry-architecture.html",
     "quality_profile": "showcase",
     "legend": {
       "mode": "auto",
@@ -13,7 +13,7 @@
           "label": "用户"
         },
         "backend": {
-          "label": "CineLoom Harness"
+          "label": "Spotfoundry Harness"
         },
         "frontend": {
           "label": "技能与界面"
@@ -63,7 +63,7 @@
       "id": "director",
       "type": "backend",
       "label": "导演智能体",
-      "sublabel": "cineloom harness",
+      "sublabel": "spotfoundry harness",
       "pos": [
         240,
         170
@@ -118,7 +118,7 @@
     {
       "id": "cli",
       "type": "backend",
-      "label": "cineloom CLI",
+      "label": "spotfoundry CLI",
       "sublabel": "TypeScript",
       "pos": [
         240,

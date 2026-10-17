@@ -1,11 +1,11 @@
 {
-  "name": "cineloom",
+  "name": "spotfoundry",
   "version": "0.1.0",
-  "description": "CineLoom (影织): an agentic ad-film studio that runs on a single NVIDIA DGX Spark.",
-  "license": "MIT",
+  "description": "Spotfoundry (广告工坊): an agentic ad-film studio that runs on a single NVIDIA DGX Spark.",
+  "license": "BUSL-1.1",
   "type": "module",
   "engines": { "node": ">=22" },
-  "bin": { "cineloom": "dist/cli.js" },
+  "bin": { "spotfoundry": "dist/cli.js" },
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -2,7 +2,7 @@
  "brief": [
   {
    "project": "chenlu-commute-15s",
-   "request": "用 cineloom-ad-film 给「晨露」无糖气泡水做一条 15 秒竖屏广告。目标人群是通勤白领，核心卖点是清爽无糖。产品是银色易拉罐、浅蓝标签，风格清新，结尾写“清爽一下，再出发”。",
+   "request": "用 spotfoundry-ad-film 给「晨露」无糖气泡水做一条 15 秒竖屏广告。目标人群是通勤白领，核心卖点是清爽无糖。产品是银色易拉罐、浅蓝标签，风格清新，结尾写“清爽一下，再出发”。",
    "photo": false
   },
   {
@@ -2983,7 +2983,7 @@
  "film": [
   {
    "project": "chenlu-commute-15s",
-   "message": "用 cineloom-ad-film 给「晨露」无糖气泡水做一条 15 秒竖屏广告。目标人群是通勤白领，核心卖点是清爽无糖。产品是银色易拉罐、浅蓝标签，风格清新，结尾写“清爽一下，再出发”。",
+   "message": "用 spotfoundry-ad-film 给「晨露」无糖气泡水做一条 15 秒竖屏广告。目标人群是通勤白领，核心卖点是清爽无糖。产品是银色易拉罐、浅蓝标签，风格清新，结尾写“清爽一下，再出发”。",
    "photo": null,
    "planOnly": false
   },
@@ -3081,32 +3081,32 @@
  "breakdown": [
   {
    "project": "chenlu-commute-15s-retry",
-   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/chenlu-commute-15s-retry",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/chenlu-commute-15s-retry",
    "shotCount": 4
   },
   {
    "project": "dgx-spark-ad",
-   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/dgx-spark-ad",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/dgx-spark-ad",
    "shotCount": 4
   },
   {
    "project": "leng-soda",
-   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/leng-soda",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/leng-soda",
    "shotCount": 4
   },
   {
    "project": "morning-drop-soda",
-   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/morning-drop-soda",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/morning-drop-soda",
    "shotCount": 4
   },
   {
    "project": "show-coffee",
-   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/show-coffee",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/show-coffee",
    "shotCount": 4
   },
   {
    "project": "show-cream",
-   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/cineloom/eval/skill-bench/shots/show-cream",
+   "shotsDir": "/home/orion/repos/dgx-spark-hackathon/spotfoundry/eval/skill-bench/shots/show-cream",
    "shotCount": 4
   }
  ]

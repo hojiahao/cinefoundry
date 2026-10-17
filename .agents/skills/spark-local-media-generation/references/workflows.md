@@ -1,7 +1,7 @@
 # Workflow catalogue
 
 Templates live in `workflows/` in ComfyUI API format with `{{placeholder}}` inputs.
-Run `cineloom doctor` after any ComfyUI upgrade.
+Run `spotfoundry doctor` after any ComfyUI upgrade.
 
 | Template | Used for | Models (ComfyUI folders) | Sampling |
 |---|---|---|---|

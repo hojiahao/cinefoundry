@@ -50,7 +50,7 @@ async function project(args: ParsedArgs): Promise<number> {
     print((await setStage(requireFlag(args, 'id'), stage, status, flag(args, 'note'))).stages)
     return 0
   }
-  throw new UsageError('usage: cineloom project <init|status|stage> ...')
+  throw new UsageError('usage: spotfoundry project <init|status|stage> ...')
 }
 
 async function image(args: ParsedArgs): Promise<number> {
@@ -100,7 +100,7 @@ async function video(args: ParsedArgs): Promise<number> {
 
 async function copyCheck(args: ParsedArgs): Promise<number> {
   const source = args.positionals[0]
-  if (!source) throw new UsageError('usage: cineloom copy-check <file|-> [--category general|food|health_food|cosmetics|medical]')
+  if (!source) throw new UsageError('usage: spotfoundry copy-check <file|-> [--category general|food|health_food|cosmetics|medical]')
   const category = flag(args, 'category', 'general') as Category
   if (!CATEGORIES.includes(category)) throw new UsageError(`--category must be one of ${CATEGORIES.join(', ')}`)
   const copy = source === '-' ? await new Response(process.stdin as never).text() : await readFile(source, 'utf8')
@@ -111,7 +111,7 @@ async function copyCheck(args: ParsedArgs): Promise<number> {
 
 async function shots(args: ParsedArgs): Promise<number> {
   const source = args.positionals[0]
-  if (!source) throw new UsageError('usage: cineloom shots <video> [--out dir] [--threshold 0.30] [--min-shot 0.4]')
+  if (!source) throw new UsageError('usage: spotfoundry shots <video> [--out dir] [--threshold 0.30] [--min-shot 0.4]')
   const out = resolve(flag(args, 'out', 'breakdown')!)
   await mkdir(out, { recursive: true })
   const duration = await probeDuration(source)
@@ -161,7 +161,7 @@ async function mem(args: ParsedArgs): Promise<number> {
     print({ ...result, availableGb: (await memoryStatus()).availableGb })
     return 0
   }
-  throw new UsageError('usage: cineloom mem <status|plan|free|sleep|wake> [planner|reviewer] [--need name=GB ...] [--reserve 10] [--against total|available]')
+  throw new UsageError('usage: spotfoundry mem <status|plan|free|sleep|wake> [planner|reviewer] [--need name=GB ...] [--reserve 10] [--against total|available]')
 }
 
 /** The same gate the harness runs, for one frame. */
@@ -243,10 +243,10 @@ async function studio(args: ParsedArgs): Promise<number> {
   return new Promise(() => {})
 }
 
-/** Brief in, finished film out: CineLoom Harness runs every stage with its agents and skills. */
+/** Brief in, finished film out: Spotfoundry Harness runs every stage with its agents and skills. */
 async function harnessCommand(args: ParsedArgs): Promise<number> {
   const brief = args.positionals.join(' ').trim()
-  if (!brief) throw new UsageError('usage: cineloom harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
+  if (!brief) throw new UsageError('usage: spotfoundry harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
   const result = await runHarness({
     brief,
     id: flag(args, 'id'),

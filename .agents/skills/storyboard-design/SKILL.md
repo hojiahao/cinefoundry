@@ -2,9 +2,9 @@
 name: storyboard-design
 version: "0.1.0"
 description: Convert an approved ad script into a shot-by-shot storyboard with image prompts, video motion prompts and reference assignments that the local image and video models can execute. Use after the script passes compliance, when a reference breakdown must be mapped onto a new product, or when the user asks to change shots, framing, camera moves or pacing.
-license: MIT
+license: BUSL-1.1
 metadata:
-  author: 方舟团队 (Team Ark)
+  author: 贺家豪 (Jiahao He)
   tags:
     - advertising
     - storyboard

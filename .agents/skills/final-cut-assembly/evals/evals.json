@@ -4,7 +4,7 @@
     "question": "三个镜头的视频都有了，出成片，配上字幕。",
     "expected_skill": "final-cut-assembly",
     "expected_script": null,
-    "ground_truth": "The agent confirms all clips exist via project status, writes cut/subtitles.srt with one cue per beat from the voiceover, runs `cineloom cut --project --subtitles`, checks the printed duration against the brief, and writes reports/delivery.md with per-shot measured seconds, gate scores, regeneration counts, where each asset was produced, open issues, and the AI-generated label."
+    "ground_truth": "The agent confirms all clips exist via project status, writes cut/subtitles.srt with one cue per beat from the voiceover, runs `spotfoundry cut --project --subtitles`, checks the printed duration against the brief, and writes reports/delivery.md with per-shot measured seconds, gate scores, regeneration counts, where each asset was produced, open issues, and the AI-generated label."
   },
   {
     "id": "final-cut-assembly-eval-002-music-rights",

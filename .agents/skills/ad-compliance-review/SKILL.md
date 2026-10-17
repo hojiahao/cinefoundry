@@ -2,9 +2,9 @@
 name: ad-compliance-review
 version: "0.1.0"
 description: Review Chinese advertising copy (scripts, voiceover, on-screen text, captions) for wording that PRC advertising rules restrict - absolute claims, unverifiable guarantees, medical or efficacy claims on non-medical products, and data claims without a source. Use after script or voiceover authoring and before any media generation, or whenever the user asks whether ad copy is compliant or "能不能这么说".
-license: MIT
+license: BUSL-1.1
 metadata:
-  author: 方舟团队 (Team Ark)
+  author: 贺家豪 (Jiahao He)
   tags:
     - advertising
     - compliance
@@ -22,12 +22,12 @@ phrase caught late costs a full regeneration. Review text before media.
 2. Run the deterministic scan. It is local, fast, and reproducible:
 
    ```bash
-   cineloom copy-check projects/<id>/script/copy.txt --category cosmetics > projects/<id>/reports/compliance.json
+   spotfoundry copy-check projects/<id>/script/copy.txt --category cosmetics > projects/<id>/reports/compliance.json
    ```
 
    The category comes from the brief. Exit code 1 means at least one `block` finding.
 3. For each finding, read the matching section of `references/rules.md` before judging. The scan matches wording; whether a claim is substantiated depends on the brief's proof points.
-4. Review what a wording scan cannot see: implied superlatives and comparisons with competitors, body or health effects claimed for food and drink ("提神醒脑", "解暑降火"), efficacy claims on cosmetics, statistics without a stated source, and register borrowed from another category (skincare vocabulary on a soda). The reviewer must not be the agent that wrote the copy; in CineLoom Harness it is a separate agent with this skill and a different system prompt.
+4. Review what a wording scan cannot see: implied superlatives and comparisons with competitors, body or health effects claimed for food and drink ("提神醒脑", "解暑降火"), efficacy claims on cosmetics, statistics without a stated source, and register borrowed from another category (skincare vocabulary on a soda). The reviewer must not be the agent that wrote the copy; in Spotfoundry Harness it is a separate agent with this skill and a different system prompt.
 5. Rewrite every `block` finding - keep the selling point, drop the restricted form - and rescan until the exit code is 0. Resolve `review` findings with proof from the brief, or rewrite them too.
 
 ## Structured judge (optional)

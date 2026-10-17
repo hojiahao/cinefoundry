@@ -1,22 +1,22 @@
 [
   {
-    "id": "cineloom-ad-film-eval-001-one-sentence",
+    "id": "spotfoundry-ad-film-eval-001-one-sentence",
     "question": "给一款叫“冷”的无糖气泡水做一条 15 秒竖版广告，面向大学生，夏天。",
-    "expected_skill": "cineloom-ad-film",
+    "expected_skill": "spotfoundry-ad-film",
     "expected_script": null,
     "ground_truth": "The agent checks the three services answer and no other harness run is active, runs `node dist/cli.js harness` with the brief verbatim in the background, reports progress from the stage lines, and when it finishes reports the film path, per-shot gate results, total seconds and open items from reports/delivery.md."
   },
   {
-    "id": "cineloom-ad-film-eval-002-approve-first",
+    "id": "spotfoundry-ad-film-eval-002-approve-first",
     "question": "先给我看脚本和分镜，我确认了再生成视频。",
-    "expected_skill": "cineloom-ad-film",
+    "expected_skill": "spotfoundry-ad-film",
     "expected_script": null,
     "ground_truth": "The agent runs the harness with --plan-only, shows script/script.json and storyboard/storyboard.json, and only after the user approves runs the full harness."
   },
   {
-    "id": "cineloom-ad-film-eval-003-busy",
+    "id": "spotfoundry-ad-film-eval-003-busy",
     "question": "再帮我同时做一支咖啡的广告。",
-    "expected_skill": "cineloom-ad-film",
+    "expected_skill": "spotfoundry-ad-film",
     "expected_script": null,
     "ground_truth": "The agent sees a harness run is already active, explains that one film runs at a time on the single GPU, and queues the second brief to start when the first finishes instead of launching it in parallel."
   }

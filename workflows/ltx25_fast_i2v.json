@@ -338,7 +338,9 @@
       ],
       "filename_prefix": "{{filename_prefix}}",
       "format": "mp4",
-      "codec": "h264"
+      "format.codec": "h264",
+      "format.codec.encoding": "re-encode",
+      "format.codec.encoding.crf": 12
     }
   }
 }

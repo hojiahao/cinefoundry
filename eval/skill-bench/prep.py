@@ -1,5 +1,5 @@
 """Build the with/without-skill benchmark cases for the eight stage skills that had no ablation yet,
-from this machine's own project history (cineloom/projects/*). Output: eval/skill-bench/cases.json.
+from this machine's own project history (spotfoundry/projects/*). Output: eval/skill-bench/cases.json.
 Every case carries what the scorer needs; nothing is judged by a model."""
 import glob, json, os, random, re, subprocess
 from pathlib import Path
@@ -125,7 +125,7 @@ sched_fixed = [
     {'kind': 'parallel', 'question': '一支片子正在生成视频，能不能同时再跑一轮评测或者另一支片子？', 'availableGb': 26.5},
 ]
 
-# ---- reference breakdown: our own finished films. Shot cuts are crossfaded and graded, so `cineloom shots`
+# ---- reference breakdown: our own finished films. Shot cuts are crossfaded and graded, so `spotfoundry shots`
 # finds one shot; the timeline is known instead: N beats of 5 s with 0.4 s crossfades, then a 3 s end card.
 refs = []
 for d in projects():

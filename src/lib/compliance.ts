@@ -50,6 +50,15 @@ const RULES: Rule[] = [
     categories: ['health_food', 'food'],
   },
   {
+    // The nuts brief asked for 补脑、增强免疫力; the reviewer's rewrite was too short for the script checks, the line stood,
+    // and nothing in this list caught it. A food or an everyday product may not claim a health effect at all.
+    rule: 'health_effect',
+    severity: 'block',
+    pattern: /补脑|健脑|益智|增强免疫|提高免疫|提升免疫|增强抵抗力|抗疲劳|缓解疲劳|助眠|改善睡眠|安神|缓解焦虑|抗焦虑|减肥|瘦身|燃脂|刮油|排毒|养颜|抗衰老|延缓衰老|护肝|养胃|不长胖|喝不胖|吃不胖/gi,
+    reason: '普通食品和一般商品不得宣称保健、医疗或减肥功效（《广告法》第十七条、第二十八条，《食品安全法》第七十三条）。',
+    categories: ['general', 'food'],
+  },
+  {
     rule: 'cosmetics_efficacy',
     severity: 'review',
     pattern: /美白|祛斑|淡斑|防晒|防脱|生发|育发|祛痘|抗皱|去皱|除皱|修复屏障|换肤|再生/gi,

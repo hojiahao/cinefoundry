@@ -381,7 +381,7 @@ describe('frame prompt repairs and second objects (summer-cool-soda-ltx, shot 3)
   })
 })
 
-import { statedTagline } from '../src/agent/harness.js'
+import { faithfulLabel, statedTagline } from '../src/agent/harness.js'
 
 describe('a computer is not a keyboard', () => {
   const brief = { id: 'd', title: '桌上超算', product: 'palm-sized gold mini PC', category: 'general', audience: 'developers', message: '把AI超算放上桌面', ratio: '16:9', durationSeconds: 15, tone: 'night', brandText: 'NVIDIA', industry: 'computing' } as Brief
@@ -437,5 +437,41 @@ describe('computers are lit warm, not blue', () => {
     expect(checkStoryboard(board([shot(1), shot(2), shot(3)]), script3, brief)).toEqual([])
     expect(composeImagePrompt(shot(1), board([]), true, 'computing')).toMatch(/warm golden/)
     expect(composeVideoNegative('blurry', 'computing')).toMatch(/blue light/)
+  })
+})
+
+describe('faithfulLabel', () => {
+  it('puts back label lettering the intake agent miscopied, and leaves faithful copies alone', () => {
+    const request = '无糖乌龙茶「岩」，米白色标签上有黑色书法字“岩”。'
+    expect(faithfulLabel('米白色标签上有黑色书法字“岁”', request, '岩')).toBe('米白色标签上有黑色书法字“岩”')
+    expect(faithfulLabel('青绿色标签上有白色书法字“冷”', '青绿色标签上有白色书法字“冷”', '冷')).toBe('青绿色标签上有白色书法字“冷”')
+    expect(faithfulLabel('标签上有“岁”', '没有写标签文字', '岩')).toBe('标签上有“岁”')
+  })
+})
+
+describe('containerWord', () => {
+  it('names the container of a Chinese product description in English', async () => {
+    const { containerWord } = await import('../src/agent/prompts.js')
+    expect(containerWord('透明玻璃瓶，琥珀色茶汤')).toBe('bottle')
+    expect(containerWord('银色铝罐，青绿色标签')).toBe('can')
+    expect(containerWord('磨砂琥珀色玻璃杯')).toBe('cup')
+    expect(containerWord('牛皮纸自立袋')).toBe('pouch')
+    expect(containerWord('哑光黑色头戴式耳机')).toBeUndefined()
+  })
+})
+
+describe('flaggedBeats', () => {
+  it('reads the beat numbers a reviewer names', async () => {
+    const { flaggedBeats } = await import('../src/agent/harness.js')
+    expect(flaggedBeats(["Beat 3 VO '世界很吵' sounds unnatural", "Beat 2 VO '一键开启全网降噪' implies an absolute claim"], 3)).toEqual([2, 3])
+    expect(flaggedBeats(['第2拍 暗示功效', 'beat 9 is out of range', 'no beat named'], 3)).toEqual([2])
+  })
+})
+
+describe('health effect claims', () => {
+  it('blocks health effects for foods and everyday goods, not for fragrance notes', () => {
+    expect(scanCopy('补脑增强免疫力，脆爽一夏', 'food').filter((f) => f.severity === 'block').map((f) => f.text)).toEqual(['补脑', '增强免疫'])
+    expect(scanCopy('卖点就说助眠、缓解焦虑', 'general').map((f) => f.rule)).toEqual(['health_effect', 'health_effect'])
+    expect(scanCopy('主要香调雪松薰衣草', 'general')).toEqual([])
   })
 })

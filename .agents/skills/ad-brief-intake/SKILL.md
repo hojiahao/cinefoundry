@@ -1,10 +1,10 @@
 ---
 name: ad-brief-intake
 version: "0.1.0"
-description: Turn a rough advertising request into a confirmed production brief and open a CineLoom project. Use at the start of any new ad, commercial, product video or 广告片 request, or when the user changes the product, audience, platform, duration or aspect ratio of an existing project.
-license: MIT
+description: Turn a rough advertising request into a confirmed production brief and open a Spotfoundry project. Use at the start of any new ad, commercial, product video or 广告片 request, or when the user changes the product, audience, platform, duration or aspect ratio of an existing project.
+license: BUSL-1.1
 metadata:
-  author: 方舟团队 (Team Ark)
+  author: 贺家豪 (Jiahao He)
   tags:
     - advertising
     - brief
@@ -28,7 +28,7 @@ then open the project so every later stage has one source of truth.
 4. Open the project:
 
    ```bash
-   cineloom project init --id summer-soda --title "夏日气泡水" --brief "<one-paragraph brief>" --ratio 9:16 --duration 15
+   spotfoundry project init --id summer-soda --title "夏日气泡水" --brief "<one-paragraph brief>" --ratio 9:16 --duration 15
    ```
 
    The id is lowercase letters, digits and dashes.

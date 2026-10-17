@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Synthesise several voiceover lines with Step-Audio-EditX in one model load.
 
-Runs inside the cineloom/step-audio container (scripts/step-audio.sh batch <jobs.json>). The job file:
+Runs inside the spotfoundry/step-audio container (scripts/step-audio.sh batch <jobs.json>). The job file:
 
     {"prompt_audio": "/work/src/ref.wav", "prompt_text": "<what the reference says>",
      "style": "advertising",              # optional Step-Audio style edit applied after cloning

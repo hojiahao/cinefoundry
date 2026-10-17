@@ -13,9 +13,15 @@ export const storyboardUser = (brief: Brief, script: Script) => `Brief:\n${JSON.
 
 ${brief.photo
   ? `${photoNote(brief)} \`product\` must describe exactly what the photo shows; the product label reads "${brief.brandText}". \`style\` sets light, background and mood only: no colour, material or finish for the product.`
-  : `No reference photos exist. The product label reads "${brief.brandText}".${brief.appearance ? `\nThe product looks like this, in the client's words, and \`product\` must describe exactly that: ${brief.appearance}` : ''}`}
+  : `No reference photos exist. The product label reads "${brief.brandText}".${brief.appearance ? `\nThe product looks like this, in the client's words, and \`product\` must describe exactly that: ${brief.appearance}\nWrite \`product\` in English: translate that description${containerWord(brief.appearance) ? `, name the container as "${containerWord(brief.appearance)}"` : ''}, and keep only the label text "${brief.brandText}" in Chinese inside quotes. Use the same English word for the product in every shot.` : ''}`}
 Write EXACTLY ${script.beats.length} shots, numbered 1 to ${script.beats.length}, one per beat, in beat order.
 Return JSON only: {"style": "...", "product": "...", "shots": [{"shot": 1, "seconds": 5, "framing": "...", "camera": "...", "image_prompt": "...", "video_prompt": "...", "on_screen_text": "", "must_show": "..."}]}`
 
 export const agentSystem = (role: string, rules: string, skill?: { name: string; body: string }) =>
-  [`You are the ${role} of CineLoom, an advertising studio running on one DGX Spark.`, rules, skill ? `# Skill: ${skill.name}\n\n${skill.body}` : ''].filter(Boolean).join('\n\n')
+  [`You are the ${role} of Spotfoundry, an advertising studio running on one DGX Spark.`, rules, skill ? `# Skill: ${skill.name}\n\n${skill.body}` : ''].filter(Boolean).join('\n\n')
+
+/** The English container word for a client's Chinese description: a storyboard that copied 透明玻璃瓶 verbatim never said "bottle" and failed six times. */
+export function containerWord(appearance: string): string | undefined {
+  const forms: Array<[RegExp, string]> = [[/易拉罐|铝罐|罐/, 'can'], [/瓶/, 'bottle'], [/杯/, 'cup'], [/自立袋|袋/, 'pouch'], [/盒/, 'box'], [/管/, 'tube'], [/罐|jar/i, 'jar']]
+  return forms.find(([pattern]) => pattern.test(appearance))?.[1]
+}

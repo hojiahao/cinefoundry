@@ -4,7 +4,7 @@
     "question": "我想在这台 Spark 上同时跑 Nemotron、Step3-VL 和 ComfyUI，放得下吗？",
     "expected_skill": "spark-model-scheduler",
     "expected_script": null,
-    "ground_truth": "The agent measures with `cineloom mem status`, runs `cineloom mem plan` with the three needs and a reserve, reports budget, required and headroom from the command output, explains that vLLM claims its fraction of the whole pool at startup so LLM services start first, and does not answer from the reference table alone."
+    "ground_truth": "The agent measures with `spotfoundry mem status`, runs `spotfoundry mem plan` with the three needs and a reserve, reports budget, required and headroom from the command output, explains that vLLM claims its fraction of the whole pool at startup so LLM services start first, and does not answer from the reference table alone."
   },
   {
     "id": "spark-model-scheduler-eval-002-step37-local",

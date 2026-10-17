@@ -33,7 +33,7 @@ export interface ProjectState {
 }
 
 export function projectsRoot(): string {
-  return resolve(process.env.CINELOOM_PROJECTS ?? 'projects')
+  return resolve(process.env.SPOTFOUNDRY_PROJECTS ?? 'projects')
 }
 
 export function projectDir(id: string): string {
