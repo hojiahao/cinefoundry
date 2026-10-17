@@ -7,7 +7,7 @@
   <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A5%2022-5fa04e">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.8-3178c6">
   <img alt="Platform" src="https://img.shields.io/badge/platform-NVIDIA%20DGX%20Spark%20(GB10%20%C2%B7%20aarch64)-76b900">
-  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-10-d9b26a">
+  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-12-d9b26a">
 </p>
 
 <p align="center">
@@ -295,10 +295,12 @@ GB10 上的环境要点已写入配置：Docker 通过 CDI（`nvidia.com/gpu=all
 | Skill | 阶段 | 做什么 | 依赖的命令 / 模型 |
 |---|---|---|---|
 | [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | 需求 | 只问阻塞项，其余自己定并说明，立项 | `cinefoundry project init` |
+| [`creative-direction`](.agents/skills/creative-direction/SKILL.md) | 创意 | 洞察、单一主张、创意概念与导演阐述（光线、色板、质感、节奏、选定声线、配乐与环境声），文案与分镜都从它出发 | Nemotron |
 | [`ad-script-writing`](.agents/skills/ad-script-writing/SKILL.md) | 脚本 | 5 秒一个节拍，口播 8–18 字，标题 ≤8 字，品类语感 | Nemotron |
 | [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | 合规 | 《广告法》用词扫描 + 独立审稿智能体，`block` 级必须改写 | `cinefoundry copy-check` · Nemotron（另一个智能体） |
 | [`ad-reference-breakdown`](.agents/skills/ad-reference-breakdown/SKILL.md) | 拉片 | 参考片切镜、逐镜描述、映射到新产品 | `cinefoundry shots` · Step3-VL |
 | [`storyboard-design`](.agents/skills/storyboard-design/SKILL.md) | 分镜 | 产品只描述一次、风格行不带数字、画面无字、单镜单运镜、电影运镜语言 | Nemotron |
+| [`cinematography-and-art-direction`](.agents/skills/cinematography-and-art-direction/SKILL.md) | 分镜 | 摄影指导、美术、产品造型与选角：用画面语言写镜头、统一光线逻辑、置景与道具、人物外形与表演 | Nemotron |
 | [`spark-local-media-generation`](.agents/skills/spark-local-media-generation/SKILL.md) | 生图 / 生视频 | 定妆图 → 参考图首帧（2 候选）→ 首帧驱动视频 | `cinefoundry image` / `video` · Qwen-Image(-Edit) · Wan2.2 14B |
 | [`shot-quality-gate`](.agents/skills/shot-quality-gate/SKILL.md) | 质检 | 对照定妆图：产品不符、多余文字、乱码、不该有的人手一票否决；按问题类型改提示词重生成 | `cinefoundry qa` · Step3-VL |
 | [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | 成片 | 定版、真字体标题字幕（缺字即失败）、离线配音、本地音乐并自动压低、转场调色 | `cinefoundry cut` · ffmpeg · Qwen3-TTS / Kokoro · ACE-Step |
