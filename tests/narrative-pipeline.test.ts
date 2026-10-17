@@ -76,7 +76,7 @@ const pass = { pass: true, score: 90, craft: { light: 8, composition: 8, realism
 /** How the episode reviewer behaves in a run: approves, rejects with a quoted finding, or cannot be reached. */
 let episodeReview: 'approve' | 'reject' | 'unreachable' = 'approve'
 /** Every chat call, in order: the role it was routed by (or "gate" for an image) and the user prompt. */
-const calls: Array<{ role: string; user: string }> = []
+const calls: Array<{ role: string; user: string; writer?: boolean }> = []
 let developmentCalls = 0
 let editorCalls = 0
 
@@ -118,14 +118,15 @@ beforeAll(async () => {
     const chunks: Buffer[] = []
     request.on('data', (chunk) => chunks.push(chunk))
     request.on('end', () => {
-      // Sleep and wake calls: a server without sleep mode answers 404 and is left alone.
+      // The writers' room checks its model serves; sleep and wake calls get 404 (no sleep mode) and are left alone.
+      if (request.url?.endsWith('/v1/models')) return response.writeHead(200, { 'content-type': 'application/json' }).end('{"data":[]}')
       if (!request.url?.endsWith('/chat/completions')) return response.writeHead(404).end()
       const body = JSON.parse(Buffer.concat(chunks).toString())
       const system: string = body.messages[0].content
       const user = body.messages[1].content
       // Route by the agent's role line ("You are the <role> of Cinefoundry"), never by words a skill's text may contain.
       const role = Array.isArray(user) ? 'gate' : (/^You are the (.+?) of Cinefoundry/.exec(system)?.[1] ?? '')
-      calls.push({ role, user: typeof user === 'string' ? user : JSON.stringify(user[0]) })
+      calls.push({ role, user: typeof user === 'string' ? user : JSON.stringify(user[0]), writer: request.url.startsWith('/writer/') })
       if (role === 'compliance reviewer. You did not write this screenplay' && episodeReview === 'unreachable') return response.writeHead(503).end('reviewer down')
       const content = JSON.stringify(role === 'gate' ? pass : reply(role, user))
       response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ choices: [{ message: { content }, finish_reason: 'stop' }], usage: { completion_tokens: 10 } }))
@@ -305,5 +306,22 @@ describe('creator short end to end', () => {
     expect(qc).toMatchObject({ label: 'ep01', spec: { fps: 30, width: 720, height: 1280 } })
     expect(qc.results.filter((r: { status: string; check: string }) => r.status !== 'pass').map((r: { check: string }) => r.check).filter((c: string) => c !== 'loudness_range')).toEqual([])
     expect(Math.abs(qc.measured.loudness.integrated - (-14))).toBeLessThanOrEqual(1)
+  })
+})
+
+describe("writers' room end to end", () => {
+  it('writes the whole story, the sound plan and the packaging on the author, and nothing on it after the first picture', async () => {
+    process.env.CINEFOUNDRY_WRITER_URL = process.env.CINEFOUNDRY_PLANNER_URL!.replace(/\/v1$/, '/writer/v1')
+    try {
+      await runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-room'))
+    } finally {
+      delete process.env.CINEFOUNDRY_WRITER_URL
+    }
+    const firstPicture = calls.findIndex((c) => c.role === 'gate')
+    const written = calls.slice(0, firstPicture)
+    expect(written.every((c) => c.writer)).toBe(true)
+    expect(written.map((c) => c.role)).toEqual(expect.arrayContaining(['creator-content writer', 'screenwriter', 'script editor of a top streaming studio. You did not write this draft', 'director working with the director of photography and the script supervisor', 'character designer and casting director', 'sound designer and composer', 'packaging editor']))
+    expect(calls.slice(firstPicture).some((c) => c.writer)).toBe(false)
+    expect(logs.join('\n')).toMatch(/writers' room: nemotron-3.5-super-vl released for production|writers' room: .* could not be put to sleep/)
   })
 })

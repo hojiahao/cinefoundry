@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { chatJson } from '../../agent/llm.js'
+import { chatJson, type ModelEndpoint } from '../../agent/llm.js'
 import { exec } from '../../lib/exec.js'
 import { scanBrandWords } from '../../lib/compliance.js'
 import type { NarrativeContext } from './context.js'
@@ -33,12 +33,12 @@ export function checkPackaging(p: Packaging, shots: number): string[] {
   return problems
 }
 
-/** Packaging: titles to test, the cover frame and its words, description with the AI disclosure, hashtags. */
-export async function packagingStage(ctx: NarrativeContext): Promise<string> {
+/** The packaging editor's copy: titles, cover shot and words, description, hashtags; the brand's own are added by code. */
+export async function draftPackaging(ctx: NarrativeContext, endpoint: ModelEndpoint): Promise<Packaging> {
   const play = ctx.plays[0]!
   const shots = ctx.shots.get(play.episode) ?? []
   const run = await chatJson<Packaging>(
-    ctx.planner,
+    endpoint,
     {
       system: await ctx.agentPrompt('packaging editor', 'platform-packaging'),
       thinking: false, maxTokens: 1500, temperature: 0.6,
@@ -50,12 +50,19 @@ Return JSON only: {"titles": ["...", "...", "..."], "cover": {"shot": 1, "text":
     (value) => [...checkPackaging(value, shots.length), ...(ctx.brand ? scanBrandWords([...(value.titles ?? []), value.description ?? '', value.cover?.text ?? '', ...(value.hashtags ?? [])].join('\n'), ctx.brand.kit.forbidden.words, ctx.brand.kit.name).map((f) => `"${f.text}": ${f.reason}`) : [])],
     4,
   )
+  await ctx.record('packaging', 'packaging-editor', endpoint, { seconds: run.seconds, attempts: run.attempts, titles: run.value.titles })
+  return run.value
+}
+
+/** Packaging: titles to test, the cover frame and its words, description with the AI disclosure, hashtags. */
+export async function packagingStage(ctx: NarrativeContext): Promise<string> {
+  const play = ctx.plays[0]!
+  const copy = ctx.packagingDraft ?? (await draftPackaging(ctx, ctx.planner))
   // The brand's hashtags lead and its handles are attached by code: the editor never retypes them.
-  const pack: Packaging & { handles?: Record<string, string> } = ctx.brand ? { ...run.value, ...brandPackaging(ctx.brand.kit, run.value.hashtags) } : run.value
+  const pack: Packaging & { handles?: Record<string, string> } = ctx.brand ? { ...copy, ...brandPackaging(ctx.brand.kit, copy.hashtags) } : copy
   await writeFile(join(ctx.dir!, 'reports', 'packaging.json'), JSON.stringify(pack, null, 2))
   // The cover is the chosen shot's approved first frame, at full quality: what the feed shows before anyone presses play.
   const frame = ctx.frames.get(`${play.episode}:${pack.cover.shot}`)
   if (frame) await exec('ffmpeg', ['-y', '-v', 'error', '-i', frame, '-q:v', '2', join(ctx.dir!, 'cut', 'cover.jpg')])
-  await ctx.record('packaging', 'packaging-editor', ctx.planner, { seconds: run.seconds, attempts: run.attempts, titles: pack.titles })
   return pack.titles[0]!
 }

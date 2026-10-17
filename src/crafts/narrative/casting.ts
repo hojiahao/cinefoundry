@@ -7,8 +7,7 @@ import { enterPhase } from '../../agent/finish.js'
 import { generateImage, type EditModel, type ImageModel } from '../../lib/media.js'
 import { addAsset } from '../../lib/project.js'
 import { failIfHardProblems } from '../repair.js'
-import { writersRoom, type NarrativeContext } from './context.js'
-import { closeWritersRoom } from '../../lib/writers-room.js'
+import type { NarrativeContext } from './context.js'
 import { identityGate, sheetGate, type CastingVerdict, type PackView } from './gate.js'
 import type { Character, NarrativeShot } from './types.js'
 
@@ -343,7 +342,7 @@ Return JSON only: {"characters": [{"id": "mia", "brief": {"face": "...", "featur
  * The picture side of casting: reuse every recorded character, brief and cast the rest, edit and gate their reference
  * packs, and write cast/<id>/character.json (the voice is added by the casting stage). Fills `ctx.cast` and `ctx.sheets`.
  */
-export async function castPictures(ctx: NarrativeContext): Promise<{ reused: string[]; cast: string[] }> {
+export async function castPictures(ctx: NarrativeContext, beforePictures: () => Promise<void> = async () => {}): Promise<{ reused: string[]; cast: string[] }> {
   const bible = ctx.bible!
   const dir = ctx.dir!
   const reused: string[] = []
@@ -358,11 +357,11 @@ export async function castPictures(ctx: NarrativeContext): Promise<{ reused: str
     ctx.log(`▸ cast ${character.id.padEnd(10)} reused from ${member.dir} (master gate ${member.record.images.master.score})`)
     await ctx.record('casting', 'reuse', undefined, { character: character.id, from: member.dir, views: Object.keys(member.views) })
   }
-  // The casting briefs are the writers' room's last page; the room closes before the first picture is made.
-  if (!toCast.length) { await closeWritersRoom(writersRoom(ctx)); return { reused, cast: [] } }
+  // The casting briefs are written in the writers' room, which closes (beforePictures) before the first picture is made.
+  if (!toCast.length) { await beforePictures(); return { reused, cast: [] } }
 
   const briefs = await designBriefs(ctx, toCast, [...ctx.cast.values()])
-  await closeWritersRoom(writersRoom(ctx))
+  await beforePictures()
   const comfy = (ctx.comfy ??= new ComfyClient())
   await ctx.rest('casting (Qwen-Image-2512)', [ctx.planner])
   await enterPhase(comfy, 'casting (Qwen-Image-2512)', ctx.record)

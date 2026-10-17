@@ -1,7 +1,7 @@
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ComfyClient } from '../../comfy/client.js'
-import { chatJson } from '../../agent/llm.js'
+import { chatJson, type ModelEndpoint } from '../../agent/llm.js'
 import { AI_LABEL, TITLE_FONT, enterPhase } from '../../agent/finish.js'
 import type { QaVerdict } from '../../agent/gate.js'
 import { generateMusic } from '../../lib/audio.js'
@@ -18,7 +18,9 @@ import { brandFinish, brandPackaging, brandVoices, productReference } from '../b
 import { NARRATIVE_EDIT_MODEL, NARRATIVE_IMAGE_MODEL, castPictures, referencePrompt, saveCharacterRecord, selectReferences, type CastMember } from './casting.js'
 import { gradeWith } from '../finishing.js'
 import { pictureTrack, stored, writeTimeline } from '../timeline.js'
-import { produced, key, type NarrativeContext } from './context.js'
+import { produced, key, writersRoom, type NarrativeContext } from './context.js'
+import { closeWritersRoom, hasWritersRoom } from '../../lib/writers-room.js'
+import { draftPackaging } from './packaging.js'
 import { loudnessFor, mergeQcReport, qcOpenItems, qcSummary, runQc, type QcReport, type QcSpec, type QcVerdict } from '../qc.js'
 import { shotGate } from './gate.js'
 import { mixNarrative } from './mix.js'
@@ -38,7 +40,7 @@ const castOf = (ctx: NarrativeContext, ids: string[]) => ids.map((id) => ctx.bib
 export async function castingStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
   await mkdir(join(ctx.dir!, 'cast'), { recursive: true })
-  const pictures = await castPictures(ctx)
+  const pictures = await castPictures(ctx, () => closeRoom(ctx))
   // Voices: a recorded voice is kept. Otherwise a character is cast from the library when a QC-passed voice fits (same
   // gender, within twelve years, the timbre the bible asks for); only a character no library voice fits gets a voice
   // designed for them alone.
@@ -255,6 +257,47 @@ export async function interpolateClip(ctx: NarrativeContext, k: string): Promise
   return ctx.clips.get(k)!
 }
 
+export interface SoundPlan { ambience: Array<{ scene: number; prompt: string }>; effects: Array<{ shot: number; prompt: string }>; music: string }
+
+/**
+ * The sound designer's plan for an episode: ambience per scene, sync effects, the score direction. It needs only the
+ * screenplay and the shot list, so it is written in the writers' room; a run without one writes it here on the planner.
+ */
+export async function planSound(ctx: NarrativeContext, episode: number, endpoint: ModelEndpoint): Promise<SoundPlan> {
+  const bible = ctx.bible!
+  const play = ctx.plays.find((p) => p.episode === episode)!
+  const shots = ctx.shots.get(episode) ?? []
+  const plan = await chatJson<SoundPlan>(
+    endpoint,
+    {
+      system: await ctx.agentPrompt('sound designer and composer', 'sound-design-and-music'),
+      thinking: false, maxTokens: 2500, temperature: 0.5,
+      user: `Series: ${bible.genre}; look ${bible.look}.
+Scenes: ${play.scenes.map((s) => `${s.scene}. ${s.heading}: ${s.action}`).join(' | ')}
+Shots: ${shots.map((s) => `${s.shot} (scene ${s.scene}): ${s.video_prompt}`).join(' | ')}
+Write one ambience bed per scene and a sync effect only for shots where something audible happens (a door, a cup set down, rain on glass) - at most half the shots. English, concrete, no music and no speech in effect prompts. Then the score direction for the episode (genre, instrumentation, tempo, how it ends on the cliffhanger; no artist names).
+Return JSON only: {"ambience": [{"scene": 1, "prompt": "..."}], "effects": [{"shot": 2, "prompt": "..."}], "music": "..."}`,
+    },
+    (v) => (Array.isArray(v.ambience) && Array.isArray(v.effects) && typeof v.music === 'string' && v.music.trim() ? [] : ['need "ambience", "effects" arrays and a "music" direction']),
+    3,
+  )
+  await writeFile(join(ctx.dir!, 'story', `ep${pad(episode)}.sound.json`), `${JSON.stringify(plan.value, null, 2)}\n`)
+  await ctx.record('sound', 'sound-designer', endpoint, { episode, seconds: plan.seconds, attempts: plan.attempts, plan: true })
+  return plan.value
+}
+
+/**
+ * The writers' room's last pages, then it closes: every text the rest of the run needs and can write from the
+ * screenplay and the shot list - the sound plans, a short's packaging - is written on the author before the first picture.
+ */
+export async function closeRoom(ctx: NarrativeContext): Promise<void> {
+  const room = writersRoom(ctx)
+  if (!hasWritersRoom(room)) return
+  for (const episode of produced(ctx)) if (!ctx.soundPlans.has(episode)) ctx.soundPlans.set(episode, await planSound(ctx, episode, ctx.author))
+  if (ctx.format === 'short' && !ctx.packagingDraft) ctx.packagingDraft = await draftPackaging(ctx, ctx.author)
+  await closeWritersRoom(room)
+}
+
 /** Sound: the sound designer writes ambience per scene and effects per shot; MOSS-SoundEffect and ACE-Step make them. */
 export async function soundStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
@@ -262,20 +305,7 @@ export async function soundStage(ctx: NarrativeContext): Promise<string> {
   for (const episode of produced(ctx)) {
     const play = ctx.plays.find((p) => p.episode === episode)!
     const shots = ctx.shots.get(episode) ?? []
-    const plan = await chatJson<{ ambience: Array<{ scene: number; prompt: string }>; effects: Array<{ shot: number; prompt: string }>; music: string }>(
-      ctx.planner,
-      {
-        system: await ctx.agentPrompt('sound designer and composer', 'sound-design-and-music'),
-        thinking: false, maxTokens: 2500, temperature: 0.5,
-        user: `Series: ${bible.genre}; look ${bible.look}.
-Scenes: ${play.scenes.map((s) => `${s.scene}. ${s.heading}: ${s.action}`).join(' | ')}
-Shots: ${shots.map((s) => `${s.shot} (scene ${s.scene}): ${s.video_prompt}`).join(' | ')}
-Write one ambience bed per scene and a sync effect only for shots where something audible happens (a door, a cup set down, rain on glass) - at most half the shots. English, concrete, no music and no speech in effect prompts. Then the score direction for the episode (genre, instrumentation, tempo, how it ends on the cliffhanger; no artist names).
-Return JSON only: {"ambience": [{"scene": 1, "prompt": "..."}], "effects": [{"shot": 2, "prompt": "..."}], "music": "..."}`,
-      },
-      (v) => (Array.isArray(v.ambience) && Array.isArray(v.effects) && typeof v.music === 'string' && v.music.trim() ? [] : ['need "ambience", "effects" arrays and a "music" direction']),
-      3,
-    )
+    const plan = { value: ctx.soundPlans.get(episode) ?? (await planSound(ctx, episode, ctx.planner)) }
     const base = soundDir(ctx, episode)
     const sceneSpan = (scene: number) => shots.filter((s) => s.scene === scene).length * 5
     const ambience = plan.value.ambience.filter((a) => sceneSpan(a.scene) > 0).map((a) => ({ scene: a.scene, prompt: a.prompt, seconds: Math.min(30, sceneSpan(a.scene)), output: join(base, `amb_s${a.scene}.wav`) }))
@@ -284,7 +314,7 @@ Return JSON only: {"ambience": [{"scene": 1, "prompt": "..."}], "effects": [{"sh
     ctx.sound.set(episode, { ambience: new Map(ambience.map((a) => [a.scene, a.output])), sfx: new Map(effects.map((e) => [e.shot, e.output])) })
     await scoreEpisode(ctx, episode, plan.value.music)
     made += ambience.length + effects.length + 1
-    await ctx.record('sound', 'sound-designer', ctx.planner, { episode, ambience: ambience.length, effects: effects.length, music: plan.value.music })
+    await ctx.record('sound', 'sound-designer', undefined, { episode, ambience: ambience.length, effects: effects.length, music: plan.value.music })
   }
   await ctx.comfy?.free()
   return `${made} sound files`

@@ -5,6 +5,8 @@ import type { EngineContext } from '../../engine/pipeline.js'
 import type { EngineOptions } from '../../engine/run.js'
 import type { VideoModel } from '../../lib/media.js'
 import type { CastMember } from './casting.js'
+import type { SoundPlan } from './production.js'
+import type { Packaging } from './packaging.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 import type { BrandProduct, LoadedBrand } from '../brand.js'
 
@@ -65,6 +67,10 @@ export interface NarrativeContext extends EngineContext {
   /** Episode number -> finished file. */
   outputs: Map<number, string>
   qaRegenerations: number
+  /** Per episode: the sound designer's plan, written in the writers' room when there is one. */
+  soundPlans: Map<number, SoundPlan>
+  /** A short's packaging copy, drafted in the writers' room when there is one. */
+  packagingDraft?: Packaging
   /** The brand kit and the product the film features, when it is made under one. */
   brand?: LoadedBrand & { product: BrandProduct; presenters: CastMember[] }
 }
