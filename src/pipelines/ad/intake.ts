@@ -6,12 +6,15 @@ import { normalizeImage } from '../../lib/ffmpeg.js'
 import { DEFAULT_DURATION, DEFAULT_FPS, DEFAULT_RATIO, DEFAULT_RESOLUTION, checkFps, generationResolution } from '../../lib/formats.js'
 import { archiveProject, projectExists } from '../../lib/project.js'
 import type { AdContext } from './context.js'
+import { applyBrandToBrief, brandProduct } from '../../crafts/brand.js'
 import { closingLine, faithfulLabel, statedFormat, statedTagline } from './request.js'
 
 /** Brief: the intake producer reads the request into a brief; the client's own words fix ratio, length and closing line. */
 export async function intakeStage(ctx: AdContext): Promise<string> {
   const { options, planner, reviewer, log } = ctx
   log('▸ brief        intake agent · nemotron')
+  const product = ctx.brand ? brandProduct(ctx.brand, options.brief, options.product) : undefined
+  const kitNote = ctx.brand && product ? `\nThe ${ctx.brand.kit.name} brand kit fixes the brand and the product: ${product.name} (${product.appearance}); the lettering printed on it is "${ctx.brand.kit.lettering}".` : ''
   const briefRun = await chatJson<Brief>(
     planner,
     {
@@ -20,7 +23,7 @@ export async function intakeStage(ctx: AdContext): Promise<string> {
       temperature: 0.3,
       user: `This run is non-interactive: nobody can answer questions, so decide every open point yourself.
 Request: ${options.brief}
-${options.ratio ? `The user fixed the aspect ratio: ${options.ratio}.` : ''}${options.durationSeconds ? ` The user fixed the duration: ${options.durationSeconds} seconds.` : ''}
+${options.ratio ? `The user fixed the aspect ratio: ${options.ratio}.` : ''}${options.durationSeconds ? ` The user fixed the duration: ${options.durationSeconds} seconds.` : ''}${kitNote}
 
 Return JSON only:
 {"id": "lowercase-dashed-project-id", "title": "short Chinese title", "product": "what is being advertised", "category": "general|food|health_food|cosmetics|medical",
@@ -35,7 +38,7 @@ Return JSON only:
   // What the request states outright is not the model's to decide: the coffee brief asked for
   // 横版 and the intake agent still chose 9:16. Explicit user words win over the agent's choice.
   const stated = statedFormat(options.brief)
-  const brief: Brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ratio: (options.ratio as Brief['ratio'] | undefined) ?? stated.ratio ?? DEFAULT_RATIO, durationSeconds: options.durationSeconds ?? stated.durationSeconds ?? DEFAULT_DURATION }
+  let brief: Brief = { ...briefRun.value, id: options.id ?? briefRun.value.id, ratio: (options.ratio as Brief['ratio'] | undefined) ?? stated.ratio ?? DEFAULT_RATIO, durationSeconds: options.durationSeconds ?? stated.durationSeconds ?? DEFAULT_DURATION }
   // A closing line the client quoted is theirs, word for word: the copywriter never saw the request, so
   // "DGX Spark，把 AI 超算放上你的桌面" became "AI supercomputing on your desk". The model's copy counts only if it is in the request.
   const modelTagline = briefRun.value.tagline?.trim()
@@ -48,6 +51,8 @@ Return JSON only:
   }
   if (brief.appearance) brief.appearance = faithfulLabel(brief.appearance, options.brief, brief.brandText)
   if (options.proof?.trim()) brief.proof = options.proof.trim()
+  // Under a brand kit the product, its look and lettering, the proof, the forbidden words and the legal lines are the kit's.
+  if (ctx.brand && product) brief = applyBrandToBrief(brief, ctx.brand, product)
   brief.resolution = (options.resolution ?? DEFAULT_RESOLUTION).toLowerCase()
   generationResolution(brief.resolution) // throws on an unknown preset before any model runs
   brief.fps = checkFps(options.fps ?? DEFAULT_FPS)
@@ -64,6 +69,8 @@ Return JSON only:
   }
   const dir = await ctx.openProject({ id: brief.id, title: brief.title, ratio: brief.ratio, durationSeconds: brief.durationSeconds })
   await ctx.record('brief', 'intake', planner, { seconds: briefRun.seconds, attempts: briefRun.attempts, skills: !options.withoutSkills })
+  // The kit's version: which words, colours, logos and photos this film was made with.
+  if (ctx.brand) await ctx.record('brief', 'brand-kit', undefined, { brand: ctx.brand.id, version: ctx.brand.version, product: product?.id })
   // With a product photo the photo is the product's look; without one the hero still is generated from text.
   // The photo is read before anyone writes: the copywriter and the storyboard artist only see text, and a
   // style line of "cool-toned, smooth" made each shot repaint a gold foam front its own way.
@@ -92,7 +99,11 @@ Return JSON only: {"description": "one to three English sentences: overall shape
     // The photo shows what is printed on the product. The intake agent once wrote "DGX" for a
     // device whose only lettering is "NVIDIA", and the gate then failed the real photo for it.
     const printed = brief.photo ? photoLettering(brief.photo.description) : []
-    if (printed.length && !printed.some((text) => text.toLowerCase() === brief.brandText.trim().toLowerCase())) {
+    if (ctx.brand && printed.length && !printed.some((text) => text.toLowerCase() === brief.brandText.trim().toLowerCase())) {
+      // The kit's lettering is the brand's record of what is printed: the reading does not change it, it is reported.
+      log(`  open item: the photo reads "${printed[0]}" but the ${ctx.brand.kit.name} kit's lettering is "${brief.brandText}"; check the kit's photo`)
+      await ctx.record('brief', 'photo-reader', reviewer, { openItems: [`产品照片上的字样 "${printed[0]}" 与品牌套件 "${brief.brandText}" 不一致`] })
+    } else if (printed.length && !printed.some((text) => text.toLowerCase() === brief.brandText.trim().toLowerCase())) {
       await ctx.record('brief', 'photo-reader', reviewer, { brandText: { from: brief.brandText, to: printed[0], printed } })
       log(`▸ photo        brand lettering "${brief.brandText}" -> "${printed[0]}", as printed on the product`)
       brief.brandText = printed[0]!

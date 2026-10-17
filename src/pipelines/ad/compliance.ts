@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { checkScript, type Brief, type Script } from '../../agent/checks.js'
 import { chatJson } from '../../agent/llm.js'
-import { scanCopy, type Finding } from '../../lib/compliance.js'
+import { scanBrandWords, scanCopy, type Finding } from '../../lib/compliance.js'
 import { need, type AdContext } from './context.js'
 import { flaggedBeats } from './request.js'
 
@@ -61,7 +61,7 @@ export async function reviewCopy(ctx: Pick<AdContext, 'editor' | 'agentPrompt' |
       thinking: false,
       maxTokens: 2000,
       temperature: 0.2,
-      user: `Product category: ${brief.category}. Proof points the brand can substantiate: ${brief.proof ?? 'none supplied'}.${brief.proof ? ' A line that states one of these facts is substantiated; anything stronger is not.' : ''}
+      user: `Product category: ${brief.category}. Proof points the brand can substantiate: ${brief.proof ?? 'none supplied'}.${brief.proof ? ' A line that states one of these facts is substantiated; anything stronger is not.' : ''}${brief.brand ? `\nThese are the ${brief.brand.name} brand kit's substantiated claims and the only proof any line may rest on. The kit also forbids these words: ${brief.brand.forbiddenWords.join(', ') || 'none'}; and these topics: ${brief.brand.forbiddenTopics.join(', ') || 'none'}.` : ''}
 ${input.subject ?? 'Script copy'} (the announcer speaks the English line; the Chinese subtitle and title are on screen):\n${script.beats.map((beat) => `Beat ${beat.beat} VO (English): ${beat.vo}\nBeat ${beat.beat} subtitle (Chinese): ${beat.zh}\nBeat ${beat.beat} title: ${beat.text}`).join('\n')}
 
 ${judgeFlags.length ? `A structured judge flagged these lines as uncertain; decide each one:\n${judgeFlags.map((f) => `- beat ${f.beat} "${f.line}": ${f.issue} (p=${f.probability.toFixed(2)})`).join('\n')}\n\n` : ''}Judge three things only, briefly: (1) wording a keyword scan would miss, in either language - implied superlatives, implied comparison with competitors, effects nobody could prove; (2) English that a native broadcast copywriter would not write; (3) a Chinese subtitle that does not say what the English says, or reads as translationese.
@@ -137,7 +137,8 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
   if (unapprovedWithoutBeats) openItems.push(`the reviewer did not approve the copy but named no beat (${(reviewRun!.value.issues ?? []).join(' ').slice(0, 160)}); review the copy before release`)
   // The end card is copy too: the client's closing line, or the message it falls back to, is scanned with the beats.
   const copy = [...script.beats.map((beat) => `${beat.vo}\n${beat.zh}\n${beat.text}`), brief.tagline ?? brief.message].join('\n')
-  const findings = scanCopy(copy, brief.category)
+  // The kit's forbidden words are block findings like the law's: copy with one never reaches media generation.
+  const findings = [...scanCopy(copy, brief.category), ...(brief.brand ? scanBrandWords(copy, brief.brand.forbiddenWords, brief.brand.name) : [])]
   return {
     script, copy, findings, blocked: findings.filter((finding) => finding.severity === 'block'), reviewer: reviewRun?.value ?? null, seconds: reviewRun?.seconds ?? 0,
     revisedBeats: revised.map((item) => item.beat), unrevisedFlaggedBeats: unrevised, unapprovedWithoutBeats, openItems,

@@ -5,6 +5,7 @@
  * parsing prose. Anything sent here leaves the machine, so callers record it as cloud.
  */
 import type { Brief, Script, Shot, Storyboard } from './checks.js'
+import { env } from '../lib/config.js'
 
 export interface JevConfig {
   apiKey: string
@@ -13,9 +14,9 @@ export interface JevConfig {
 }
 
 export function jevConfig(): JevConfig | undefined {
-  const apiKey = process.env.TYPESAFE_API_KEY
+  const apiKey = env('TYPESAFE_API_KEY')
   if (!apiKey) return undefined
-  return { apiKey, endpoint: (process.env.TYPESAFE_ENDPOINT ?? 'https://api.typesafe.ai/v1/systemone').replace(/\/+$/, ''), model: process.env.TYPESAFE_MODEL ?? 'jev-latest' }
+  return { apiKey, endpoint: env('TYPESAFE_ENDPOINT')!.replace(/\/+$/, ''), model: env('TYPESAFE_MODEL')! }
 }
 
 type Question =

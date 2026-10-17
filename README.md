@@ -11,7 +11,7 @@
   <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A5%2022-5fa04e">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.8-3178c6">
   <img alt="Platform" src="https://img.shields.io/badge/platform-NVIDIA%20DGX%20Spark%20(GB10%20%C2%B7%20aarch64)-76b900">
-  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-25-d9b26a">
+  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-26-d9b26a">
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@ A crew of AI agents — creative director, screenwriter, director of photography
 
 | | Traditional production | General AI video tools | Cinefoundry |
 |---|---|---|---|
-| **Who does the work** | A crew of specialists over weeks | One person prompting clip by clip | A crew of 25 role agents, each working under the craft standard of its role |
+| **Who does the work** | A crew of specialists over weeks | One person prompting clip by clip | A crew of 26 role agents, each working under the craft standard of its role |
 | **Consistency** | Real product, real actors | The product and the faces drift from shot to shot | One gated hero still per product, one locked reference portrait per character; every frame is generated from it |
 | **Quality control** | Producers, editors, QC houses | Whoever watches the output | A vision gate on every frame, Whisper on every spoken line, an independent compliance reviewer on every word, before the next, more expensive stage |
 | **On-screen text** | Typeset in post | The model paints it, often garbled | The model never draws text; titles and subtitles are typeset in a real font checked for every glyph |
@@ -58,7 +58,7 @@ A crew of AI agents — creative director, screenwriter, director of photography
 - **Shared crafts.** Writing, picture, sound and post (`src/crafts`) are shared between formats: the ad's creative treatment, the narrative screenplay, casting, identity-gated frames, lip-synced dialogue, the four-bus mix and bilingual subtitles.
 - **Gates between stages.** Copy and dialogue that fail compliance never reach generation; a frame that fails the vision gate is regenerated before any video time is spent; a line Whisper mishears is retaken.
 - **One memory pool, scheduled.** CPU and GPU share 121.7 GB of unified memory. Both language models stay resident; diffusion models are loaded per phase and released at every phase boundary, so one diffusion family is resident at a time.
-- **Skills are an open format.** All 25 skills drive the `cinefoundry` CLI through files and JSON, so Claude Code, Codex, DeepSeek Harness or any client that loads Agent Skills can run the studio.
+- **Skills are an open format.** All 26 skills drive the `cinefoundry` CLI through files and JSON, so Claude Code, Codex, DeepSeek Harness or any client that loads Agent Skills can run the studio.
 
 ## Quick start
 
@@ -126,7 +126,7 @@ From September 22 the hard limits (beat count, line length, shot count) moved in
 
 ## Agent Skills
 
-25 skills, one per real production role, in six categories. The three formats share the picture, sound and post crews; writing and compliance are specialised per format.
+26 skills, one per real production role, in six categories. The three formats share the picture, sound and post crews; writing and compliance are specialised per format.
 
 **Production**
 
@@ -136,6 +136,7 @@ From September 22 the hard limits (beat count, line length, shot count) moved in
 | [`cinefoundry-short-video`](.agents/skills/cinefoundry-short-video/SKILL.md) | Short-video producer | Entry point: topic to finished short and its packaging |
 | [`cinefoundry-micro-drama`](.agents/skills/cinefoundry-micro-drama/SKILL.md) | Series producer | Entry point: series bible, casting and episodes |
 | [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | Account planner | Reads the brief, asks only what blocks it, decides the rest |
+| [`brand-kit`](.agents/skills/brand-kit/SKILL.md) | Brand guardian | A reusable brand kit - lettering, logo, palette, fonts, voice, tone, claims, legal lines - applied to every film made under it |
 | [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | Advertising legal | Advertising Law wording scan and an independent reviewer; `block` findings must be rewritten |
 | [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | Content review | Micro-drama regulation, content red lines, AI labelling, platform disclosure, likeness and voice rights |
 | [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | Technical producer | Measures unified memory, then loads and releases models phase by phase |
@@ -198,7 +199,7 @@ From September 22 the hard limits (beat count, line length, shot count) moved in
 | Finishing | ffmpeg and libass: grade, typeset titles and subtitles, four-bus mix, loudness, AIGC metadata |
 | Engine | TypeScript on Node.js 22, no runtime dependencies; Vitest |
 
-**Deploy.** `scripts/spark-up.sh` refuses to start without enough free unified memory, brings up Nemotron (:8001), Step3-VL (:8002) and ComfyUI (:8188), then runs `cinefoundry doctor`, which checks every workflow template node by node against the running ComfyUI. Ports are configurable with `CINEFOUNDRY_PLANNER_URL`, `CINEFOUNDRY_VISION_URL` and `COMFYUI_URL`; the full configuration is in [`deploy/spark/compose.yaml`](deploy/spark/compose.yaml). The voice and sound containers are built from `deploy/spark/qwen-tts` and `deploy/spark/moss-audio`; `scripts/voice-design.py` and `scripts/voice-qc.py` build the voice library from [`deploy/voices/library.json`](deploy/voices/library.json).
+**Deploy.** `scripts/spark-up.sh` refuses to start without enough free unified memory, brings up Nemotron (:8001), Step3-VL (:8002) and ComfyUI (:8188), then runs `cinefoundry doctor`, which checks every workflow template node by node against the running ComfyUI. Ports are configurable with `CINEFOUNDRY_PLANNER_URL`, `CINEFOUNDRY_VISION_URL` and `COMFYUI_URL`; the services are configured in [`deploy/spark/compose.yaml`](deploy/spark/compose.yaml), and every environment variable Cinefoundry reads, with its default, is listed in [`docs/configuration.md`](docs/configuration.md). The voice and sound containers are built from `deploy/spark/qwen-tts` and `deploy/spark/moss-audio`; `scripts/voice-design.py` and `scripts/voice-qc.py` build the voice library from [`deploy/voices/library.json`](deploy/voices/library.json).
 
 **Optimisation.**
 

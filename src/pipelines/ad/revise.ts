@@ -10,6 +10,7 @@ import { checkGrade, loadFinishing, saveFinishing, finishingPath } from '../../c
 import { qcOpenItems, qcSummary, runQc, mergeQcReport, type QcReport } from '../../crafts/qc.js'
 import { reviseShotPrompt, translateSubtitle } from '../../crafts/revisions.js'
 import { readTimeline, resolved } from '../../crafts/timeline.js'
+import { brandFinish, loadBrand } from '../../crafts/brand.js'
 import type { Treatment } from '../../crafts/treatment.js'
 import { CUTDOWNS, type VersionPlan } from '../../crafts/versions.js'
 import { scanCopy } from '../../lib/compliance.js'
@@ -83,11 +84,15 @@ export async function loadAdContext(engine: EngineContext & RevisionTools, state
     const plan = await readJson<VersionPlan>(file)
     versions.push({ spec, plan, cut: { ...masterCut, path: join(dir, 'cut', `final_${spec.id}.mp4`), ass: join(dir, 'cut', `titles_${spec.id}.ass`), produceId: `${brief.id}-${spec.id}` } })
   }
+  // A film made under a brand kit is revised under the kit as it is now (as `cinefoundry cut` does); a changed kit is said.
+  const brandId = recorded.brand ?? brief.brand?.id
+  const brand = brandId ? await loadBrand(brandId) : undefined
+  if (brand && brief.brand && brand.version !== brief.brand.version) engine.log(`  note: the ${brand.id} kit changed since this film was made (${brief.brand.version} -> ${brand.version}); revising with the current kit`)
   const { planner, reviewer, editor } = endpoints()
   return Object.assign(engine, {
     options, planner, reviewer, editor, jev: undefined, jevReview: [], rejectedAttempts: {}, qaRegenerations: 0,
     brief, treatment, script, storyboard, comfy: new ComfyClient(), hero: { path: join(dir, hero.path), verdict: { pass: true, score: Number(/gate (\d+)/.exec(hero.note ?? '')?.[1] ?? 0), issues: [] } },
-    frames, finalCut: masterCut.path, masterCut, versions,
+    frames, finalCut: masterCut.path, masterCut, versions, ...(brand ? { brand } : {}),
   }) as AdRevisionContext
 }
 
@@ -185,7 +190,7 @@ export const adRevision: RevisionDef<AdContext> = {
   },
 
   report: async (ctx: AdRevisionContext) => {
-    await writeDeliveryReport(ctx.dir!, need(ctx.brief, 'brief'), need(ctx.script, 'script'), need(ctx.storyboard, 'storyboard'), join(ctx.dir!, 'cut', 'final.mp4'))
+    await writeDeliveryReport(ctx.dir!, need(ctx.brief, 'brief'), need(ctx.storyboard, 'storyboard'), join(ctx.dir!, 'cut', 'final.mp4'))
   },
 }
 
@@ -248,7 +253,7 @@ async function recut(ctx: AdRevisionContext, input: { versions: VersionCut[]; re
   }
   const master = await finishMaster({
     dir, brief, script: need(ctx.script, 'script'), storyboard: need(ctx.storyboard, 'storyboard'), heroPath: need(ctx.hero, 'hero').path, comfy: need(ctx.comfy, 'comfy'),
-    silent, record: ctx.record, log: ctx.log, treatment, music, reuseVoices: true, revoice: input.revoice, reuseEndCard: true, grade: input.grade,
+    silent, record: ctx.record, log: ctx.log, treatment, music, ...(ctx.brand ? { brand: await brandFinish(ctx.brand) } : {}), reuseVoices: true, revoice: input.revoice, reuseEndCard: true, grade: input.grade,
   })
   await addAsset(brief.id, { id: 'final-cut', kind: 'video', stage: 'cut', path: 'cut/final.mp4', execution: 'local-dgx-spark', model: 'ffmpeg' })
   ctx.masterCut = master

@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { COMMANDS } from './commands/index.js'
 import { parseArgs, UsageError } from './lib/args.js'
+import { env } from './lib/config.js'
 
 const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
 
@@ -9,7 +10,7 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
   cinefoundry ad "<brief>"      [--duration 30] [--ratio 16:9|9:16|1:1] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts"] [--plan-only]
   cinefoundry short "<topic>"   [--seconds 60] [--ratio 9:16] [--fps 30] [--cast dir] [--plan-only]
   cinefoundry drama "<story>"   [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--cast dir] [--plan-only]
-  Common: [--id id] [--video-model ltx25-fast-nvfp4|ltx25-fast|wan22-14b|wan22-5b|seedance] [--candidates 2]
+  Common: [--id id] [--brand brand-id] [--product product-id] [--video-model ltx25-fast-nvfp4|ltx25-fast|wan22-14b|wan22-5b|seedance] [--candidates 2]
   (cinefoundry harness is the same as cinefoundry ad)
 
   Revisions and interchange, on a finished project
@@ -19,6 +20,9 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
   cinefoundry export <id> --format edl|fcpxml|otio [--episode E | --version master|15s|06s]   EDL / FCPXML + FCP 7 XML / OTIO, stems, SRT, ASS
 
   Individual tools, as the skills call them
+  cinefoundry brand init <brand-id> [--name "Brand"] [--brief "brand brief"]   scaffold a kit in brands/<brand-id>/ (drafted by the brand manager from a brief)
+  cinefoundry brand check <brand-id>                                          files, fonts, voices, colours, logos: exit 1 on any problem
+  cinefoundry brand show <brand-id>
   cinefoundry eval [--briefs eval/briefs.json] [--repeats 2]      with/without-skill comparison
   cinefoundry project init --id <id> --brief <text> [--title] [--ratio 9:16] [--duration 15]
   cinefoundry project status --id <id>
@@ -35,7 +39,7 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
 `
 
 // Optional API keys for cloud routes live outside the repo (runtime-data/ is git-ignored).
-const keysFile = process.env.CINEFOUNDRY_KEYS_FILE ?? 'runtime-data/keys.env'
+const keysFile = env('CINEFOUNDRY_KEYS_FILE')!
 if (existsSync(keysFile)) {
   for (const line of readFileSync(keysFile, 'utf8').split('\n')) {
     const match = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line)

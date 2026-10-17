@@ -16,14 +16,12 @@ export interface EngineOptions {
   log?: (line: string) => void
 }
 
-export type OpenProject = EngineContext['openProject']
-
 /** A run's id: the start time to the second and the process, so two runs never share one. */
 export const newRunId = () => `${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${process.pid}`
 
-/** The options worth keeping with the project (values, no functions): a revision reruns stages with the same ones. */
+/** The options worth keeping with the project (values, no functions; a brand kit by its id, reloaded): a revision reruns stages with the same ones. */
 export function recordedOptions(options: object): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(options).filter(([, value]) => value !== undefined && typeof value !== 'function'))
+  return Object.fromEntries(Object.entries(options).filter(([key, value]) => value !== undefined && typeof value !== 'function' && key !== 'brandKit'))
 }
 
 /**
@@ -71,7 +69,7 @@ export async function runPipeline<O extends EngineOptions, C extends EngineConte
 
   const engine = createEngineContext({ format: pipeline.id, request: options.brief, runId, rules, withoutSkills: options.withoutSkills, log })
   engine.openProject = async ({ id, title, ratio, durationSeconds }) => {
-    await createProject({ id, title, brief: options.brief, ratio, durationSeconds, runId, format: pipeline.id, stages: pipeline.stages.flatMap((s) => [s.id, ...(s.alsoMarks ?? [])]), folders: pipeline.folders, options: recordedOptions(options) })
+    await createProject({ id, title, brief: options.brief, ratio, durationSeconds, runId, format: pipeline.id, stages: pipeline.stages.flatMap((s) => [s.id, ...(s.alsoMarks ?? []).map((m) => m.id)]), folders: pipeline.folders, options: recordedOptions(options) })
     engine.projectId = id
     engine.dir = projectDir(id)
     current = { id }
@@ -85,10 +83,10 @@ export async function runPipeline<O extends EngineOptions, C extends EngineConte
     const ctx = await pipeline.init(options, engine)
     for (const stage of pipeline.stages) {
       if (stage.when && !stage.when(ctx)) continue
-      for (const id of [stage.id, ...(stage.alsoMarks ?? [])]) await board.mark(id, 'running')
+      for (const id of [stage.id, ...(stage.alsoMarks ?? []).map((m) => m.id)]) await board.mark(id, 'running')
       const note = await stage.run(ctx)
       // The stage that opened the project could not mark itself running; it is done now all the same.
-      for (const id of [stage.id, ...(stage.alsoMarks ?? [])]) await board.mark(id, 'done', note ?? undefined)
+      for (const id of [stage.id, ...(stage.alsoMarks ?? []).map((m) => m.id)]) await board.mark(id, 'done', note ?? undefined)
     }
     return await pipeline.finish(ctx)
   } catch (error) {

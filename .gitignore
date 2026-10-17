@@ -1,6 +1,7 @@
 node_modules/
 dist/
 projects/
+brands/
 runtime-data/
 deploy/spark/spark.env
 .dsh-home/

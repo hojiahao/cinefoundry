@@ -109,3 +109,26 @@ export function scanCopy(copy: string, category: Category): Finding[] {
   })
   return findings
 }
+
+const LATIN_WORD = /^[A-Za-z0-9][A-Za-z0-9 '\-]*$/
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * A brand kit's forbidden words as restricted wording: every occurrence is a `block` finding. Latin words match whole
+ * words, case-insensitively ("cheap" does not flag "cheapside"); Chinese words match anywhere.
+ */
+export function scanBrandWords(copy: string, words: string[], brand: string): Finding[] {
+  const findings: Finding[] = []
+  const patterns = words.map((word) => word.trim()).filter(Boolean).map((word) => ({ word, pattern: LATIN_WORD.test(word) ? new RegExp(`\\b${escape(word)}\\b`, 'gi') : new RegExp(escape(word), 'gi') }))
+  copy.split(/\r?\n/).forEach((line, index) => {
+    for (const { word, pattern } of patterns) {
+      for (const match of line.matchAll(pattern)) {
+        findings.push({
+          text: match[0], rule: 'brand_forbidden', severity: 'block', reason: `the ${brand} brand kit forbids "${word}"`, line: index + 1,
+          context: line.slice(Math.max(0, match.index - 12), match.index + match[0].length + 12).trim(),
+        })
+      }
+    }
+  })
+  return findings
+}

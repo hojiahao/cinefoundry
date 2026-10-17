@@ -13,6 +13,7 @@ import type { ProjectState } from '../../lib/project.js'
 import { loadVoiceLibrary, voicesDir } from '../../lib/voices.js'
 import { RevisionRefused, type RevisionDef, type RevisionRequest, type RevisionTools } from '../../engine/revise.js'
 import type { EngineContext } from '../../engine/pipeline.js'
+import { brandVoices, loadBrand } from '../brand.js'
 import { checkGrade, finishingPath, loadFinishing, saveFinishing } from '../finishing.js'
 import { reviseShotPrompt, translateSubtitle } from '../revisions.js'
 import { applyRecord, loadCastMember } from './casting.js'
@@ -48,6 +49,8 @@ export async function loadNarrativeContext(engine: EngineContext & RevisionTools
   if (!existsSync(join(dir, 'story', 'bible.json'))) throw new RevisionRefused(`${state.id} has no series bible (story/bible.json)`)
   const recorded = (state.options ?? {}) as Partial<NarrativeOptions>
   const options: NarrativeOptions = { fps: format === 'drama' ? 24 : 30, ...recorded, brief: state.brief }
+  // A series made under a brand kit is revised under the kit as it is now: its fonts, grade, legal lines, product photo and voices.
+  if (recorded.brand) options.brandKit = await loadBrand(recorded.brand)
   const ctx = narrativeContext(options, engine, {
     writer: format === 'drama' ? { role: 'showrunner and head writer', skill: 'series-development' } : { role: 'creator-content writer', skill: 'short-video-scripting' },
     seconds: state.durationSeconds, ratio: (state.ratio as NarrativeContext['ratio']) ?? '9:16',
@@ -71,7 +74,9 @@ export async function loadNarrativeContext(engine: EngineContext & RevisionTools
     bible.characters[index] = applyRecord(character, member.record)
     ctx.cast.set(character.id, member)
     ctx.sheets.set(character.id, member.views.master)
-    const voice = recordedVoice(member, available)
+    // The casting stage's order: the brand kit's designed voice first, then the cast record's.
+    const kitVoice = ctx.brand ? brandVoices(ctx.brand).get(character.id) : undefined
+    const voice = kitVoice && existsSync(kitVoice.wav) ? { voice: kitVoice } : recordedVoice(member, available)
     if (voice) ctx.voices.set(character.id, voice.voice)
   }
   if (existsSync(narratorVoice(ctx))) ctx.voices.set('vo', { wav: narratorVoice(ctx), text: NARRATOR_TEXT })

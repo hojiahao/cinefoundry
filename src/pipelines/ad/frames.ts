@@ -8,6 +8,7 @@ import { generateImage, imageWorkflow, videoSize } from '../../lib/media.js'
 import { generationResolution } from '../../lib/formats.js'
 import { addAsset } from '../../lib/project.js'
 import { MAX_QA_REGENERATIONS, repairPrompt } from '../../crafts/repair.js'
+import { brandProduct, kitFile } from '../../crafts/brand.js'
 import { need, type AdContext } from './context.js'
 
 /** Frames are generated at the video model's working size: the clip is made at that size, so a larger still only costs time (1920x1080 took 77 s a frame; 1280x704 about half). */
@@ -61,7 +62,7 @@ export async function framesStage(ctx: AdContext): Promise<string> {
   if (!hero!.verdict.pass) {
     throw new Error(`The product hero still failed the gate ${MAX_QA_REGENERATIONS + 1} times (${hero!.verdict.issues.join('; ')}). Every frame is anchored to it, so the film cannot continue with the wrong product.`)
   }
-  await addAsset(brief.id, { id: 'product-hero', kind: 'image', stage: 'frames', path: hero!.path.slice(dir.length + 1), execution: ctx.options.productImage ? 'user-supplied' : 'local-dgx-spark', model: ctx.options.productImage ? 'user photo' : imageWorkflow(0).workflow, note: `gate ${hero!.verdict.score}` })
+  await addAsset(brief.id, { id: 'product-hero', kind: 'image', stage: 'frames', path: hero!.path.slice(dir.length + 1), execution: ctx.options.productImage ? 'user-supplied' : 'local-dgx-spark', model: ctx.options.productImage ? (ctx.brand ? `brand kit photo (${ctx.brand.id} ${ctx.brand.version})` : 'user photo') : imageWorkflow(0).workflow, note: `gate ${hero!.verdict.score}` })
 
   await enterPhase(comfy, 'frames (Qwen-Image-Edit)', ctx.record)
   ctx.hero = hero!
@@ -104,7 +105,10 @@ export function renderFrame(ctx: AdContext, shot: Shot, prompt: string, suffix: 
   const path = framePath(ctx.dir!, shot, suffix)
   // imageSeconds counts from the request, so it includes any wait in ComfyUI's queue.
   const renderStartedAt = new Date().toISOString()
-  return generateImage(need(ctx.comfy, 'comfy'), { prompt, size: frameSize(generationResolution(brief.resolution!), brief.ratio), output: path, references: [need(ctx.hero, 'hero').path] })
+  // The kit's other photos of the product are references too (images 2 and 3): the side and back the hero does not show.
+  const kitPhotos = ctx.brand ? brandProduct(ctx.brand, ctx.request, ctx.options.product).photos.slice(1, 3).map((photo) => kitFile(ctx.brand!, photo)) : []
+  const kitPhotoNote = kitPhotos.length ? ` Image${kitPhotos.length > 1 ? 's 2 and 3 show' : ' 2 shows'} the same product from another side: match its details, never add a second product.` : ''
+  return generateImage(need(ctx.comfy, 'comfy'), { prompt: `${prompt}${kitPhotoNote}`, size: frameSize(generationResolution(brief.resolution!), brief.ratio), output: path, references: [need(ctx.hero, 'hero').path, ...kitPhotos] })
     .then((image) => ({ path, image, renderStartedAt }))
 }
 

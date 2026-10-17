@@ -40,3 +40,9 @@ function alive(pid: number): boolean {
     return (error as NodeJS.ErrnoException).code === 'EPERM'
   }
 }
+
+/** Who holds the run lock right now, if anyone: a lock whose process is gone does not count. */
+export async function runLockHolder(): Promise<{ pid: number; startedAt: string; brief: string } | undefined> {
+  const held = await readFile(join(projectsRoot(), '.harness.lock'), 'utf8').then((text) => JSON.parse(text) as { pid: number; startedAt: string; brief: string }).catch(() => undefined)
+  return held && alive(held.pid) ? held : undefined
+}

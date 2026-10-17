@@ -15,7 +15,7 @@ export const dramaPipeline: PipelineDef<NarrativeOptions, NarrativeContext, Dram
   title: 'Micro-drama',
   folders: NARRATIVE_FOLDERS,
   stages: narrativeStages,
-  preflight: (options) => narrativePreflight({ fps: 24, ...options }, { maxSeconds: 180, maxEpisodes: 30 }),
+  preflight: async (options) => { options.brandKit = await narrativePreflight({ fps: 24, ...options }, { maxSeconds: 180, maxEpisodes: 30 }) },
   init: async (options, engine) => narrativeContext({ fps: 24, ...options }, engine, { writer: { role: 'showrunner and head writer', skill: 'series-development' }, seconds: 120, ratio: '9:16' }),
   finish: async (ctx) => {
     if (ctx.outputs.size) await writeNarrativeDeliveryReport(ctx)

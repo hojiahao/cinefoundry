@@ -3,7 +3,7 @@
  * reject an agent's work; the evals use the same functions to score runs with and without
  * a skill, so "the skill helped" is a count of rule violations, not an opinion.
  */
-import { scanCopy, type Category } from '../lib/compliance.js'
+import { scanBrandWords, scanCopy, type Category } from '../lib/compliance.js'
 
 export interface Brief {
   id: string
@@ -30,6 +30,24 @@ export interface Brief {
   resolution?: string
   /** Delivery frame rate; 60 when missing. */
   fps?: number
+  /** The brand kit this film is made under (`--brand`): its words, claims and legal lines bind every stage. */
+  brand?: BrandBrief
+}
+
+/** What a brand kit fixes in the brief (src/crafts/brand.ts): carried in brief.json so every stage and a re-cut read the same kit. */
+export interface BrandBrief {
+  id: string
+  /** Content hash of the kit (brand.json and every file it names), recorded in run.jsonl. */
+  version: string
+  name: string
+  /** Words the kit forbids: restricted wording in every line of copy, in any language. */
+  forbiddenWords: string[]
+  /** Topics the kit keeps out of its films; judged by the writers and the reviewer. */
+  forbiddenTopics: string[]
+  /** The kit's substantiated claims: the only proof the copy may rest on. */
+  claims: Array<{ claim: string; proof: string; source: string }>
+  /** Mandatory legal lines, typeset on the end card. */
+  legal: string[]
 }
 
 /** The vision model's reading of a user-supplied product photo: the product's look only, never its placement, light or background. */
@@ -82,9 +100,6 @@ export const subtitleMax = (ratio: string) => (ratio === '9:16' ? 12 : 16)
 export const EN_ABSOLUTES = /\b(the best|best[- ]ever|number one|no\.\s?1|world'?s (first|best)|the only|perfect|flawless|guaranteed|100\s?%|ultimate|unbeatable|revolutionary)\b|#1\b/i
 /** English stock ad-speak: the words that mark copy as templated. */
 export const EN_CLICHES = /\b(elevate|unleash|game[- ]changer|seamless(ly)?|next[- ]level|redefin(e|es|ing)|unlock (your|the)|experience the|like never before|take it to the next|empower|cutting[- ]edge|state[- ]of[- ]the[- ]art|immerse yourself|embark|journey of)\b/i
-export const VO_MAX_CHARS = 18
-/** Below this a 5-second beat is mostly silence, which is how a model 'passes' a length limit without writing copy. */
-export const VO_MIN_CHARS = 8
 export const TEXT_MAX_CHARS = 8
 const CJK = /[一-鿿]/
 // Container words that only make sense for a specific product form.
@@ -187,6 +202,11 @@ export function checkScript(script: Script, brief: Brief, options: { beats?: num
   const copy = beats.map((beat) => `${beat.zh ?? ''}\n${beat.text ?? ''}`).join('\n')
   for (const finding of scanCopy(copy, brief.category).filter((item) => item.severity === 'block'))
     problems.push(`restricted wording "${finding.text}" (${finding.rule}): ${finding.reason}`)
+  // The brand kit's forbidden words are restricted wording too, in the English line as much as in the Chinese.
+  if (brief.brand) {
+    const lines = beats.map((beat) => `${beat.vo ?? ''}\n${beat.zh ?? ''}\n${beat.text ?? ''}`).join('\n')
+    for (const finding of scanBrandWords(lines, brief.brand.forbiddenWords, brief.brand.name)) problems.push(`restricted wording "${finding.text}" (${finding.rule}): ${finding.reason}`)
+  }
   return problems
 }
 
@@ -248,7 +268,7 @@ export function checkStoryboard(storyboard: Storyboard, script: Script, brief?: 
   if (/\bin quotes\b/i.test(storyboard.product ?? '')) problems.push('product contains the words "in quotes" copied from the template; write the label text itself inside the quotes and nothing about quoting')
   // The product line is painted into the hero still. Chinese outside the quoted label text ("无糖气泡水, container: ...") ends up printed on the can, garbled.
   if (storyboard.product?.trim() && CJK.test(storyboard.product.replace(/"[^"]*"|“[^”]*”/g, ''))) problems.push('product must be in English except the label text inside quotes: any other Chinese in it gets painted onto the product')
-  if (storyboard.product?.trim() && brief && /\b(aluminium|aluminum|tin|soda|drink|beverage)?\s*cans?\b|气泡水|易拉罐/i.test(storyboard.product) && !/\bcan\b|aluminium|气泡|饮料|汽水|可乐|啤酒|soda|drink|beverage|water|beer|cola|tea|coffee|juice/i.test(brief.product)) problems.push('product describes a drink can but the brief is not for a canned drink; describe the actual product from the brief')
+  if (storyboard.product?.trim() && brief && /\b(aluminium|aluminum|tin|soda|drink|beverage)?\s*cans?\b|气泡水|易拉罐/i.test(storyboard.product) && !/\bcan\b|aluminium|气泡|饮料|汽水|可乐|啤酒|咖啡|茶|果汁|soda|drink|beverage|water|beer|cola|tea|coffee|juice/i.test(brief.product)) problems.push('product describes a drink can but the brief is not for a canned drink; describe the actual product from the brief')
   if (brief && storyboard.product?.includes('matte-silver aluminium can') && !/can|罐|铝/i.test(brief.product)) problems.push('product is the example from the skill, not this brief\'s product')
   if (shots.length !== script.beats.length) problems.push(`one shot per beat: expected ${script.beats.length} shots, got ${shots.length}`)
   for (const shot of shots) {

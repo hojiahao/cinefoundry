@@ -1,3 +1,5 @@
+import { env } from './config.js'
+
 /**
  * Putting the language models to sleep while the diffusion models work.
  *
@@ -16,14 +18,24 @@
 const state = new Map<string, 'awake' | 'asleep' | 'none'>()
 /** The sleep level each service was put to by us: level 2 discards the weights and they must be reloaded after wake_up. */
 const level = new Map<string, 1 | 2>()
+/** The wake in flight per service: every caller that needs the model while it wakes waits for this one wake. */
+const waking = new Map<string, Promise<{ wokeSeconds?: number }>>()
+/** Per service, the tail of its transitions: a sleep and a wake never interleave their HTTP calls. */
+const transitions = new Map<string, Promise<unknown>>()
+
+function serially<T>(baseUrl: string, task: () => Promise<T>): Promise<T> {
+  const run = (transitions.get(baseUrl) ?? Promise.resolve()).then(task, task)
+  transitions.set(baseUrl, run.catch(() => undefined))
+  return run
+}
 
 /** 2 (default): release weights and KV cache, reload from disk on wake. 1: keep the weights in host memory (frees nothing on a unified-memory machine). */
-export const sleepLevel = (): 1 | 2 => (process.env.CINEFOUNDRY_SLEEP_LEVEL === '1' ? 1 : 2)
+export const sleepLevel = (): 1 | 2 => (env('CINEFOUNDRY_SLEEP_LEVEL') === '1' ? 1 : 2)
 
 /** `http://host:port/v1` -> `http://host:port` */
 export const serviceRoot = (baseUrl: string) => baseUrl.replace(/\/v1\/?$/, '')
 
-export const sleepEnabled = () => process.env.CINEFOUNDRY_SLEEP_LLMS !== '0'
+export const sleepEnabled = () => env('CINEFOUNDRY_SLEEP_LLMS') !== '0'
 
 /** Whether the service is asleep; `undefined` when it has no sleep mode (or is not a vLLM server). */
 export async function isSleeping(baseUrl: string): Promise<boolean | undefined> {
@@ -36,9 +48,25 @@ export async function isSleeping(baseUrl: string): Promise<boolean | undefined> 
   }
 }
 
-/** Wake the service if it sleeps. Cheap after the first call: the state is remembered until we sleep it ourselves. */
+/**
+ * Wake the service if it sleeps. Cheap after the first call: the state is remembered until we sleep it ourselves.
+ * Concurrent callers share one wake; only the caller that started it gets `wokeSeconds`, so the time is recorded once.
+ */
 export async function ensureAwake(baseUrl: string): Promise<{ wokeSeconds?: number }> {
   if (!baseUrl.startsWith('http://127.0.0.1') && !baseUrl.startsWith('http://localhost')) return {}
+  const known = state.get(baseUrl)
+  if (known === 'awake' || known === 'none') return {}
+  const inFlight = waking.get(baseUrl)
+  if (inFlight) {
+    await inFlight
+    return {}
+  }
+  const wake = serially(baseUrl, () => wakeNow(baseUrl)).finally(() => waking.delete(baseUrl))
+  waking.set(baseUrl, wake)
+  return wake
+}
+
+async function wakeNow(baseUrl: string): Promise<{ wokeSeconds?: number }> {
   const known = state.get(baseUrl)
   if (known === 'awake' || known === 'none') return {}
   const sleeping = await isSleeping(baseUrl)
@@ -63,25 +91,33 @@ export async function ensureAwake(baseUrl: string): Promise<{ wokeSeconds?: numb
   return { wokeSeconds: (Date.now() - started) / 1000 }
 }
 
-/** Level 2: weights and KV cache are released; the next request reloads them. Returns false when the server has no sleep mode. */
+/**
+ * Level 2: weights and KV cache are released; the next request reloads them. Returns false when the server has no sleep
+ * mode, and when a wake is in flight or queued: whoever asked for it needs the model now (the cut wakes both models
+ * underneath finishing), so a sleep that arrives during the wake is a late call and is not carried out.
+ */
 export async function sleepService(baseUrl: string): Promise<boolean> {
-  if (!sleepEnabled() || state.get(baseUrl) === 'none') return false
-  const sleeping = await isSleeping(baseUrl)
-  if (sleeping === undefined) {
-    state.set(baseUrl, 'none')
-    return false
-  }
-  if (!sleeping) {
-    const response = await fetch(`${serviceRoot(baseUrl)}/sleep?level=${sleepLevel()}`, { method: 'POST', signal: AbortSignal.timeout(120000) })
-    if (!response.ok) throw new Error(`could not sleep ${baseUrl}: ${response.status}`)
-    level.set(baseUrl, sleepLevel())
-  }
-  state.set(baseUrl, 'asleep')
-  return true
+  if (!sleepEnabled() || state.get(baseUrl) === 'none' || waking.has(baseUrl)) return false
+  return serially(baseUrl, async () => {
+    if (waking.has(baseUrl) || state.get(baseUrl) === 'none') return false
+    const sleeping = await isSleeping(baseUrl)
+    if (sleeping === undefined) {
+      state.set(baseUrl, 'none')
+      return false
+    }
+    if (!sleeping) {
+      const response = await fetch(`${serviceRoot(baseUrl)}/sleep?level=${sleepLevel()}`, { method: 'POST', signal: AbortSignal.timeout(120000) })
+      if (!response.ok) throw new Error(`could not sleep ${baseUrl}: ${response.status}`)
+      level.set(baseUrl, sleepLevel())
+    }
+    state.set(baseUrl, 'asleep')
+    return true
+  })
 }
 
+/** Wake the service whatever we last recorded (it may have been slept from outside); joins a wake already in flight. */
 export async function wakeService(baseUrl: string): Promise<{ wokeSeconds?: number }> {
-  if (state.get(baseUrl) !== 'none') state.delete(baseUrl)
+  if (state.get(baseUrl) !== 'none' && !waking.has(baseUrl)) state.delete(baseUrl)
   return ensureAwake(baseUrl)
 }
 

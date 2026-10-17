@@ -142,12 +142,26 @@ export function ageWords(age: number, gender: Character['gender']): string {
 
 const firstName = (character: Pick<Character, 'name' | 'id'>) => character.name?.split('/')[0]?.trim() || character.id
 
-const PHOTO = 'Shot on a full-frame cinema camera with a portrait lens, natural skin with visible pores, fine lines and slight unevenness, real hair with a few flyaways, no retouching, no makeup beyond what the character would wear, subtle film grain. A real person photographed, not a render. No text, captions or logos.'
+/**
+ * How a real casting office photographs someone: plain wall, window light from one side, an honest exposure and no
+ * retouching. Studio beauty light on a seamless backdrop made the image model produce the airbrushed, symmetrical, glassy-
+ * eyed face the gate rejects as AI; a bare audition snapshot swung too far, real but without a lead's presence. This is an
+ * agency headshot: natural light and real skin, groomed and photogenic, as a casting director would want a lead.
+ */
+const PHOTO = 'An agency headshot of a working television actor, taken in natural light: plain off-white wall behind, soft diffused daylight from a large window, flattering but honest, a gentle shadow on the far cheek, true-to-life colour. Photogenic and believable, with the quiet presence of a series lead: groomed hair with a few natural flyaways, light natural makeup suited to the character, healthy skin that still shows real pores and texture, a face with natural asymmetry, clear eyes with natural moisture rather than gloss. Not retouched, no beauty filter. A real actor photographed, not a render. No text, captions or logos.'
+/** What the image model drifts into on a face; read by the full-quality graph (CFG above one). */
+export const CASTING_NEGATIVE = `${'beauty filter, airbrushed skin, smooth plastic skin, porcelain skin, waxy skin, doll-like face, uncanny glossy eyes, CGI, 3D render, digital painting, illustration, anime, oversaturated, HDR'}，低分辨率，低画质，肢体畸形，蜡像感，人脸无细节，过度光滑，磨皮，画面具有AI感`
 
 /** The casting-call prompt: the brief in a casting director's order, posed as the master (front three-quarter). */
 export function castingPrompt(character: Character, brief: CastingBrief): string {
-  const who = `a ${brief.ethnicity} ${character.gender === 'female' ? 'woman' : 'man'} ${ageWords(character.age, character.gender)}`
-  return `Casting photograph of ${who}. Face: ${brief.face}. Features: ${brief.features}. Skin: ${brief.skin}. Hair: ${brief.hair}. Build: ${brief.build}. Distinctive detail: ${brief.distinctive}. Wearing ${brief.wardrobe}, in ${brief.palette}. Head and shoulders, front three-quarter view, face turned slightly off camera, eyes toward the lens side, neutral relaxed expression, mouth closed. Neutral mid-grey seamless backdrop, large soft key light from camera left with gentle fill. ${PHOTO}`
+  // The image model ages a face given only a decade: under thirty the youth is stated outright.
+  const young = character.age < 30 ? 'young ' : ''
+  const who = `a ${young}${brief.ethnicity} ${character.gender === 'female' ? 'woman' : 'man'} ${ageWords(character.age, character.gender)}${character.age < 30 ? ', youthful and fresh-faced' : ''}`
+  // Leads are cast for presence, as a casting director casts a series lead; supporting roles for character.
+  const appeal = /lead|love interest|protagonist|heroine|hero\b|主角|女主|男主/i.test(character.role)
+    ? 'Cast as a series lead: attractive, fresh and photogenic, a face an audience follows for a whole season, looking exactly their age'
+    : 'Cast for character: believable and specific, looking exactly their age'
+  return `Casting photograph of ${who}. ${appeal}. Face: ${brief.face}. Features: ${brief.features}. Skin: ${brief.skin}. Hair: ${brief.hair}. Build: ${brief.build}. Distinctive detail: ${brief.distinctive}. Wearing ${brief.wardrobe}, in ${brief.palette}. Head and shoulders, front three-quarter view, face turned slightly off camera, eyes toward the lens side, neutral relaxed expression, mouth closed. ${PHOTO}`
 }
 
 /** The edit prompt of a reference view, from the master as image 1. */
@@ -256,14 +270,22 @@ const image = (path: string, verdict: CastingVerdict, model: string): CastImage 
   path, score: verdict.score, pass: verdict.pass, model, ...(verdict.issues.length ? { issues: verdict.issues.slice(0, 5) } : {}), ...(verdict.casting ? { casting: verdict.casting } : {}),
 })
 
-/** Reuse: the project's own cast/<id>/ first, then `--cast <dir>` (copied in so the project stays self-contained). */
+/** Where a character's cast record may come from, after the project's own: `--cast <dir>`, then the brand kit's cast/. */
+export function castSources(options: Pick<NarrativeContext['options'], 'castDir'>, brand?: { dir: string }): string[] {
+  return [...(options.castDir ? [resolve(options.castDir)] : []), ...(brand ? [join(brand.dir, 'cast')] : [])]
+}
+
+/**
+ * Reuse: the project's own cast/<id>/ first, then `--cast <dir>`, then the brand kit's recurring presenters and mascots
+ * (copied in so the project stays self-contained).
+ */
 async function reuse(ctx: NarrativeContext, character: Character): Promise<CastMember | undefined> {
   const own = join(ctx.dir!, 'cast', character.id)
   const found = await loadCastMember(own, character)
   if ('record' in found) return found
-  if (ctx.options.castDir) {
-    const source = resolve(ctx.options.castDir, character.id)
-    if (source !== own) {
+  for (const root of castSources(ctx.options, ctx.brand)) {
+    const source = join(root, character.id)
+    if (source !== own && existsSync(source)) {
       const other = await loadCastMember(source, character)
       if ('record' in other) {
         await cp(source, own, { recursive: true })
@@ -345,7 +367,7 @@ export async function castPictures(ctx: NarrativeContext): Promise<{ reused: str
     for (let round = 0; round < CASTING_ROUNDS && !candidates.some((c) => c.verdict.pass); round++) {
       for (let n = 0; n < CASTING_CALL; n++) {
         const path = join(home, 'candidates', `c${round * CASTING_CALL + n + 1}.png`)
-        const made = await generateImage(comfy, { size: VIEW_SIZES.master, output: path, prompt, model: NARRATIVE_IMAGE_MODEL })
+        const made = await generateImage(comfy, { size: VIEW_SIZES.master, output: path, prompt, model: NARRATIVE_IMAGE_MODEL, negative: CASTING_NEGATIVE })
         const verdict = await sheetGate(ctx.reviewer, path, character, { brief, others })
         ctx.log(`▸ cast ${character.id.padEnd(10)} candidate ${round * CASTING_CALL + n + 1} ${made.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
         await ctx.record('casting', 'casting-gate', ctx.reviewer, { character: character.id, candidate: round * CASTING_CALL + n + 1, imageSeconds: made.seconds, ...verdict })

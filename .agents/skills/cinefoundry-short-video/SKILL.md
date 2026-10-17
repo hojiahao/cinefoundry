@@ -38,8 +38,10 @@ A running `cli.js` line means another film is generating: stop and tell the user
 3. Run from the repository root:
 
    ```bash
-   node dist/cli.js short '<the topic, verbatim>' [--seconds 60] [--ratio 9:16] [--fps 30] [--id <project-id>] [--cast projects/<earlier-id>/cast]
+   node dist/cli.js short '<the topic, verbatim>' [--seconds 60] [--ratio 9:16] [--fps 30] [--id <project-id>] [--cast projects/<earlier-id>/cast] [--brand <brand-id> [--product <product-id>]]
    ```
+
+   For branded content pass `--brand` with the brand's kit (skill `brand-kit`): its presenter, product, wording, fonts, grade, logo, legal lines and hashtags apply, and the run is refused if the kit fails its check (*checked*).
 
    Defaults: 9:16, native 1080p, 30 fps, 60 seconds (creator shorts run one to three minutes; pass --seconds up to 180). Use `--ratio 16:9` for a Bilibili or YouTube landscape video and `--fps 60` for product or motion-heavy shorts. `--plan-only` stops after the script and shot list for approval.
 4. When it finishes, report: the video (`projects/<id>/cut/ep01.mp4`), the cover (`cut/cover.jpg`), the three titles, the description and hashtags from `reports/packaging.json`, and every open item the log lists. Remind the user that the platform's own AI-content declaration must be ticked when publishing (YouTube altered or synthetic content; Douyin AI 标识) - the description already discloses it.
