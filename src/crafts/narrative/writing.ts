@@ -129,12 +129,12 @@ export function checkScriptNotes(notes: ScriptNotes, source: string): string[] {
 }
 
 /** The script editor reads a draft against the bible and the episode plan, on the reviewer model: it did not write it. */
-async function reviewScreenplay(ctx: NarrativeContext, play: Screenplay, plan: SeriesBible['episodes'][number]): Promise<ScriptNotes> {
+export async function reviewScreenplay(ctx: NarrativeContext, play: Screenplay, plan: SeriesBible['episodes'][number]): Promise<ScriptNotes> {
   const bible = ctx.bible!
   const page = play.scenes.map((s) => `SCENE ${s.scene}. ${s.heading}\n${s.action}\n${s.lines.map((l) => `${l.speaker}: ${l.en} [${l.zh}]${l.delivery ? ` (${l.delivery})` : ''}`).join('\n')}`).join('\n\n')
   const source = `${page}\n${plan.synopsis}\n${plan.hook}\n${plan.cliffhanger}\n${bible.world}`
   const run = await chatJson<ScriptNotes>(ctx.editor, {
-    system: await ctx.agentPrompt('script editor of a top streaming studio. You did not write this draft', 'screenwriting'), thinking: false, maxTokens: 3000, temperature: 0.2,
+    system: await ctx.agentPrompt('script editor of a top streaming studio. You did not write this draft', 'screenwriting'), thinking: false, maxTokens: 4000, temperature: 0.2,
     user: `World: ${bible.world}
 Characters: ${bible.characters.map((c) => `${c.id} (${c.name}, ${c.role}): ${c.arc}`).join(' | ')}
 Episode plan: ${plan.synopsis}
@@ -151,10 +151,11 @@ Score the draft 0-10 as a script editor would before it goes to production:
 - dialogue: every line answers or turns the one before it, sounds like a real person in a well-made series, and makes sense; no non-sequiturs, stock lines or ping-pong insults; each character sounds like themselves; the subtitles say what the English says.
 Approve only when every score is ${SCRIPT_FLOOR} or more. Every note quotes the exact words it is about, in quotation marks, and says what to change.
 Return JSON only: {"approve": true|false, "scores": {"story": 0, "hook": 0, "structure": 0, "dialogue": 0}, "issues": ["\\"quoted words\\" - what to change"]}`,
-  }, (n) => checkScriptNotes(n, source), 3).catch(() => undefined)
-  const notes: ScriptNotes = run && !run.unresolved.length ? run.value : { approve: false, scores: { story: 0, hook: 0, structure: 0, dialogue: 0 }, issues: ['the script editor gave no usable notes'], inconclusive: true }
+  }, (n) => checkScriptNotes(n, source), 3).catch((error: Error) => ({ failed: error.message.slice(0, 300) }))
+  const why = 'failed' in run ? run.failed : run.unresolved.join('; ').slice(0, 300)
+  const notes: ScriptNotes = !('failed' in run) && !run.unresolved.length ? run.value : { approve: false, scores: { story: 0, hook: 0, structure: 0, dialogue: 0 }, issues: [`the script editor gave no usable notes: ${why}`], inconclusive: true }
   await ctx.record('screenplay', 'script-editor', ctx.editor, { episode: play.episode, approve: notes.approve, scores: notes.scores, issues: notes.issues })
-  ctx.log(`  script editor: ${notes.approve ? 'approved' : 'notes'} (${Object.entries(notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')})`)
+  ctx.log(notes.inconclusive ? `  script editor: inconclusive (${why.slice(0, 160)})` : `  script editor: ${notes.approve ? 'approved' : 'notes'} (${Object.entries(notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')})`)
   return notes
 }
 
