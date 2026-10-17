@@ -117,3 +117,18 @@ describe('narrative mix', () => {
     expect(await probeDuration(output)).toBeCloseTo(10, 0)
   })
 })
+
+import { checkReviewEvidence } from '../src/crafts/narrative/writing.js'
+
+describe('compliance findings are grounded in the script', () => {
+  const source = 'A perfumer and the heir buying up the street sign a three-month contract.\nWe close tomorrow.\n明天就关门了'
+  it('accepts a finding that quotes words on the page, and an approval with none', () => {
+    expect(checkReviewEvidence({ approve: false, issues: ['scene 1 line 1: "We close tomorrow" - fine, but tighten'] }, source)).toEqual([])
+    expect(checkReviewEvidence({ approve: true, issues: [] }, source)).toEqual([])
+  })
+  it('sends back findings that quote nothing, or quote words that are not there', () => {
+    expect(checkReviewEvidence({ approve: false, issues: ['money worship at series level'] }, source).join(' ')).toMatch(/quote the exact words/)
+    expect(checkReviewEvidence({ approve: false, issues: ['series: "rebirth revenge on the rich husband"'] }, source).join(' ')).toMatch(/do not appear/)
+    expect(checkReviewEvidence({ approve: false, issues: [] }, source).join(' ')).toMatch(/at least one issue/)
+  })
+})

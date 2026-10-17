@@ -7,8 +7,8 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
 
   One idea in, a finished film out
   cinefoundry ad "<brief>"      [--duration 30] [--ratio 16:9|9:16|1:1] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts"] [--plan-only]
-  cinefoundry short "<topic>"   [--seconds 45] [--ratio 9:16] [--fps 30] [--cast dir] [--plan-only]
-  cinefoundry drama "<story>"   [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--cast dir] [--plan-only]
+  cinefoundry short "<topic>"   [--seconds 60] [--ratio 9:16] [--fps 30] [--cast dir] [--plan-only]
+  cinefoundry drama "<story>"   [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--cast dir] [--plan-only]
   Common: [--id id] [--video-model ltx25-fast-nvfp4|ltx25-fast|wan22-14b|wan22-5b|seedance] [--candidates 2]
   (cinefoundry harness is the same as cinefoundry ad)
 

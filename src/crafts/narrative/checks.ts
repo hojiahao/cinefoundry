@@ -1,3 +1,4 @@
+import { CLICKBAIT } from './packaging.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
 const CJK = /[㐀-鿿]/
@@ -51,6 +52,7 @@ export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want
   episodes.forEach((e, index) => {
     if (e.episode !== index + 1) problems.push(`episodes must be numbered 1..${want.episodes} in order`)
     for (const key of ['title', 'synopsis', 'hook', 'cliffhanger'] as const) if (!e[key]?.trim()) problems.push(`episode ${index + 1}: ${key} is empty`)
+    if (CLICKBAIT.test(e.title ?? '')) problems.push(`episode ${index + 1}: the title "${e.title}" uses a 霸总-style or click-bait word the regulator names; title it after an object or a situation in the story`)
   })
   return problems
 }

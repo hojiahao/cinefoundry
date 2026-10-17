@@ -10,8 +10,8 @@ works on or with this repository. The `## Rules` section at the end is also inje
 | Format | Command | Pipeline | Defaults |
 |---|---|---|---|
 | Ad film | `cinefoundry ad "<brief>"` | brief → creative → script → compliance → storyboard → frames + gate → clips → cut → versions → qc | 30 s master (15 s and 6 s cutdowns), 16:9, native 1080p, 60 fps, −16 LUFS |
-| Short video | `cinefoundry short "<topic>"` | topic → screenplay → compliance → shots → casting → frames + gate → dialogue → clips → sound → cut + qc → packaging | 45 s, 9:16, 1080p, 30 fps, −14 LUFS |
-| Micro-drama | `cinefoundry drama "<story>"` | development → screenplay → compliance → shots → casting → frames + gate → dialogue → clips → sound → cut + qc | 60 s episodes, 9:16, 1080p, 24 fps, −14 LUFS |
+| Short video | `cinefoundry short "<topic>"` | topic → screenplay → compliance → shots → casting → frames + gate → dialogue → clips → sound → cut + qc → packaging | 60 s (up to 3 min), 9:16, 1080p, 30 fps, −14 LUFS |
+| Micro-drama | `cinefoundry drama "<story>"` | development → screenplay → compliance → shots → casting → frames + gate → dialogue → clips → sound → cut + qc | 2-minute episodes, 9:16, 1080p, 24 fps, −14 LUFS |
 
 Entry skills: `cinefoundry-ad-film`, `cinefoundry-short-video`, `cinefoundry-micro-drama`. Each project records its
 stages in `projects/<id>/state.json`; the studio board reads it.

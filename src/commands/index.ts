@@ -302,8 +302,8 @@ function narrativeOptions(args: ParsedArgs, usage: string): NarrativeOptions {
   }
 }
 
-const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--id id] [--cast projects/<id>/cast] [--plan-only]'
-const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 45] [--ratio 9:16] [--fps 30] [--id id] [--cast projects/<id>/cast] [--plan-only]'
+const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id id] [--cast projects/<id>/cast] [--plan-only]'
+const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 60] [--ratio 9:16] [--fps 30] [--id id] [--cast projects/<id>/cast] [--plan-only]'
 
 async function dramaCommand(args: ParsedArgs): Promise<number> {
   print(await runPipeline(dramaPipeline, narrativeOptions(args, DRAMA_USAGE)))

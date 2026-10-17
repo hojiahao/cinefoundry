@@ -2,6 +2,8 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chatJson } from '../../agent/llm.js'
 import { failIfHardProblems } from '../repair.js'
+import { scanCopy } from '../../lib/compliance.js'
+import { EN_ABSOLUTES } from '../../agent/checks.js'
 import { checkBible, checkScreenplay, checkShots } from './checks.js'
 import { produced, type NarrativeContext } from './context.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
@@ -78,39 +80,77 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
  * Compliance: an independent reviewer on another model reads every line against broadcast and platform rules
  * (content-compliance). Rewrites are taken only if the screenplay still passes every check.
  */
+type ContentReview = { approve: boolean; issues: string[]; revised?: Array<{ scene: number; line: number; en: string; zh: string }> }
+
+/**
+ * Every finding must quote the words it is about, exactly as they appear in the episode or the logline: a reviewer
+ * once condemned a perfume-shop romance as "rebirth revenge on the rich husband" - the skill's own counter-example,
+ * nowhere in the script. A finding that quotes nothing on the page is sent back.
+ */
+export function checkReviewEvidence(review: ContentReview, source: string): string[] {
+  if (typeof review.approve !== 'boolean') return ['"approve" must be true or false']
+  if (!Array.isArray(review.issues)) return ['"issues" must be an array']
+  const quotes = (issue: string) => [...issue.matchAll(/["“'‘「]([^"”'’」]{2,80})["”'’」]/g)].map((m) => m[1]!.trim())
+  const problems: string[] = []
+  for (const issue of review.issues) {
+    const cited = quotes(issue)
+    if (!cited.length) problems.push(`quote the exact words this finding is about, in quotation marks: ${issue.slice(0, 80)}`)
+    else if (!cited.some((q) => source.includes(q))) problems.push(`the quoted words do not appear in this episode or the logline - judge only what is written: ${issue.slice(0, 80)}`)
+  }
+  if (!review.approve && review.issues.length === 0) problems.push('a review that does not approve names at least one issue')
+  return problems
+}
+
+/**
+ * Compliance: a deterministic scan of the subtitles and lines, then an independent reviewer on another agent who did not
+ * write the screenplay (content-compliance). Rewrites are taken only if the screenplay still passes every check, then the
+ * episode is reviewed again. Compliance is a gate: a reviewer that cannot be reached, or an episode still not approved
+ * after its rewrite, stops the run before any frame is generated.
+ */
 export async function contentComplianceStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
-  const notes: string[] = []
-  for (const [index, play] of ctx.plays.entries()) {
-    ctx.log(`▸ compliance   episode ${play.episode} · independent reviewer · ${ctx.editor.name}`)
-    const review = await chatJson<{ approve: boolean; issues: string[]; revised?: Array<{ scene: number; line: number; en: string; zh: string }> }>(
-      ctx.editor,
-      {
-        system: await ctx.agentPrompt('compliance reviewer. You did not write this screenplay', 'content-compliance'),
-        thinking: false,
-        maxTokens: 2500,
-        temperature: 0.2,
-        user: `Series: ${bible.logline} (${bible.genre}). Characters: ${bible.characters.map((c) => `${c.id}, ${c.age}, ${c.role}`).join('; ')}.
-Episode ${play.episode} lines (scene.line numbered from 1):
+  const system = await ctx.agentPrompt('compliance reviewer. You did not write this screenplay', 'content-compliance')
+  for (const [index, initial] of ctx.plays.entries()) {
+    let play = initial
+    const episode = String(play.episode).padStart(2, '0')
+    const reviews: ContentReview[] = []
+    for (let pass = 1; pass <= 2; pass++) {
+      ctx.log(`▸ compliance   episode ${play.episode} · ${pass === 1 ? 'scan + independent reviewer' : 'second review after rewrites'} · ${ctx.editor.name}`)
+      const lines = play.scenes.flatMap((s) => s.lines.map((l, n) => ({ s, n, l })))
+      const source = `${bible.logline}\n${play.scenes.map((s) => `${s.heading} ${s.action}`).join('\n')}\n${lines.map(({ l }) => `${l.en}\n${l.zh}`).join('\n')}`
+      // The same restricted-wording scan the ads get, on the Chinese subtitles, and absolute claims in English.
+      const scan = scanCopy(lines.map(({ l }) => l.zh).join('\n'), 'general').filter((f) => f.severity === 'block').map((f) => `restricted wording "${f.text}" (${f.rule})`)
+      for (const { s, n, l } of lines) { const hit = EN_ABSOLUTES.exec(l.en)?.[0]; if (hit) scan.push(`scene ${s.scene} line ${n + 1}: absolute claim "${hit}"`) }
+      const run = await chatJson<ContentReview>(
+        ctx.editor,
+        {
+          system, thinking: false, maxTokens: 3000, temperature: 0.2,
+          user: `Series logline: ${bible.logline} (${bible.genre}). Characters: ${bible.characters.map((c) => `${c.id}, ${c.age}, ${c.role}`).join('; ')}.
+Episode ${play.episode} (scene.line numbered from 1):
 ${play.scenes.map((s) => `Scene ${s.scene} ${s.heading}: ${s.action}\n${s.lines.map((l, n) => `  ${s.scene}.${n + 1} ${l.speaker}: ${l.en} / ${l.zh}`).join('\n')}`).join('\n')}
-Return JSON only: {"approve": true|false, "issues": ["scene N line M: ..."], "revised": [{"scene": N, "line": M, "en": "...", "zh": "..."}]}`,
-      },
-      (r) => (typeof r.approve === 'boolean' ? [] : ['"approve" must be true or false']),
-      2,
-    ).catch(() => undefined)
-    if (!review) { notes.push(`ep${play.episode}: reviewer unavailable`); continue }
-    if (review.value.revised?.length) {
-      const next: Screenplay = { ...play, scenes: play.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const r = review.value.revised!.find((x) => x.scene === s.scene && x.line === n + 1); return r ? { ...l, en: r.en ?? l.en, zh: r.zh ?? l.zh } : l }) })) }
-      if (checkScreenplay(next, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio }).length === 0) ctx.plays[index] = next
-      else notes.push(`ep${play.episode}: reviewer rewrites failed the screenplay checks and were not taken`)
+${scan.length ? `The deterministic scan found: ${scan.join('; ')}. Each of these must be rewritten.\n` : ''}Judge only what is written above. Every issue quotes the exact words it is about, in quotation marks.
+Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted words\\" - why"], "revised": [{"scene": N, "line": M, "en": "...", "zh": "..."}]}`,
+        },
+        (r) => checkReviewEvidence(r, source),
+        3,
+      ).catch((error: Error) => { throw new Error(`compliance review of episode ${play.episode} could not be completed (${error.message.slice(0, 160)}); the run stops here rather than shoot unreviewed lines`) })
+      const review = { ...run.value, approve: run.value.approve && scan.length === 0 && run.unresolved.length === 0 }
+      reviews.push(review)
+      await ctx.record('compliance', 'reviewer', ctx.editor, { episode: play.episode, pass, approve: review.approve, issues: review.issues, scan, revised: review.revised?.length ?? 0, unresolved: run.unresolved })
+      if (review.approve) break
+      if (!review.revised?.length) break
+      const next: Screenplay = { ...play, scenes: play.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const r = review.revised!.find((x) => x.scene === s.scene && x.line === n + 1); return r ? { ...l, en: r.en ?? l.en, zh: r.zh ?? l.zh } : l }) })) }
+      const problems = checkScreenplay(next, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio })
+      if (problems.length) { ctx.log(`  reviewer rewrites fail the screenplay checks (${problems[0]}); not taken`); break }
+      play = next
     }
-    if (!review.value.approve) notes.push(`ep${play.episode}: ${(review.value.issues ?? []).join(' ').slice(0, 200)}`)
-    await writeFile(join(ctx.dir!, 'reports', `compliance.ep${String(play.episode).padStart(2, '0')}.json`), json(review.value))
-    await writeFile(join(ctx.dir!, 'story', `ep${String(play.episode).padStart(2, '0')}.screenplay.json`), json(ctx.plays[index]))
-    await ctx.record('compliance', 'reviewer', ctx.editor, { episode: play.episode, approve: review.value.approve, issues: review.value.issues, revised: review.value.revised?.length ?? 0 })
+    ctx.plays[index] = play
+    await writeFile(join(ctx.dir!, 'reports', `compliance.ep${episode}.json`), json(reviews))
+    await writeFile(join(ctx.dir!, 'story', `ep${episode}.screenplay.json`), json(play))
+    const last = reviews.at(-1)!
+    if (!last.approve) throw new Error(`episode ${play.episode} did not pass compliance: ${last.issues.join(' | ').slice(0, 300)}`)
   }
-  for (const note of notes) ctx.log(`  open item: ${note}`)
-  return notes.length ? `${notes.length} open item(s)` : 'approved'
+  return 'approved'
 }
 
 /** Shot breakdown: the director and the director of photography cut each scene into 5-second shots; dialogue is shot single. */

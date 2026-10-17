@@ -19,7 +19,7 @@ export const shortPipeline: PipelineDef<NarrativeOptions, NarrativeContext, Shor
     { id: 'packaging', label: '平台包装', when: (ctx) => !ctx.options.planOnly, run: packagingStage },
   ],
   preflight: (options) => narrativePreflight({ fps: 30, ...options, episodes: 1 }, { maxSeconds: 180, maxEpisodes: 1 }),
-  init: async (options, engine) => narrativeContext({ fps: 30, ...options, episodes: 1, produce: 1 }, engine, { writer: { role: 'creator-content writer', skill: 'short-video-scripting' }, seconds: 45, ratio: '9:16' }),
+  init: async (options, engine) => narrativeContext({ fps: 30, ...options, episodes: 1, produce: 1 }, engine, { writer: { role: 'creator-content writer', skill: 'short-video-scripting' }, seconds: 60, ratio: '9:16' }),
   finish: async (ctx) => {
     const wallSeconds = (Date.now() - ctx.started) / 1000
     await ctx.record('run', 'director', undefined, { wallSeconds, qaRegenerations: ctx.qaRegenerations })

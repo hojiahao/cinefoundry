@@ -74,7 +74,7 @@ One command per format:
 
 ```bash
 node dist/cli.js ad    "A 30-second film for Misthaven, a woody fragrance in a heavy faceted glass bottle, for women around thirty"
-node dist/cli.js short "A 45-second skit in a specialty coffee bar: a barista talks a regular into trying a natural-process Ethiopian"
+node dist/cli.js short "A 60-second skit in a specialty coffee bar: a barista talks a regular into trying a natural-process Ethiopian"
 node dist/cli.js drama "A fake-dating romance: to save her late grandmother's perfume shop, a young perfumer signs a three-month contract with the heir buying up the street" --episodes 3 --produce 1
 ```
 
@@ -94,7 +94,7 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 | Frame | 16:9 (9:16, 1:1 on request) | 9:16 (16:9 for Bilibili, YouTube) | 9:16 |
 | Resolution | Native 1080p; 2K, 4K, 6K delivery presets (upscaled, and reported as such) | Native 1080p | Native 1080p |
 | Frame rate | 60 fps, interpolated from 24 with RIFE | 30 fps (60 for product and motion) | 24 fps, the film look |
-| Length | 30 s master, 15 s and 6 s cutdowns | 45 s by default | 60 s episodes, a series plan of any length |
+| Length | 30 s master, 15 s and 6 s cutdowns | 60 s by default, up to 3 min | 2-minute episodes, a series plan of any length |
 | Voice | English announcer cast from the voice library | Presenter or characters, lip-synced English | Characters, lip-synced English |
 | Subtitles | Chinese over English | Chinese over English, inside the vertical safe zone | Chinese over English, inside the vertical safe zone |
 | Loudness | −16 LUFS, −1.5 dBTP | −14 LUFS | −14 LUFS |

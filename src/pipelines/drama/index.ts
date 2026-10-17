@@ -15,7 +15,7 @@ export const dramaPipeline: PipelineDef<NarrativeOptions, NarrativeContext, Dram
   folders: NARRATIVE_FOLDERS,
   stages: narrativeStages,
   preflight: (options) => narrativePreflight({ fps: 24, ...options }, { maxSeconds: 180, maxEpisodes: 30 }),
-  init: async (options, engine) => narrativeContext({ fps: 24, ...options }, engine, { writer: { role: 'showrunner and head writer', skill: 'series-development' }, seconds: 60, ratio: '9:16' }),
+  init: async (options, engine) => narrativeContext({ fps: 24, ...options }, engine, { writer: { role: 'showrunner and head writer', skill: 'series-development' }, seconds: 120, ratio: '9:16' }),
   finish: async (ctx) => {
     const wallSeconds = (Date.now() - ctx.started) / 1000
     await ctx.record('run', 'director', undefined, { wallSeconds, episodes: [...ctx.outputs.keys()], qaRegenerations: ctx.qaRegenerations })

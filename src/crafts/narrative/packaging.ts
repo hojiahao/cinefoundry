@@ -14,6 +14,8 @@ export interface Packaging {
 }
 
 const CJK = /[㐀-鿿]/
+/** Title words regulators name (the 霸总 notice, the 2026 clean-up) and the feed's click-bait formulas. */
+export const CLICKBAIT = /霸总|霸道总裁|震惊|惊呆|不看后悔|速看|必看|跪求|悔不当初|闪婚|豪门/
 
 export function checkPackaging(p: Packaging, shots: number): string[] {
   const problems: string[] = []
@@ -24,7 +26,7 @@ export function checkPackaging(p: Packaging, shots: number): string[] {
   if (!p.description?.trim()) problems.push('description is empty')
   else if (!/AI/.test(p.description)) problems.push('the description must disclose that the video is AI-generated (标识办法; YouTube altered or synthetic content)')
   if (!Array.isArray(p.hashtags) || p.hashtags.length < 3 || p.hashtags.length > 8) problems.push('three to eight hashtags')
-  if (p.titles?.some((t) => /(震惊|惊呆|不看后悔|速看|必看)/.test(t))) problems.push('no clickbait formulas: the title must say what the video is')
+  if (p.titles?.some((t) => CLICKBAIT.test(t))) problems.push('no clickbait formulas or 霸总-style words (NRTA notice): the title must say what the video is')
   if (p.titles?.length && !p.titles.some((t) => CJK.test(t))) problems.push('at least one title in Chinese for Douyin and Bilibili')
   return problems
 }

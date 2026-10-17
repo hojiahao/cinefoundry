@@ -41,10 +41,10 @@ pgrep -af "cli.js (ad|short|drama|harness)"; curl -sf 127.0.0.1:8001/v1/models >
 4. Run from the repository root:
 
    ```bash
-   node dist/cli.js drama '<the idea, verbatim>' [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--id <series-id>] [--cast projects/<earlier-id>/cast]
+   node dist/cli.js drama '<the idea, verbatim>' [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id <series-id>] [--cast projects/<earlier-id>/cast]
    ```
 
-   Defaults: 9:16, native 1080p, 24 fps (a higher rate reads as soap opera), 60-second episodes. Use `--plan-only` to stop after the bible, screenplays and shot lists so the user approves the story before any GPU time.
+   Defaults: 9:16, native 1080p, 24 fps (a higher rate reads as soap opera), 120-second episodes (two minutes, the length of a domestic premium micro-drama episode). Use `--plan-only` to stop after the bible, screenplays and shot lists so the user approves the story before any GPU time.
 5. Run it in the background and report progress from the `▸` lines.
 6. When it finishes, report: each episode file (`projects/<id>/cut/epNN.mp4`), the bible (`story/bible.json`), the cast (`cast/<id>/character.json` with `master.png`, `profile.png`, `full-body.png`), and every open item the log and `reports/` list - a frame kept after failing the identity gate, a line Whisper still mis-heard after retakes, a compliance issue the reviewer raised. Never call an episode flawless when the record says otherwise.
 

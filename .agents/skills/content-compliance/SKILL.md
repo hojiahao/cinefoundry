@@ -1,6 +1,6 @@
 ---
 name: content-compliance
-version: "0.1.0"
+version: "0.2.0"
 description: Review a non-advertising project - a micro-drama series bible, an episode screenplay or a creator short - against the NRTA micro-drama rules (《微短剧发展管理办法》 in force 2026-09-01, the AI micro-drama classification standard, the 2026 cleanup campaign), the mandatory AI-content labels (《人工智能生成合成内容标识办法》 and GB 45438-2025), platform AIGC disclosure (YouTube, Douyin) and likeness and voice rights, and return approve / issues / revised lines. Use after series-development, screenwriting or short-video-scripting and before any picture is generated, or when the user asks whether a story, title or line is allowed, 能不能播, 会不会被下架, or how to label AI content.
 license: BUSL-1.1
 metadata:
@@ -42,6 +42,19 @@ Ad copy answers to the Advertising Law (`ad-compliance-review`). Dramas and crea
 | 侵权盗版 piracy | quoted song lyrics, famous film lines, known characters, real brands as props | original everything |
 
 The November 2024 notice on 霸总 dramas still applies: no "霸总" or similar words in titles to pull clicks; strict control of money worship, flaunting and overnight riches; entrepreneur stories must be realistic.
+
+## What is allowed - judge values, not premises
+
+Regulation targets how a story is told and sold, not whether rich people may appear in it. These are fine when the
+values are sound: a wealthy heir, a business acquisition, a contract or fake relationship, a family arranging a match,
+a rivalry that turns into love. What decides it is the treatment:
+- wealth is never the measure of a person: nobody is humiliated or won over by money, no luxury as status display;
+- consent and equality: no coercion, confinement or "taming" presented as romance; the lead has her own skill, choices and voice;
+- conflict resolves through truth, work and character, not revenge or punishment;
+- titles, episode titles and packaging avoid 霸总 and the other click-bait words (*checked* in `platform-packaging`).
+A finding names what is actually written: quote the exact words, in quotation marks, from the episode or the logline
+(*checked*: a finding that quotes nothing on the page is sent back). Never treat this skill's own counter-examples as
+if they were in the script.
 
 ## AI labels - mandatory, never removable
 
