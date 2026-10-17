@@ -236,7 +236,10 @@ async function doctor(): Promise<number> {
       }
       const declared = { ...spec.input.required, ...spec.input.optional }
       for (const [input, value] of Object.entries(node.inputs)) {
-        if (!(input in declared)) problems.push(`${name} node ${nodeId}: ${node.class_type} has no input "${input}"`)
+        // "format.codec.encoding.crf" is a dynamic input: it exists once its root ("format") takes a value, so the
+        // static schema does not list it. Only the root has to be declared.
+        const root = input.split('.')[0]!
+        if (!(input in declared) && !(input.includes('.') && root in declared)) problems.push(`${name} node ${nodeId}: ${node.class_type} has no input "${input}"`)
         else if (/_name$/.test(input) && !String(value).includes('{{') && Array.isArray(declared[input]?.[0]) && !(declared[input]![0] as unknown[]).includes(value)) {
           problems.push(`${name} node ${nodeId}: model file not installed: ${String(value)}`)
         }
