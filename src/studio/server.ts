@@ -13,6 +13,7 @@ import { PIPELINES, isFormat, type Format } from '../pipelines/index.js'
 import type { AdOptions } from '../pipelines/ad/context.js'
 import type { NarrativeOptions } from '../crafts/narrative/context.js'
 import { FORMAT_NAMES, listProjects, projectDetail, stageLabels } from './projects.js'
+import { env } from '../lib/config.js'
 
 const PUBLIC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), 'public')
 const TYPES: Record<string, string> = {
@@ -184,7 +185,7 @@ export function createStudio(options: { start?: Starter } = {}): Server {
       const isUpload = path === '/api/upload' && request.method === 'POST'
       if (isRun || isUpload) {
         // Optional shared secret so the studio can sit on a LAN / Tailscale address without letting anyone start GPU jobs.
-        const token = process.env.CINEFOUNDRY_STUDIO_TOKEN
+        const token = env('CINEFOUNDRY_STUDIO_TOKEN')
         if (token && request.headers['x-cinefoundry-token'] !== token) return send(401, { error: '服务端设置了 CINEFOUNDRY_STUDIO_TOKEN，请求需带 x-cinefoundry-token 头。' })
         const type = String(request.headers['content-type'] ?? '').split(';')[0]!.trim().toLowerCase()
         if (isUpload) {

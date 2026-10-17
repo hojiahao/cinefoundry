@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { env, modelRoot } from './config.js'
 
 export interface MemoryStatus {
   totalGb: number
@@ -51,7 +52,7 @@ export function planMemory(status: MemoryStatus, needs: Record<string, number>, 
 export async function releaseFileCache(roots: string[]): Promise<{ freeBeforeGb: number; freeAfterGb: number }> {
   const free = async () => parseMeminfo(await readFile('/proc/meminfo', 'utf8').then((t) => t.replace(/^MemAvailable:/m, 'MemAvailableX:').replace(/^MemFree:/m, 'MemAvailable:')))
   const before = (await free()).availableGb
-  if (process.env.CINEFOUNDRY_RELEASE_CACHE === '0') return { freeBeforeGb: before, freeAfterGb: before }
+  if (env('CINEFOUNDRY_RELEASE_CACHE') === '0') return { freeBeforeGb: before, freeAfterGb: before }
   const script = `import os,sys
 for root in sys.argv[1:]:
     for d,_,fs in os.walk(root):
@@ -67,4 +68,4 @@ for root in sys.argv[1:]:
 }
 
 /** Where model weights live: the model root (SPARK_MODEL_DIR, default ~/models). */
-export const modelRoots = () => [process.env.SPARK_MODEL_DIR ?? `${process.env.HOME ?? ''}/models`]
+export const modelRoots = () => [modelRoot()]

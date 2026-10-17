@@ -1,4 +1,4 @@
-import { CRAFT_FLOOR, gateFailure, reviewCopy, type QaVerdict } from '../../agent/gate.js'
+import { CRAFT_FLOOR, gateFailure, reviewProxy, type QaVerdict } from '../../agent/gate.js'
 import { chatJson, type ModelEndpoint } from '../../agent/llm.js'
 import type { CastingBrief } from './casting.js'
 import type { Character, NarrativeShot } from './types.js'
@@ -17,7 +17,7 @@ const numeric = <K extends string>(value: unknown, keys: K[]): Record<K, number>
     : undefined
 
 async function judge(reviewer: ModelEndpoint, images: string[], user: string): Promise<CastingVerdict> {
-  const copies = await Promise.all(images.map(reviewCopy))
+  const copies = await Promise.all(images.map(reviewProxy))
   for (let attempt = 0; ; attempt++) {
     try {
       const run = await chatJson<CastingVerdict>(

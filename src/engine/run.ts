@@ -16,8 +16,6 @@ export interface EngineOptions {
   log?: (line: string) => void
 }
 
-export type OpenProject = EngineContext['openProject']
-
 /**
  * Runs a pipeline: preflight, the one-film-at-a-time lock, then every stage in order. The engine keeps the studio
  * board truthful - a stage is marked running before it starts and done (with its note) after - and when a run throws

@@ -194,7 +194,7 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 | 后期 | ffmpeg 与 libass：调色、真字体标题与字幕、四轨混音、响度、AIGC 元数据 |
 | 引擎 | TypeScript，Node.js 22，零运行时依赖；Vitest |
 
-**部署。** `scripts/spark-up.sh` 在统一内存不足时拒绝启动，然后拉起 Nemotron（:8001）、Step3-VL（:8002）与 ComfyUI（:8188），再运行 `cinefoundry doctor`，把每个工作流模板与运行中的 ComfyUI 逐节点比对。端口可通过 `CINEFOUNDRY_PLANNER_URL`、`CINEFOUNDRY_VISION_URL`、`COMFYUI_URL` 修改，完整配置见 [`deploy/spark/compose.yaml`](deploy/spark/compose.yaml)。配音与音效容器分别由 `deploy/spark/qwen-tts` 与 `deploy/spark/moss-audio` 构建；`scripts/voice-design.py` 与 `scripts/voice-qc.py` 按 [`deploy/voices/library.json`](deploy/voices/library.json) 生成声线库。
+**部署。** `scripts/spark-up.sh` 在统一内存不足时拒绝启动，然后拉起 Nemotron（:8001）、Step3-VL（:8002）与 ComfyUI（:8188），再运行 `cinefoundry doctor`，把每个工作流模板与运行中的 ComfyUI 逐节点比对。端口可通过 `CINEFOUNDRY_PLANNER_URL`、`CINEFOUNDRY_VISION_URL`、`COMFYUI_URL` 修改，服务配置见 [`deploy/spark/compose.yaml`](deploy/spark/compose.yaml)，影工坊读取的全部环境变量及其默认值见 [`docs/configuration.md`](docs/configuration.md)。配音与音效容器分别由 `deploy/spark/qwen-tts` 与 `deploy/spark/moss-audio` 构建；`scripts/voice-design.py` 与 `scripts/voice-qc.py` 按 [`deploy/voices/library.json`](deploy/voices/library.json) 生成声线库。
 
 **优化手段。**
 

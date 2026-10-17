@@ -87,7 +87,7 @@ export const adPipeline: PipelineDef<AdOptions, AdContext, AdResult> = {
       result.wallSeconds = (Date.now() - ctx.started) / 1000
       await ctx.record('run', 'director', undefined, { wallSeconds: result.wallSeconds, frameScheduling: ctx.options.frameScheduling ?? 'queue', qaRegenerations: ctx.qaRegenerations, rejectedAttempts: ctx.rejectedAttempts, memoryAtEnd: await memoryStatus() })
       // The report written inside finishFilm predates this final record; write it again so it carries the total.
-      await writeDeliveryReport(ctx.dir!, ctx.brief!, ctx.script!, ctx.storyboard!, ctx.finalCut)
+      await writeDeliveryReport(ctx.dir!, ctx.brief!, ctx.storyboard!, ctx.finalCut)
       ctx.log(`▸ cut          ${ctx.finalCut}`)
     } else result.wallSeconds = (Date.now() - ctx.started) / 1000
     return result

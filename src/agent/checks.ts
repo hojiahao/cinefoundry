@@ -82,9 +82,6 @@ export const subtitleMax = (ratio: string) => (ratio === '9:16' ? 12 : 16)
 export const EN_ABSOLUTES = /\b(the best|best[- ]ever|number one|no\.\s?1|world'?s (first|best)|the only|perfect|flawless|guaranteed|100\s?%|ultimate|unbeatable|revolutionary)\b|#1\b/i
 /** English stock ad-speak: the words that mark copy as templated. */
 export const EN_CLICHES = /\b(elevate|unleash|game[- ]changer|seamless(ly)?|next[- ]level|redefin(e|es|ing)|unlock (your|the)|experience the|like never before|take it to the next|empower|cutting[- ]edge|state[- ]of[- ]the[- ]art|immerse yourself|embark|journey of)\b/i
-export const VO_MAX_CHARS = 18
-/** Below this a 5-second beat is mostly silence, which is how a model 'passes' a length limit without writing copy. */
-export const VO_MIN_CHARS = 8
 export const TEXT_MAX_CHARS = 8
 const CJK = /[一-鿿]/
 // Container words that only make sense for a specific product form.

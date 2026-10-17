@@ -256,7 +256,7 @@ describe('versions and delivery QC stages', () => {
       expect(report.measured.probe.video.width).toBe(1280)
     }
     expect(qc[1].spec.seconds).toBe(15)
-    await writeDeliveryReport(dir, brief, masterScript, storyboard, ctx.finalCut!)
+    await writeDeliveryReport(dir, brief, storyboard, ctx.finalCut!)
     const delivery = readFileSync(join(dir, 'reports', 'delivery.md'), 'utf8')
     expect(delivery).toMatch(/\| 15s \| `cut\/final_15s\.mp4` \| 15\.0 s \| 1（4 s，hook） · 3（4 s，proof） · 6（4\.5 s，product hero） \|/)
     expect(delivery).toMatch(/\| 06s \| `cut\/final_06s\.mp4` \| 6\.0 s \|/)
@@ -270,7 +270,7 @@ describe('versions and delivery QC stages', () => {
     expect(note).toBe('no version cut (see open items)')
     expect(ctx.versions.length).toBe(before)
     expect(log.some((line) => /open item: 15s version not cut - the editor returned no usable plan/.test(line))).toBe(true)
-    await writeDeliveryReport(ctx.dir!, brief, masterScript, storyboard, ctx.finalCut!)
+    await writeDeliveryReport(ctx.dir!, brief, storyboard, ctx.finalCut!)
     expect(readFileSync(join(ctx.dir!, 'reports', 'delivery.md'), 'utf8')).toMatch(/- 15s 版本未剪出：the editor returned no usable plan/)
   }, 60_000)
 })
