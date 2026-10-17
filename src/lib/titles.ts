@@ -12,6 +12,8 @@ export interface TitleCue {
   /** When the subtitle shows, if not the whole cue: the seconds the voiceover line is actually spoken. */
   subtitleStart?: number
   subtitleEnd?: number
+  /** The English line under the Chinese subtitle (bilingual films: characters speak English, Chinese is read first). */
+  subtitleEn?: string
 }
 
 const assTime = (seconds: number) => {
@@ -27,6 +29,11 @@ const lineEms = (text: string) => [...text].reduce((sum, char) => sum + (/[\u300
 
 export function buildAss(cues: TitleCue[], width: number, height: number, font = 'Noto Sans CJK SC'): string {
   const portrait = height > width
+  // Bilingual: Chinese large on top, English small below it. On 9:16 both stay inside the platforms' safe zone
+  // (above y = 1440 of 1920, clear of the caption, buttons and progress bar), on 16:9 in the lower title-safe area.
+  const enSize = Math.round(height * (portrait ? 0.019 : 0.03))
+  const enMargin = Math.round(portrait ? height * 0.25 : height * 0.06)
+  const bilingual = cues.some((cue) => cue.subtitleEn?.trim())
   const titleSize = Math.round(height * (portrait ? 0.058 : 0.085))
   const subtitleSize = Math.round(height * (portrait ? 0.026 : 0.042))
   const closingSize = Math.round(height * (portrait ? 0.04 : 0.064))
@@ -36,7 +43,8 @@ export function buildAss(cues: TitleCue[], width: number, height: number, font =
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
     // Title: heavy, letter-spaced, soft shadow, upper third. Subtitle: light outline, bottom.
     `Style: Title,${font},${titleSize},&H00FFFFFF,&H00FFFFFF,&H64000000,&H96000000,1,0,0,0,100,100,${Math.round(titleSize * 0.18)},0,1,0,${Math.round(titleSize * 0.06)},8,60,60,${Math.round(height * (portrait ? 0.14 : 0.1))},1`,
-    `Style: Sub,${font},${subtitleSize},&H00FFFFFF,&H00FFFFFF,&HB4000000,&H00000000,0,0,0,0,100,100,${Math.round(subtitleSize * 0.06)},0,1,${Math.max(1, Math.round(subtitleSize * 0.07))},0,2,60,60,${Math.round(height * (portrait ? 0.09 : 0.07))},1`,
+    `Style: Sub,${font},${subtitleSize},&H00FFFFFF,&H00FFFFFF,&HB4000000,&H00000000,0,0,0,0,100,100,${Math.round(subtitleSize * 0.06)},0,1,${Math.max(1, Math.round(subtitleSize * 0.07))},0,2,60,60,${bilingual ? enMargin + Math.round(enSize * 1.55) : Math.round(height * (portrait ? 0.09 : 0.07))},1`,
+    `Style: SubEn,${font},${enSize},&H20FFFFFF,&H20FFFFFF,&HB4000000,&H00000000,0,0,0,0,100,100,0,0,1,${Math.max(1, Math.round(enSize * 0.07))},0,2,60,60,${enMargin},1`,
     `Style: Label,${font},${Math.round(height * (portrait ? 0.016 : 0.024))},&H30FFFFFF,&H30FFFFFF,&H90000000,&H00000000,0,0,0,0,100,100,${Math.round(height * 0.002)},0,1,1,0,9,${Math.round(width * 0.03)},${Math.round(width * 0.03)},${Math.round(height * 0.035)},1`,
     `Style: Closing,${font},${closingSize},&H00FFFFFF,&H00FFFFFF,&H64000000,&H96000000,1,0,0,0,100,100,${Math.round(closingSize * 0.22)},0,1,0,${Math.round(closingSize * 0.07)},2,60,60,${Math.round(height * (portrait ? 0.085 : 0.075))},1`,
     '', '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
@@ -51,6 +59,7 @@ export function buildAss(cues: TitleCue[], width: number, height: number, font =
     }
     if (cue.label?.trim()) lines.push(`Dialogue: 2,${assTime(cue.start)},${assTime(cue.end)},Label,,0,0,0,,${clean(cue.label)}`)
     if (cue.subtitle?.trim()) lines.push(`Dialogue: 0,${assTime(cue.subtitleStart ?? cue.start + 0.25)},${assTime(cue.subtitleEnd ?? cue.end - 0.15)},Sub,,0,0,0,,{\\fad(150,150)}${clean(cue.subtitle)}`)
+    if (cue.subtitleEn?.trim()) lines.push(`Dialogue: 0,${assTime(cue.subtitleStart ?? cue.start + 0.25)},${assTime(cue.subtitleEnd ?? cue.end - 0.15)},SubEn,,0,0,0,,{\\fad(150,150)}${clean(cue.subtitleEn)}`)
   }
   return `${lines.join('\n')}\n`
 }

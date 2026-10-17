@@ -2,7 +2,9 @@
 """Voice every line of a job file with Qwen3-TTS Base, cloning one reference clip (inside cinefoundry/qwen-tts).
 
 Job file (same shape as scripts/step-audio-batch.py):
-    {"prompt_audio": "/work/voices/male-2.wav", "prompt_text": "...", "lines": [{"text": "...", "output": "/work/jobs/x/vo_1.wav"}]}
+    {"prompt_audio": "/work/voices/male-2.wav", "prompt_text": "...", "language": "Chinese",
+     "lines": [{"text": "...", "output": "/work/jobs/x/vo_1.wav", "seed": 7}]}
+"language" (Chinese or English) and a per-line "seed" are optional; a retake of a line is the same line with another seed.
 The reference is encoded once and reused, so every line has the same voice.
 """
 import argparse
@@ -26,8 +28,8 @@ def main() -> None:
     results = []
     for line in jobs['lines']:
         os.makedirs(os.path.dirname(line['output']), exist_ok=True)
-        torch.manual_seed(7)
-        wavs, rate = model.generate_voice_clone(text=line['text'], language='Chinese', voice_clone_prompt=prompt)
+        torch.manual_seed(int(line.get('seed', 7)))
+        wavs, rate = model.generate_voice_clone(text=line['text'], language=line.get('language', jobs.get('language', 'Chinese')), voice_clone_prompt=prompt)
         sf.write(line['output'], wavs[0], rate)
         results.append({'output': line['output'], 'seconds': round(len(wavs[0]) / rate, 2)})
         print(f"[Saved] {line['output']}", flush=True)

@@ -3,7 +3,7 @@ import { chatJson, JsonReplyError, type ModelEndpoint } from './llm.js'
 import { exec } from '../lib/exec.js'
 
 /** The reviewer sees a 1024 px JPEG, not the full still: the verdict does not change, the prefill does. */
-async function reviewCopy(path: string): Promise<string> {
+export async function reviewCopy(path: string): Promise<string> {
   const copy = `${path}.review.jpg`
   await exec('ffmpeg', ['-y', '-v', 'error', '-i', path, '-vf', "scale='min(1024,iw)':-2", '-q:v', '3', copy])
   return copy
