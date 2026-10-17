@@ -55,6 +55,45 @@ services:
     ports:
       - "127.0.0.1:8001:8000"
 
+  # NVIDIA's vision-language flagship, one model for both the writers and the quality gate (opt-in: --profile super).
+  # Flags follow the model card's DGX Spark recipe (LiLiCorr speculative drafter). It claims most of the pool, so it
+  # runs with sleep mode: the engine sleeps it (weights released) while diffusion models work and wakes it after.
+  nemotron-super:
+    <<: *gpu
+    profiles: ["super"]
+    image: vllm/vllm-openai:${VLLM_SUPER_TAG:-v0.32.0}
+    environment:
+      HF_HUB_OFFLINE: "1"
+      VLLM_SERVER_DEV_MODE: "1"
+    volumes:
+      - ${SPARK_MODEL_DIR:-${HOME}/models}/nemotron-super-vl:/super:ro
+    command:
+      - --model=/super/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4
+      - --served-model-name=nemotron-3.5-super-vl
+      - --host=0.0.0.0
+      - --port=8000
+      - --trust-remote-code
+      - --max-num-seqs=1
+      - --gpu-memory-utilization=${SUPER_GPU_MEM:-0.70}
+      - --max-model-len=${SUPER_MAX_LEN:-65536}
+      - --max-num-batched-tokens=8192
+      - --speculative_config.model=/super/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-NVFP4-LiLiCorr
+      - --speculative_config.num_speculative_tokens=7
+      - --speculative_config.method=dflash
+      - --mamba-backend=flashinfer
+      - --mamba-ssm-cache-dtype=float16
+      - --enable-mamba-cache-stochastic-rounding
+      - --mamba-cache-philox-rounds=5
+      - --enable-mamba-shared-prefix-checkpoint
+      - --block-size=64
+      - --prefix-match-unit=64
+      - --enable-auto-tool-choice
+      - --tool-call-parser=qwen3_coder
+      - --reasoning-parser=nemotron_v3
+      - --enable-sleep-mode
+    ports:
+      - "127.0.0.1:8003:8000"
+
   # StepFun open model: Chinese copy, reference breakdown and the shot quality gate (vision).
   stepvl:
     <<: *gpu
