@@ -69,7 +69,7 @@ export const adPipeline: PipelineDef<AdOptions, AdContext, AdResult> = {
     { id: 'script', label: '脚本', run: scriptStage },
     { id: 'compliance', label: '合规', run: complianceStage },
     { id: 'storyboard', label: '分镜', run: storyboardStage },
-    { id: 'frames', label: '生图', alsoMarks: ['qa'], when: media, run: framesStage },
+    { id: 'frames', label: '生图', alsoMarks: [{ id: 'qa', label: '质检' }], when: media, run: framesStage },
     { id: 'clips', label: '生视频', when: media, run: clipsStage },
     { id: 'cut', label: '成片', when: media, run: cutStage },
     { id: 'versions', label: '版本', when: media, run: versionsStage },
