@@ -210,12 +210,19 @@ describe('episode shape', () => {
   })
 })
 
-import { unchangedFindings } from '../src/crafts/narrative/writing.js'
+import { premiseFindingProblems, unchangedFindings } from '../src/crafts/narrative/writing.js'
 
 describe('premise revision', () => {
   it('is answered only when every passage a finding quotes is gone', () => {
     const issues = ['"顾言在走廊里把林夏拉到一边" - reads as coercion']
     expect(unchangedFindings(issues, '顾言在走廊里把林夏拉到一边，低声说话')).toHaveLength(1)
     expect(unchangedFindings(issues, '顾言在走廊尽头停下，等林夏先开口')).toEqual([])
+  })
+
+  it("never removes the client's own premise, and sends back a finding that judges only it", () => {
+    const request = '林夏和顾言签下三个月的"假恋爱"协议'
+    expect(unchangedFindings(['"三个月假恋爱协议" - distorted view of love'], '林夏签下三个月假恋爱协议', request)).toEqual([])
+    expect(premiseFindingProblems({ approve: false, issues: ['"三个月假恋爱协议" - distorted view of love'] }, request).join(' ')).toMatch(/client's own premise/)
+    expect(premiseFindingProblems({ approve: false, issues: ['"顾言低声说这条街迟早会是他的" - wealth as a weapon'] }, request)).toEqual([])
   })
 })
