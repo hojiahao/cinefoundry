@@ -67,7 +67,8 @@ export function sheetGate(
 Casting brief: face ${brief.face}; features ${brief.features}; ${brief.ethnicity}; skin ${brief.skin}; hair ${brief.hair}; build ${brief.build}; distinctive detail ${brief.distinctive}; wardrobe ${brief.wardrobe}, palette ${brief.palette}.` : ''}${others.length ? `\n${others.map((o, i) => `Image ${i + 2} is ${o.character.name}, already cast.`).join(' ')}` : ''}
 Reject (pass=false) if ANY is true:
 - not exactly one person, or the person is not clearly an adult of about that age and that gender;
-- the face, hair or build clearly contradicts the description${brief ? ' or the casting brief, or the distinctive detail is missing' : ''};
+- the face, hair or build clearly contradicts the description${brief ? ' or the casting brief, or the distinctive detail is missing' : ''} (judge only what a head-and-shoulders photograph can show: ignore anything written about hands or the body below the shoulders);
+${/lead|love interest|protagonist|heroine|hero\b|主角|女主|男主/i.test(character.role) ? '- this is a lead: the face looks older than the age, tired, haggard or plain, so a top studio would not cast it as the lead of a commercial series;\n' : ''}
 ${others.map((o, i) => `- image 1 could be mistaken for ${o.character.name} (image ${i + 2}) at phone size: a similar face, hair length and colour, or wardrobe colours;\n`).join('')}- the face is distorted, asymmetric in an unnatural way, has extra or missing features; hands (if visible) are malformed;
 - it looks like CGI, a 3D render, an illustration or a beauty-filtered AI portrait: plastic or waxy skin, poreless skin, glossy eyes, perfect symmetry;
 - the face is recognisably a well-known actor, model or public figure;
@@ -86,13 +87,14 @@ export function identityGate(reviewer: ModelEndpoint, view: string, master: stri
   return judge(reviewer, [view, master], `Image 2 is the master portrait of ${character.name}, the identity of record. Image 1 must be the same person shown as ${asked}.
 Reject (pass=false) if ANY is true:
 - image 1 is a different person from image 2: another face shape, eye spacing, nose, mouth, hairline or parting, hair colour or length, skin tone, age or build;
-- the distinctive detail of image 2 is missing or on the other side;
+- the distinctive detail of image 2 is missing or on the other side, where that side of the face is visible in image 1;
+- ${kind === 'full-body' ? 'barefoot or in socks when the wardrobe is street clothes;' : 'the face is cropped or the profile is cut by the frame;'}
 - image 1 is not ${kind === 'profile' ? 'a true profile' : 'head to feet, with both feet in frame'};
 - the wardrobe contradicts: ${character.wardrobe};
 - more than one person, or a distorted face, extra or fused fingers, malformed hands or limbs;
 - it looks like CGI or a beauty-filtered AI portrait: plastic or poreless skin, glossy eyes;
 - any text, logo or watermark.
-${VERDICT()}`)
+${VERDICT()}`, 6000)
 }
 
 /** A shot's first frame against the master portraits of the characters in it (at most three). */

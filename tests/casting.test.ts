@@ -74,6 +74,14 @@ describe('casting brief', () => {
     expect(problems({ face: 'teenage roundness in the cheeks' })).toMatch(/minor/)
   })
 
+  it('casts the face, not a mood, and only a distinctive detail the headshot can show', () => {
+    const problems = (over: Partial<CastingBrief>) => checkCastingBrief(brief('charcoal and cream', over), mia).join(' | ')
+    expect(problems({ skin: 'fair, faint under-eye shadows from tired eyes' })).toMatch(/passing state/)
+    expect(problems({ build: 'slender, slight posture slump' })).toMatch(/passing state/)
+    expect(problems({ distinctive: 'a thin scar on his left thumb' })).toMatch(/out of frame/)
+    expect(problems({ distinctive: 'a small mole below the right ear' })).toBe('')
+  })
+
   it('keeps wardrobe palettes apart across the cast', () => {
     expect(palettesClash('navy and white', 'navy, white and red')).toBe(true)
     expect(palettesClash('charcoal and cream', 'charcoal and rust')).toBe(false)

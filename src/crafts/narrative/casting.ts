@@ -74,6 +74,10 @@ const CJK = /[㐀-鿿]/
 const DIGIT = /\d/
 const WORTH = /\b(beautiful|handsome|pretty|gorgeous|attractive|stunning|perfect|flawless|sexy|hot|cute|ideal)\b/i
 const LIKENESS = /\b(looks? like|resembl\w*|look-?alike|lookalike|reminiscent of|doppelg\w*|celebrity|celebrities|famous|movie star|pop star|idol|public figure)\b/i
+/** A passing state is acted in the scene, not cast: "tired eyes" in a look aged every candidate by a decade. */
+export const STATE = /\b(tired|exhausted|weary|haggard|sleepy|sleep-deprived|worn-out|worn out|careworn|drained|bags under|dark circles|under-eye shadows?|slump\w*|hunched)\b/i
+/** A distinctive detail the casting photograph cannot show cannot be cast, judged or kept: a scar on a thumb is out of frame. */
+export const OUT_OF_FRAME = /\b(hands?|thumbs?|fingers?|knuckles?|palms?|wrists?|forearms?|arms?|elbows?|legs?|knees?|ankles?|feet|foot|toes?|waist|hips?|stomach|belly|chest)\b/i
 const MINOR = /\b(girl|girls|boy|boys|teen|teens|teenage\w*|child|children|childlike|kid|kids|minor|underage|schoolgirl|schoolboy|loli\w*|baby-?faced)\b/i
 /** Colour words a palette is compared on. */
 const COLOURS = ['black', 'white', 'grey', 'gray', 'charcoal', 'graphite', 'slate', 'navy', 'blue', 'cobalt', 'indigo', 'denim', 'teal', 'turquoise', 'green', 'olive', 'sage', 'emerald', 'forest', 'mint', 'khaki', 'red', 'crimson', 'scarlet', 'burgundy', 'maroon', 'wine', 'oxblood', 'rust', 'brick', 'orange', 'terracotta', 'amber', 'mustard', 'yellow', 'ochre', 'gold', 'cream', 'ivory', 'beige', 'camel', 'tan', 'sand', 'stone', 'oatmeal', 'brown', 'chocolate', 'chestnut', 'taupe', 'pink', 'blush', 'rose', 'coral', 'peach', 'purple', 'plum', 'lavender', 'lilac', 'mauve', 'violet', 'silver']
@@ -109,7 +113,9 @@ export function checkCastingBrief(brief: Partial<CastingBrief> | undefined, char
     if (WORTH.test(value)) problems.push(`${at}: ${field} uses a word of worth ("${WORTH.exec(value)![0]}"); describe the face plainly`)
     if (LIKENESS.test(value)) problems.push(`${at}: ${field} refers to a real or famous person ("${LIKENESS.exec(value)![0]}"); faces are designed, never a likeness`)
     if (MINOR.test(value)) problems.push(`${at}: ${field} reads as a minor ("${MINOR.exec(value)![0]}"); characters are adults`)
+    if (STATE.test(value)) problems.push(`${at}: ${field} describes a passing state ("${STATE.exec(value)![0]}"); cast the face, and let the scene play the tiredness`)
   }
+  if (typeof brief.distinctive === 'string' && OUT_OF_FRAME.test(brief.distinctive)) problems.push(`${at}: distinctive "${brief.distinctive}" is out of frame in a head-and-shoulders photograph; choose a detail of the face, hair, ears or neck`)
   if (typeof brief.palette === 'string' && brief.palette.trim()) {
     if (paletteColours(brief.palette).length < 2) problems.push(`${at}: palette names at least two colours (${brief.palette})`)
     for (const other of others) if (other.id !== at && palettesClash(brief.palette, other.brief.palette)) problems.push(`${at}: palette "${brief.palette}" repeats ${other.id}'s "${other.brief.palette}"; the cast must be told apart by wardrobe at phone size`)
@@ -156,10 +162,10 @@ export const CASTING_NEGATIVE = `${'beauty filter, airbrushed skin, smooth plast
 export function castingPrompt(character: Character, brief: CastingBrief): string {
   // The image model ages a face given only a decade: under thirty the youth is stated outright.
   const young = character.age < 30 ? 'young ' : ''
-  const who = `a ${young}${brief.ethnicity} ${character.gender === 'female' ? 'woman' : 'man'} ${ageWords(character.age, character.gender)}${character.age < 30 ? ', youthful and fresh-faced' : ''}`
+  const who = `a ${young}${brief.ethnicity} ${character.gender === 'female' ? 'woman' : 'man'} ${ageWords(character.age, character.gender)}${character.age < 30 ? ', youthful and fresh-faced' : ''}${character.age <= 35 ? ', no older-looking than that: smooth forehead, firm jawline, bright eyes, no deep lines' : ''}`
   // Leads are cast for presence, as a casting director casts a series lead; supporting roles for character.
   const appeal = /lead|love interest|protagonist|heroine|hero\b|主角|女主|男主/i.test(character.role)
-    ? 'Cast as a series lead: attractive, fresh and photogenic, a face an audience follows for a whole season, looking exactly their age'
+    ? 'Cast as the lead of a top streaming series: a striking, photogenic leading face with clear healthy skin, defined features and bright expressive eyes, rested and camera-ready, the kind of face an audience follows for a whole season, looking exactly their age'
     : 'Cast for character: believable and specific, looking exactly their age'
   return `Casting photograph of ${who}. ${appeal}. Face: ${brief.face}. Features: ${brief.features}. Skin: ${brief.skin}. Hair: ${brief.hair}. Build: ${brief.build}. Distinctive detail: ${brief.distinctive}. Wearing ${brief.wardrobe}, in ${brief.palette}. Head and shoulders, front three-quarter view, face turned slightly off camera, eyes toward the lens side, neutral relaxed expression, mouth closed. ${PHOTO}`
 }
@@ -170,7 +176,7 @@ export function viewPrompt(view: PackView, character: Character): string {
   const keep = `Image 1 is ${name}. The same person: keep the face, eyes, nose, mouth, hairline, hair, skin tone and every distinguishing mark exactly as in image 1.`
   const pose = view === 'profile'
     ? `Show ${name} in left profile, head and shoulders, the face turned fully to frame left, neutral expression, mouth closed, the same wardrobe at the collar.`
-    : `Show ${name} full length from the top of the head to the feet, standing naturally with arms relaxed, front three-quarter, wearing ${character.wardrobe}, both feet on the floor.`
+    : `Show ${name} full length from the top of the head to the feet, standing naturally with arms relaxed, front three-quarter, wearing ${character.wardrobe}, with shoes that suit the outfit, both feet on the floor.`
   return `${keep} ${pose} The same neutral mid-grey seamless backdrop and soft key light from camera left. ${PHOTO}`
 }
 
@@ -318,8 +324,9 @@ Write a casting brief per character, as a casting director briefs a casting call
 - face: face shape, brow, cheekbones, jaw, chin. features: eyes (shape, colour, spacing), nose, mouth, ears if notable.
 - ethnicity: consistent with the world and the character's name and family.
 - skin: tone and texture (freckles, pores, laugh lines as fits the age). hair: length, parting (which side), texture, colour.
-- build: height impression, frame, posture. distinctive: one detail that identifies them, with its side ("a small scar through the left eyebrow").
+- build: height impression, frame, posture. distinctive: one detail of the face, hair, ears or neck that identifies them, with its side ("a small scar through the left eyebrow") - it must show in a head-and-shoulders photograph.
 - wardrobe: the default costume, garment by garment, fabric and fit; palette: two or three named colours that no other character wears.
+Cast the face, not a mood: tiredness, a slump or dark circles are acted in a scene, never written into the brief. Leads of a commercial series are cast as a top studio casts them: striking, clear-skinned faces with defined features and bright, expressive eyes that hold a close-up, looking their age and no older.
 Adults only. A designed face: never a real person, a celebrity or "someone who looks like" anyone. No words of worth (beautiful, handsome). Different hair length or colour value, silhouette and palette for every character, so each reads apart at phone size.
 Return JSON only: {"characters": [{"id": "mia", "brief": {"face": "...", "features": "...", "ethnicity": "...", "skin": "...", "hair": "...", "build": "...", "distinctive": "...", "wardrobe": "...", "palette": "..."}}]}`,
     },

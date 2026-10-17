@@ -1,5 +1,6 @@
 import { scanBrandWords } from '../../lib/compliance.js'
 import { CLICKBAIT } from './packaging.js'
+import { STATE } from './casting.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
 const CJK = /[㐀-鿿]/
@@ -45,6 +46,7 @@ export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want
       if (!c[key]?.trim()) problems.push(`${c.id}: ${key} is empty`)
       else if (CJK.test(c[key])) problems.push(`${c.id}: ${key} must be in English`)
     }
+    if (c.look && STATE.test(c.look)) problems.push(`${c.id}: look describes a passing state ("${STATE.exec(c.look)![0]}"); write the face as cast, and play the tiredness in a scene`)
     if (c.look && DIGIT.test(c.look)) problems.push(`${c.id}: look must be words only (write "in her late twenties", not "28")`)
     if (!c.name?.trim() || !c.arc?.trim()) problems.push(`${c.id}: name and arc are required`)
   }

@@ -45,6 +45,11 @@ describe('narrative checks', () => {
     expect(problems).toContain('plan exactly 1 episode')
   })
 
+  it('writes a look as cast: the face, never a passing state', () => {
+    const tired = { ...bible, characters: [{ ...bible.characters[0]!, look: 'shoulder-length dark hair, tired eyes' }] }
+    expect(checkBible(tired, { episodes: 1 }).join(' ')).toMatch(/passing state/)
+  })
+
   it('keeps every line inside one shot and every subtitle inside the line width', () => {
     expect(checkScreenplay(play, bible, { seconds: 15, ratio: '9:16' })).toEqual([])
     const long: Screenplay = { ...play, scenes: [{ ...play.scenes[0]!, lines: [{ speaker: 'mia', en: 'I never thought that after all these years you would actually walk back into this shop.', zh: '我从没想过这么多年以后你真的会再走进这家店。' }] }] }
