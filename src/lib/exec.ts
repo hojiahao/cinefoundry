@@ -7,9 +7,17 @@ export interface ExecResult {
 }
 
 /** Run a program to completion. Rejects on a non-zero exit unless `allowFailure` is set. */
-export function exec(command: string, args: string[], options: { allowFailure?: boolean } = {}): Promise<ExecResult> {
+/** No child runs forever: a hung ffmpeg or a stuck container used to hang the harness for good. */
+const DEFAULT_TIMEOUT_MS = Number(process.env.SPOTFOUNDRY_EXEC_TIMEOUT_MS) || 45 * 60 * 1000
+
+export function exec(command: string, args: string[], options: { allowFailure?: boolean; timeoutMs?: number } = {}): Promise<ExecResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL')
+      reject(new Error(`${command} did not finish within ${Math.round((options.timeoutMs ?? DEFAULT_TIMEOUT_MS) / 1000)} s and was stopped`))
+    }, options.timeoutMs ?? DEFAULT_TIMEOUT_MS)
+    child.on('close', () => clearTimeout(timer))
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', (chunk: Buffer) => (stdout += chunk.toString()))

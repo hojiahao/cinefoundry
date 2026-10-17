@@ -46,9 +46,29 @@ export class ComfyClient {
     const { prompt_id: promptId } = (await queued.json()) as { prompt_id: string }
 
     const deadline = Date.now() + this.timeoutMs
+    let transient = 0
+    let missing = 0
+    let polls = 0
     while (Date.now() < deadline) {
-      const history = (await (await this.request(`/history/${promptId}`)).json()) as Record<string, HistoryEntry>
+      let history: Record<string, HistoryEntry>
+      try {
+        history = (await (await this.request(`/history/${promptId}`)).json()) as Record<string, HistoryEntry>
+        transient = 0
+      } catch (error) {
+        // ComfyUI restarting (or briefly refusing connections) is not the end of the job; give it a minute.
+        if (++transient > 30) throw error
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        continue
+      }
       const entry = history[promptId]
+      // Every ~15 polls, make sure the job still exists: after an out-of-memory restart ComfyUI has forgotten it, and
+      // polling /history alone used to wait out the whole hour.
+      if (!entry && ++polls % 15 === 0) {
+        const queue = await this.request('/queue').then((r) => r.json() as Promise<{ queue_running?: unknown[][]; queue_pending?: unknown[][] }>).catch(() => undefined)
+        const queued = queue ? [...(queue.queue_running ?? []), ...(queue.queue_pending ?? [])].some((item) => item[1] === promptId) : true
+        if (!queued && ++missing >= 2) throw new ComfyError(`ComfyUI lost workflow ${promptId} (not queued, no history): it was probably restarted.`)
+        if (queued) missing = 0
+      }
       if (entry) {
         if (entry.status?.status_str === 'error') throw new ComfyError(`ComfyUI workflow failed: ${JSON.stringify(entry.status).slice(0, 2000)}`)
         // Wait for the whole graph: a LoadVideo/LoadImage preview shows up in `outputs` long before the saving node runs.

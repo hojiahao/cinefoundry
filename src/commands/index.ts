@@ -202,7 +202,7 @@ async function cut(args: ParsedArgs): Promise<number> {
     return 0
   }
   const record: Recorder = async (stage, agent, _endpoint, detail) =>
-    appendFile(join(dir, 'reports', 'run.jsonl'), `${JSON.stringify({ ts: new Date().toISOString(), stage, agent, execution: 'local-dgx-spark', ...detail })}\n`)
+    appendFile(join(dir, 'reports', 'run.jsonl'), `${JSON.stringify({ ts: new Date().toISOString(), runId: state.runId, stage, agent, execution: 'local-dgx-spark', ...detail })}\n`)
   const output = await finishFilm({
     dir, brief: await read<Brief>('brief.json'), script: await read<Script>('script/script.json'), storyboard: await read<Storyboard>('storyboard/storyboard.json'),
     heroPath: join(dir, hero.path), endStill: flag(args, 'end-still') ? resolve(flag(args, 'end-still')!) : undefined, comfy: new ComfyClient(), audio: flag(args, 'audio'), silent: flag(args, 'silent') === 'true', record, log: (line) => console.error(line),

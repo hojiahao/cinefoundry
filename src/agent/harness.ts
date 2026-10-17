@@ -1,13 +1,16 @@
-import { access, appendFile, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { access, appendFile, mkdir, open, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ComfyClient } from '../comfy/client.js'
 import { scanCopy } from '../lib/compliance.js'
 import { normalizeImage, probeDuration } from '../lib/ffmpeg.js'
-import { generateImage, generateVideo, interpolateVideo, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
-import { DEFAULT_FPS, DEFAULT_RATIO, DEFAULT_RESOLUTION, checkFps, generationResolution } from '../lib/formats.js'
+import { generateImage, generateVideo, interpolateVideo, interpolationMultiplier, videoFps, videoSize, VIDEO_NEGATIVE, type VideoModel } from '../lib/media.js'
+import { DEFAULT_FPS, DEFAULT_RATIO, DEFAULT_RESOLUTION, RATIOS, checkFps, generationResolution, isRatio } from '../lib/formats.js'
+import { cloudVideoConfig } from '../lib/cloudvideo.js'
+import { exec } from '../lib/exec.js'
+import { TITLE_FONT } from './finish.js'
 import { sleepService, wakeService } from '../lib/rest.js'
 import { memoryStatus } from '../lib/memory.js'
-import { addAsset, createProject, projectDir, projectsRoot, setStage as saveStage, type Stage } from '../lib/project.js'
+import { addAsset, archiveProject, createProject, projectDir, projectExists, projectsRoot, setStage as saveStage, type Stage } from '../lib/project.js'
 import { captionProblems, checkBrief, checkProductPhoto, checkRepairedPrompt, checkScript, checkStoryboard, composeImagePrompt, composeProductPrompt, composeVideoNegative, composeVideoPrompt, briefIndustry, photoLettering, type Brief, type ProductPhoto, type Script, type Shot, type Storyboard } from './checks.js'
 import { writeDeliveryReport } from './delivery.js'
 import { enterPhase, finishFilm } from './finish.js'
@@ -69,12 +72,42 @@ const MAX_QA_REGENERATIONS = 2
  * the acceptance checks; models own the judgement.
  */
 export async function runHarness(options: HarnessOptions): Promise<HarnessResult> {
+  await preflight(options)
   const release = await takeRunLock(options.brief)
   try {
     return await runHarnessUnlocked(options)
   } finally {
     await release()
   }
+}
+
+const VIDEO_MODEL_IDS: VideoModel[] = ['ltx25-fast-nvfp4', 'ltx25-fast', 'wan22-14b', 'wan22-5b', 'seedance']
+
+/**
+ * Everything that can be checked before the first model call is checked here: a typo in --video-model or a 12-second
+ * duration used to surface only after the frames, or after six script attempts, had spent their GPU time.
+ */
+export async function preflight(options: HarnessOptions): Promise<void> {
+  const problems: string[] = []
+  if (options.ratio && !isRatio(options.ratio)) problems.push(`--ratio ${options.ratio}: use ${RATIOS.join(', ')}`)
+  if (options.durationSeconds !== undefined && !(options.durationSeconds % 5 === 0 && options.durationSeconds >= 5 && options.durationSeconds <= 30)) problems.push(`--duration ${options.durationSeconds}: a multiple of 5 from 5 to 30 (clips are 5 s)`)
+  try { generationResolution(options.resolution ?? DEFAULT_RESOLUTION) } catch (error) { problems.push((error as Error).message) }
+  try { checkFps(options.fps ?? DEFAULT_FPS) } catch (error) { problems.push((error as Error).message) }
+  if (options.videoModel && !VIDEO_MODEL_IDS.includes(options.videoModel)) problems.push(`--video-model ${options.videoModel}: use ${VIDEO_MODEL_IDS.join(', ')}`)
+  if (options.videoModel === 'seedance' && !cloudVideoConfig()) problems.push('--video-model seedance needs ARK_API_KEY')
+  if (options.frameScheduling && !['queue', 'serial'].includes(options.frameScheduling)) problems.push(`--frame-scheduling ${options.frameScheduling}: use queue or serial`)
+  if (options.productImage) await access(options.productImage).catch(() => problems.push(`Product image not found: ${options.productImage}`))
+  if (options.audio) await access(options.audio).catch(() => problems.push(`Music file not found: ${options.audio}`))
+  if (!options.silent && !options.planOnly && ['qwen-tts', 'step-audio'].includes(process.env.SPOTFOUNDRY_TTS_ENGINE ?? '')) {
+    const wav = process.env.SPOTFOUNDRY_TTS_REF_WAV
+    if (!wav || !process.env.SPOTFOUNDRY_TTS_REF_TEXT) problems.push('SPOTFOUNDRY_TTS_ENGINE needs SPOTFOUNDRY_TTS_REF_WAV and SPOTFOUNDRY_TTS_REF_TEXT')
+    else await access(wav).catch(() => problems.push(`SPOTFOUNDRY_TTS_REF_WAV not found: ${wav}`))
+  }
+  if (!options.planOnly) {
+    const fonts = await exec('fc-list', [':', 'family']).then((r) => r.stdout).catch(() => '')
+    if (fonts && !fonts.includes(TITLE_FONT)) problems.push(`title font "${TITLE_FONT}" is not installed (fc-list)`)
+  }
+  if (problems.length) throw new Error(`Cannot start: ${problems.join('; ')}`)
 }
 
 /**
@@ -84,12 +117,23 @@ export async function runHarness(options: HarnessOptions): Promise<HarnessResult
  */
 async function takeRunLock(brief: string): Promise<() => Promise<void>> {
   const lock = join(projectsRoot(), '.harness.lock')
-  const held = await readFile(lock, 'utf8').then((text) => JSON.parse(text) as { pid: number; startedAt: string; brief: string }).catch(() => undefined)
-  if (held && held.pid !== process.pid && alive(held.pid)) {
-    throw new Error(`Another film is generating (pid ${held.pid}, started ${held.startedAt}: "${held.brief.slice(0, 60)}"). One film at a time on this GPU: wait for it to finish, or stop it first.`)
-  }
   await mkdir(projectsRoot(), { recursive: true })
-  await writeFile(lock, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString(), brief }))
+  // Created atomically (O_EXCL): two runs started together can no longer both read "no lock" and both write one.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const handle = await open(lock, 'wx')
+      await handle.writeFile(JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString(), brief }))
+      await handle.close()
+      break
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST' || attempt > 0) throw error
+      const held = await readFile(lock, 'utf8').then((text) => JSON.parse(text) as { pid: number; startedAt: string; brief: string }).catch(() => undefined)
+      if (held && held.pid !== process.pid && alive(held.pid)) {
+        throw new Error(`Another film is generating (pid ${held.pid}, started ${held.startedAt}: "${held.brief.slice(0, 60)}"). One film at a time on this GPU: wait for it to finish, or stop it first.`)
+      }
+      await rm(lock, { force: true }) // stale: its process is gone
+    }
+  }
   return async () => {
     const now = await readFile(lock, 'utf8').then((text) => JSON.parse(text) as { pid: number }).catch(() => undefined)
     if (now?.pid === process.pid) await rm(lock, { force: true })
@@ -179,14 +223,25 @@ Return JSON only:
   generationResolution(brief.resolution) // throws on an unknown preset before any model runs
   brief.fps = checkFps(options.fps ?? DEFAULT_FPS)
   rejectedAttempts.brief = briefRun.rejected.length
-  await createProject({ id: brief.id, title: brief.title, brief: options.brief, ratio: brief.ratio, durationSeconds: brief.durationSeconds })
+  // A project id is never silently reused: a run asked for by id replaces the previous run of that id, which is archived
+  // (projects/.archive) rather than overwritten; an id the intake model made up that collides with another film gets a suffix.
+  if (projectExists(brief.id)) {
+    if (options.id) log(`  previous run of ${brief.id} archived to ${await archiveProject(brief.id)}`)
+    else {
+      let n = 2
+      while (projectExists(`${brief.id}-${n}`)) n++
+      brief.id = `${brief.id}-${n}`
+    }
+  }
+  const runId = `${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${process.pid}`
+  await createProject({ id: brief.id, title: brief.title, brief: options.brief, ratio: brief.ratio, durationSeconds: brief.durationSeconds, runId })
   const dir = projectDir(brief.id)
   let jev = jevConfig()
   let jevReview: Array<{ beat: number; line: string; issue: string; probability: number }> = []
   const record = async (stage: Stage | 'run', agent: string, endpoint: ModelEndpoint | undefined, detail: Record<string, unknown>) =>
     appendFile(
       join(dir, 'reports', 'run.jsonl'),
-      `${JSON.stringify({ ts: new Date().toISOString(), stage, agent, model: endpoint?.model, execution: endpoint?.execution ?? 'local-dgx-spark', ...detail })}\n`,
+      `${JSON.stringify({ ts: new Date().toISOString(), runId, stage, agent, model: endpoint?.model, execution: endpoint?.execution ?? 'local-dgx-spark', ...detail })}\n`,
     )
   // The judge is an optional cloud service. When it cannot be reached (HTTP 451 "not available in
   // your region" once spent all six script attempts) it is switched off for this run and the local
@@ -362,12 +417,14 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
   }
   const unrevised = flagged.filter((beat) => !revised.some((item) => item.beat === beat))
   if (unrevised.length) log(`  open item: the reviewer flagged beat ${unrevised.join(', ')} but no compliant rewrite came back; check those lines before release`)
+  // "Not approved" without naming a beat used to pass silently: keep it as an open item for the delivery report.
+  if (reviewRun && !reviewRun.value.approve && flagged.length === 0 && !revised.length) log(`  open item: the reviewer did not approve the copy but named no beat (${(reviewRun.value.issues ?? []).join(' ').slice(0, 160)}); review the copy before release`)
   const copy = script.beats.map((beat) => `${beat.vo}\n${beat.text}`).join('\n')
   const findings = scanCopy(copy, brief.category)
   await writeFile(join(dir, 'script', 'script.json'), JSON.stringify(script, null, 2))
   await writeFile(join(dir, 'script', 'copy.txt'), copy)
   await writeFile(join(dir, 'reports', 'compliance.json'), JSON.stringify({ scan: findings, reviewer: reviewRun?.value ?? null }, null, 2))
-  await record('compliance', 'reviewer', editor, { seconds: reviewRun?.seconds ?? 0, approve: reviewRun?.value.approve, issues: reviewRun?.value.issues, scanFindings: findings.length, revisedBeats: revised.map((item) => item.beat), unrevisedFlaggedBeats: unrevised })
+  await record('compliance', 'reviewer', editor, { seconds: reviewRun?.seconds ?? 0, approve: reviewRun?.value.approve, issues: reviewRun?.value.issues, scanFindings: findings.length, revisedBeats: revised.map((item) => item.beat), unrevisedFlaggedBeats: unrevised, unapprovedWithoutBeats: !!reviewRun && !reviewRun.value.approve && flagged.length === 0 && !revised.length })
   if (findings.some((finding) => finding.severity === 'block')) {
     await setStage(brief.id, 'compliance', 'failed', 'blocked wording remains after review')
     throw new Error(`Compliance blocked the script: ${findings.filter((finding) => finding.severity === 'block').map((finding) => finding.text).join(', ')}`)
@@ -402,7 +459,10 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
   failIfHardProblems('storyboard', storyboardProblems, storyboardRun.attempts)
   if (storyboardRun.unresolved.length) log(`  storyboard accepted with ${storyboardRun.unresolved.length} unresolved semantic finding(s) after ${storyboardRun.attempts} attempts`)
   // With a photo the product's look is the photo's, not the storyboard artist's paraphrase of it.
-  const storyboard = brief.photo ? { ...storyboardRun.value, product: brief.photo.description } : storyboardRun.value
+  // Shot numbers and lengths are the pipeline's, not the model's: file names, the frame map and the timeline key on them,
+  // and two "shot: 1" once wrote one frame over another.
+  const storyboard = { ...(brief.photo ? { ...storyboardRun.value, product: brief.photo.description } : storyboardRun.value) }
+  storyboard.shots = storyboard.shots.map((shot, index) => ({ ...shot, shot: index + 1, seconds: 5 }))
   rejectedAttempts.storyboard = storyboardRun.rejected.length
   await writeFile(join(dir, 'storyboard', 'storyboard.json'), JSON.stringify(storyboard, null, 2))
   await record('storyboard', 'storyboard', planner, { seconds: storyboardRun.seconds, attempts: storyboardRun.attempts, rejected: storyboardRun.rejected })
@@ -531,7 +591,11 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
       const first = prefetched ?? firstRender(shot)
       prefetched = undefined
       await makeFrame(shot, first, () => {
-        if (next && options.prefetch !== false) prefetched = firstRender(next)
+        if (next && options.prefetch !== false) {
+          prefetched = firstRender(next)
+          // If this shot fails, the loop ends and nobody awaits the prefetch: a rejection there would exit the process.
+          prefetched.catch(() => undefined)
+        }
       })
     }
   }
@@ -554,13 +618,15 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
     await record('clips', 'video', undefined, { shot: shot.shot, seconds: clip.seconds })
     await addAsset(brief.id, { id: `clip-${shot.shot}`, kind: 'video', stage: 'clips', path: `clips/shot_${String(shot.shot).padStart(3, '0')}.mp4`, shot: shot.shot, execution: clip.workflow.startsWith('cloud:') ? 'cloud' : 'local-dgx-spark', model: clip.workflow, seconds: clip.seconds })
   }
-  // Frame rate: RIFE x5 turns the 24 fps clips into 120 fps masters while both language models still sleep
+  // Frame rate: RIFE turns the clips into ~120 fps masters (24 fps x5, Wan2.2 14B's 16 fps x8) while both language models still sleep
   // (601 frames at 1080p is about 15 GB); the cut conforms them to the delivery rate by dropping frames evenly.
   if ((brief.fps ?? DEFAULT_FPS) > 24 && !videoModel.startsWith('seedance')) {
     await enterPhase(comfy, 'interpolate (RIFE)', record)
     for (const shot of storyboard.shots) {
       const base = join(dir, 'clips', `shot_${String(shot.shot).padStart(3, '0')}`)
-      const hfr = await interpolateVideo(comfy, { input: `${base}.mp4`, output: `${base}.hfr.mp4`, multiplier: 5 })
+      // The clip's own frame rate decides the multiplier: Wan2.2 14B renders at 16 fps, and treating it as 24 played it 1.5x fast.
+      const sourceFps = videoFps(videoModel)
+      const hfr = await interpolateVideo(comfy, { input: `${base}.mp4`, output: `${base}.hfr.mp4`, multiplier: interpolationMultiplier(sourceFps), sourceFps })
       log(`▸ interpolate ${shot.shot}  ${hfr.seconds.toFixed(1)}s · ${hfr.fps} fps master`)
       await record('clips', 'interpolate', undefined, { shot: shot.shot, seconds: hfr.seconds, fps: hfr.fps, model: 'rife-4.26' })
     }
@@ -595,6 +661,8 @@ async function repairPrompt(planner: ModelEndpoint, system: string, shot: Shot, 
   const scene = (anchor ? prompt.slice(0, anchor.index) : prompt).trim()
   const assemble = (value: { scene: string }) => (anchor ? `${value.scene.trim()} ${prompt.slice(anchor.index)}` : value.scene.trim())
   const words = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  // A repair is an improvement, not a requirement: if the planner fails (timeout, 5xx, no JSON), the shot is regenerated
+  // with the same prompt and a new seed rather than failing a film that has already spent its GPU time.
   const run = await chatJson<{ fixes?: Array<{ issue: string; change: string }>; delete?: string[]; scene: string }>(
     planner,
     {
@@ -612,8 +680,9 @@ Return JSON only: {"fixes": [{"issue": "...", "change": "..."}], "delete": ["phr
       return checkRepairedPrompt(prompt, assemble(value))
     },
     3,
-  )
+  ).catch(() => undefined)
   // A repair that broke the label, the framing or the fixed sentences is worse than another seed on the old prompt.
+  if (!run) return prompt
   return run.unresolved.length ? prompt : assemble(run.value)
 }
 
@@ -636,8 +705,9 @@ const closingLine = (text: string) => text.trim().replace(/[。！？.!?，,]+$/
 
 export function statedFormat(request: string): { ratio?: Brief['ratio']; durationSeconds?: number } {
   const ratio = /横版|横屏|16:9|16：9/.test(request) ? '16:9' : /竖版|竖屏|9:16|9：16|抖音|快手|小红书|视频号|TikTok|Reels|Shorts/i.test(request) ? '9:16' : /方形|方版|1:1|1：1/.test(request) ? '1:1' : undefined
-  const seconds = /(\d+)\s*秒/.exec(request)?.[1]
-  const durationSeconds = seconds && Number(seconds) % 5 === 0 && Number(seconds) >= 5 && Number(seconds) <= 30 ? Number(seconds) : undefined
+  // "前 3 秒抓眼球，做一条 30 秒广告": the film length is the valid one (a multiple of 5 up to 30), and the longest of those.
+  const lengths = [...request.matchAll(/(\d+)\s*秒/g)].map((m) => Number(m[1])).filter((n) => n % 5 === 0 && n >= 5 && n <= 30)
+  const durationSeconds = lengths.length ? Math.max(...lengths) : undefined
   return { ratio, durationSeconds }
 }
 
@@ -656,9 +726,10 @@ export function faithfulLabel(appearance: string, request: string, brandText?: s
 /** Beat numbers a reviewer's issues name ("Beat 2 VO ...", "beat 3:", "第2拍"). */
 export function flaggedBeats(issues: string[], beats: number): number[] {
   const found = new Set<number>()
-  for (const issue of issues) for (const m of issue.matchAll(/\bbeat\s*(\d+)|第\s*(\d+)\s*[拍幕]/gi)) {
-    const n = Number(m[1] ?? m[2])
-    if (n >= 1 && n <= beats) found.add(n)
+  // "Beat 2", "beats 2 and 3", "Beats 1, 3", "第2拍"
+  for (const issue of issues) {
+    for (const m of issue.matchAll(/\bbeats?\s*((?:\d+\s*(?:,|and|&|、|-)?\s*)+)/gi)) for (const n of m[1]!.match(/\d+/g) ?? []) if (Number(n) >= 1 && Number(n) <= beats) found.add(Number(n))
+    for (const m of issue.matchAll(/第\s*(\d+)\s*[拍幕]/g)) if (Number(m[1]) >= 1 && Number(m[1]) <= beats) found.add(Number(m[1]))
   }
   return [...found].sort((a, b) => a - b)
 }

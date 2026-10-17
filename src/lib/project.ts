@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
@@ -22,6 +24,8 @@ export interface Asset {
 
 export interface ProjectState {
   id: string
+  /** The harness run that produced this state; every run.jsonl record carries it, so a report reads one run only. */
+  runId?: string
   title: string
   brief: string
   ratio: string
@@ -41,7 +45,7 @@ export function projectDir(id: string): string {
   return join(projectsRoot(), id)
 }
 
-export async function createProject(input: Pick<ProjectState, 'id' | 'title' | 'brief' | 'ratio' | 'durationSeconds'>): Promise<ProjectState> {
+export async function createProject(input: Pick<ProjectState, 'id' | 'title' | 'brief' | 'ratio' | 'durationSeconds'> & { runId?: string }): Promise<ProjectState> {
   const now = new Date().toISOString()
   const state: ProjectState = {
     ...input,
@@ -65,22 +69,49 @@ export async function loadProject(id: string): Promise<ProjectState> {
 export async function saveProject(state: ProjectState): Promise<void> {
   state.updatedAt = new Date().toISOString()
   const target = join(projectDir(state.id), 'state.json')
-  // Write-then-rename so the studio never reads a half-written file.
-  await writeFile(`${target}.tmp`, JSON.stringify(state, null, 2))
-  await rename(`${target}.tmp`, target)
+  // Write-then-rename so the studio never reads a half-written file; a unique temp name so two writers never share one.
+  const temp = `${target}.${process.pid}.${randomUUID().slice(0, 8)}.tmp`
+  await writeFile(temp, JSON.stringify(state, null, 2))
+  await rename(temp, target)
 }
 
-export async function setStage(id: string, stage: Stage, status: StageStatus, note?: string): Promise<ProjectState> {
-  const state = await loadProject(id)
-  state.stages[stage] = { status, note, updatedAt: new Date().toISOString() }
-  await saveProject(state)
-  return state
+/**
+ * Read-modify-write of state.json, one at a time per project within this process: in queue mode every shot's frame
+ * work finishes on its own and two addAsset calls a few milliseconds apart lost an update or failed the rename.
+ */
+const updates = new Map<string, Promise<unknown>>()
+export function updateProject(id: string, change: (state: ProjectState) => void): Promise<ProjectState> {
+  const run = async () => {
+    const state = await loadProject(id)
+    change(state)
+    await saveProject(state)
+    return state
+  }
+  const next = (updates.get(id) ?? Promise.resolve()).then(run, run)
+  updates.set(id, next.catch(() => undefined))
+  return next
 }
 
-export async function addAsset(id: string, asset: Omit<Asset, 'createdAt'>): Promise<ProjectState> {
-  const state = await loadProject(id)
-  state.assets = state.assets.filter((existing) => existing.id !== asset.id)
-  state.assets.push({ ...asset, createdAt: new Date().toISOString() })
-  await saveProject(state)
-  return state
+export function setStage(id: string, stage: Stage, status: StageStatus, note?: string): Promise<ProjectState> {
+  return updateProject(id, (state) => { state.stages[stage] = { status, note, updatedAt: new Date().toISOString() } })
+}
+
+export function addAsset(id: string, asset: Omit<Asset, 'createdAt'>): Promise<ProjectState> {
+  return updateProject(id, (state) => {
+    state.assets = state.assets.filter((existing) => existing.id !== asset.id)
+    state.assets.push({ ...asset, createdAt: new Date().toISOString() })
+  })
+}
+
+export function projectExists(id: string): boolean {
+  return existsSync(join(projectDir(id), 'state.json'))
+}
+
+/** Move a previous run of this id out of the way (projects/.archive/<id>-<time>) instead of overwriting it. */
+export async function archiveProject(id: string): Promise<string | undefined> {
+  if (!existsSync(projectDir(id))) return undefined
+  const target = join(projectsRoot(), '.archive', `${id}-${new Date().toISOString().replace(/[:.]/g, '-')}`)
+  await mkdir(join(projectsRoot(), '.archive'), { recursive: true })
+  await rename(projectDir(id), target)
+  return target
 }

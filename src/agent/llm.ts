@@ -136,7 +136,8 @@ export async function chatJson<T>(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     // The last attempts get the model's reasoning mode: a small model that has been told the same
     // rule three times usually needs to think, not to be told a fourth time.
-    const careful = attempt >= maxAttempts - 1 && options.thinking === false
+    // Never on a one- or two-attempt call: there it would turn every attempt into a 16k-token reasoning run.
+    const careful = maxAttempts >= 3 && attempt >= maxAttempts - 1 && options.thinking === false
     const result = await chat(endpoint, { ...options, user, ...(careful ? { thinking: true, maxTokens: Math.max(options.maxTokens ?? 6000, 16000) } : {}) })
     seconds += result.seconds
     completionTokens += result.completionTokens
@@ -144,10 +145,19 @@ export async function chatJson<T>(
     let value: T | undefined
     try {
       value = extractJson<T>(result.content)
-      problems = await check(value)
     } catch (error) {
       problems = [`reply was not valid JSON: ${(error as Error).message.slice(0, 160)}`]
+      value = undefined
     }
+    if (value !== undefined) {
+      // A validator that throws (a field of the wrong type) is a shape problem, not a JSON problem: say which.
+      try {
+        problems = await check(value)
+      } catch (error) {
+        problems = [`the JSON has the wrong shape (a field is missing or of the wrong type): ${(error as Error).message.slice(0, 160)}`]
+        value = undefined
+      }
+    } else problems ??= ['reply was not valid JSON']
     const finishReason = result.finishReason
     if (problems.length === 0) return { value: value!, unresolved: [], attempts: attempt, seconds, completionTokens, rejected, finishReason }
     rejected.push(problems)

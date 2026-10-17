@@ -19,6 +19,14 @@ const VIDEO_MODELS: Record<Exclude<VideoModel, 'seedance'>, { fps: number; i2v: 
   'ltx25-fast': { fps: 24, i2v: 'ltx25_fast_i2v', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors' } },
   'ltx25-fast-nvfp4': { fps: 24, i2v: 'ltx25_fast_i2v', values: { unet_name: 'ltx-2.5-22b-distilled-transformer-nvfp4.safetensors' } },
 }
+/** Native frame rate of a local video model's clips (Wan2.2 14B renders at 16 fps, the others at 24). */
+export function videoFps(model: VideoModel): number {
+  return model === 'seedance' ? VIDEO_FPS : VIDEO_MODELS[model]?.fps ?? VIDEO_FPS
+}
+/** RIFE multiplier that takes a clip to a master of about 120 fps: 24 fps x5 = 120, 16 fps x8 = 128. */
+export function interpolationMultiplier(sourceFps: number): number {
+  return Math.max(2, Math.round(120 / sourceFps))
+}
 export const VIDEO_SEGMENT_SECONDS = 5
 /** What the video models drift into on their own; industry anchors extend it (src/agent/checks.ts). */
 export const VIDEO_NEGATIVE = 'blurry, overexposed, static frame, warped product, morphing label, changing text, subtitles, watermark, extra fingers, deformed hands, distorted face, jitter, flicker, sudden camera shake, fast erratic motion, morphing, melting, CGI look, plastic texture, oversaturated, HDR glow, low quality'
