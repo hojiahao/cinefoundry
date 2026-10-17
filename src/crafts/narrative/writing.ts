@@ -36,7 +36,21 @@ Return JSON only:
     5,
   )
   failIfHardProblems('development', checkBible(run.value, { episodes, request: ctx.request }), run.attempts)
-  const { id: modelId, title, clientNames: _names, ...bible } = run.value as SeriesBible & { id?: string; title?: string; clientNames?: string[] }
+  let draft = run.value
+  // The premise is reviewed once, here, by an independent reviewer - as a studio clears a project before writing it -
+  // and sent back to the showrunner with the findings, at most twice. Episode reviews then judge execution only.
+  let premise = await reviewPremise(ctx, draft)
+  for (let round = 1; !premise.approve && round <= 2; round++) {
+    ctx.log(`  premise sent back (${premise.issues.join(' | ').slice(0, 160)})`)
+    const redo = await chatJson<SeriesBible & { id?: string; title?: string; clientNames?: string[] }>(ctx.planner, {
+      system: await ctx.agentPrompt(ctx.writer.role, [ctx.writer.skill, 'content-compliance']), thinking: false, maxTokens: 5000, temperature: 0.6,
+      user: `Your series bible:\n${json(draft)}\n\nThe compliance reviewer did not clear it:\n${premise.issues.map((i) => `- ${i}`).join('\n')}\nKeep the client's story and names; change only what the findings name. Return the corrected bible as JSON only, same shape.`,
+    }, (value) => checkBible(value, { episodes, request: ctx.request }), 4)
+    draft = redo.value
+    premise = await reviewPremise(ctx, draft)
+  }
+  if (!premise.approve) throw new Error(`the series premise did not pass compliance: ${premise.issues.join(' | ').slice(0, 300)}`)
+  const { id: modelId, title, clientNames: _names, ...bible } = draft as SeriesBible & { id?: string; title?: string; clientNames?: string[] }
   const id = ctx.options.id ?? (modelId && /^[a-z0-9][a-z0-9-]{0,40}$/.test(modelId) ? modelId : `${ctx.format}-${Date.now().toString(36)}`)
   const dir = await ctx.openProject({ id, title: title ?? bible.logline.slice(0, 20), ratio: ctx.ratio, durationSeconds: ctx.episodeSeconds })
   ctx.bible = bible
@@ -80,6 +94,20 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
  * Compliance: an independent reviewer on another model reads every line against broadcast and platform rules
  * (content-compliance). Rewrites are taken only if the screenplay still passes every check.
  */
+/** What the regulation allows, stated in the reviewer's own instruction so it is weighed, not skimmed. */
+const ALLOWED = `Allowed when the values are sound: wealthy characters, inheritances, business acquisitions, contract or fake relationships, arranged matches, rivals who fall in love. Judge the treatment: wealth is never the measure of a person or a weapon of humiliation; no coercion, confinement or "taming" as romance; the lead has her own skill, choices and voice; conflict resolves through truth and character, not revenge; titles carry no 霸总-style or click-bait words.`
+
+async function reviewPremise(ctx: NarrativeContext, bible: SeriesBible): Promise<ContentReview> {
+  const source = `${bible.logline}\n${bible.genre}\n${bible.characters.map((c) => `${c.name} ${c.role} ${c.arc}`).join('\n')}\n${bible.episodes.map((e) => `${e.title} ${e.synopsis} ${e.hook} ${e.cliffhanger}`).join('\n')}`
+  ctx.log(`▸ compliance   series premise · independent reviewer · ${ctx.editor.name}`)
+  const run = await chatJson<ContentReview>(ctx.editor, {
+    system: await ctx.agentPrompt('compliance reviewer. You did not write this series', 'content-compliance'), thinking: false, maxTokens: 2500, temperature: 0.2,
+    user: `Clear this micro-drama series for production (premise, characters, episode titles and plans):\n${source}\n\n${ALLOWED}\nEvery issue quotes the exact words it is about, in quotation marks. Return JSON only: {"approve": true|false, "issues": ["\\"quoted words\\" - why"]}`,
+  }, (r) => checkReviewEvidence(r, source), 3).catch((error: Error) => { throw new Error(`the series premise could not be reviewed (${error.message.slice(0, 160)}); the run stops here`) })
+  await ctx.record('compliance', 'premise-reviewer', ctx.editor, { approve: run.value.approve, issues: run.value.issues, unresolved: run.unresolved })
+  return { ...run.value, approve: run.value.approve && run.unresolved.length === 0 }
+}
+
 type ContentReview = { approve: boolean; issues: string[]; revised?: Array<{ scene: number; line: number; en: string; zh: string }> }
 
 /**
@@ -128,7 +156,7 @@ export async function contentComplianceStage(ctx: NarrativeContext): Promise<str
           user: `Series logline: ${bible.logline} (${bible.genre}). Characters: ${bible.characters.map((c) => `${c.id}, ${c.age}, ${c.role}`).join('; ')}.
 Episode ${play.episode} (scene.line numbered from 1):
 ${play.scenes.map((s) => `Scene ${s.scene} ${s.heading}: ${s.action}\n${s.lines.map((l, n) => `  ${s.scene}.${n + 1} ${l.speaker}: ${l.en} / ${l.zh}`).join('\n')}`).join('\n')}
-${scan.length ? `The deterministic scan found: ${scan.join('; ')}. Each of these must be rewritten.\n` : ''}Judge only what is written above. Every issue quotes the exact words it is about, in quotation marks.
+${scan.length ? `The deterministic scan found: ${scan.join('; ')}. Each of these must be rewritten.\n` : ''}The series premise has already been cleared; judge how this episode executes it - its lines, actions and on-screen behaviour.\n${ALLOWED}\nJudge only what is written above. Every issue quotes the exact words it is about, in quotation marks.
 Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted words\\" - why"], "revised": [{"scene": N, "line": M, "en": "...", "zh": "..."}]}`,
         },
         (r) => checkReviewEvidence(r, source),
