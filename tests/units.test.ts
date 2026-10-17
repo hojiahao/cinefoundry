@@ -190,7 +190,7 @@ describe('product-consistency heuristic', () => {
 
 describe('voiceover language', () => {
   it('rejects an English word inside a Chinese voiceover line', () => {
-    const script = { structure: 's', beats: [{ beat: 1, job: 'hook', see: 'x', vo: '仪式感，唤醒 mornings 的早晨', text: '唤醒' }, { beat: 2, job: 'payoff', see: 'y', vo: '清晨的第一口，温热流转', text: '第一口' }, { beat: 3, job: 'cta', see: 'z', vo: '醒，清晨一口的仪式感', text: '醒' }] }
+    const script = { structure: 's', beats: [{ beat: 1, job: 'hook', see: 'x', vo: '闹钟响后，唤醒 mornings 的早晨', text: '唤醒' }, { beat: 2, job: 'payoff', see: 'y', vo: '清晨的第一口，温热流转', text: '第一口' }, { beat: 3, job: 'cta', see: 'z', vo: '醒，清晨这一口刚刚好', text: '醒' }] }
     const brief = { id: 'c', title: 't', product: 'coffee', category: 'food', audience: 'a', message: 'm', ratio: '16:9', durationSeconds: 15, tone: 'warm', brandText: '醒' } as Brief
     const problems = checkScript(script, brief)
     expect(problems).toHaveLength(1)
@@ -495,5 +495,13 @@ describe('delivery formats', () => {
     // three 5 s shots cut hard, a 0.5 s dissolve into a 3 s end card
     expect(clipStart(3, [5, 5, 5, 3], [0, 0, 0.5])).toBeCloseTo(14.5)
     expect(filmLength([5, 5, 5, 3], [0, 0, 0.5])).toBeCloseTo(17.5)
+  })
+})
+
+describe('stock ad-speak', () => {
+  it('sends back machine-sounding cliches and keeps concrete spoken lines', async () => {
+    const { AI_CLICHES } = await import('../src/agent/checks.js')
+    for (const line of ['开启美好生活新篇章', '焕新你的每一天', '让早晨成为可能', '满满的高级感']) expect(AI_CLICHES.test(line)).toBe(true)
+    for (const line of ['拧开盖子，气泡往上冒', '第一口有点凉，后面是回甘']) expect(AI_CLICHES.test(line)).toBe(false)
   })
 })

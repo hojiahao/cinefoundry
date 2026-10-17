@@ -16,7 +16,12 @@ export interface QaVerdict {
   issues: string[]
   /** Only on score -1: why the reviewer did not conclude, so the time it costs can be attributed. */
   inconclusive?: GateFailure
+  /** Craft, 0-10 each: does the frame look like a commercial shot by a top crew, not like generated art. */
+  craft?: { light: number; composition: number; realism: number }
 }
+
+/** A frame below this on any craft axis is regenerated even when nothing is wrong with it. */
+export const CRAFT_FLOOR = Number(process.env.SPOTFOUNDRY_CRAFT_FLOOR ?? 6)
 
 export interface GateFailure {
   /** budget: max_tokens ran out (finish_reason "length"); unparsable: it finished without JSON; malformed: JSON without pass/score; transport: HTTP or connection error. */
@@ -45,11 +50,15 @@ export function gateFailure(error: unknown): GateFailure {
  */
 export async function qualityGate(reviewer: ModelEndpoint, frame: string, shot: Shot, productReference?: string, industry: Industry = 'general'): Promise<QaVerdict> {
   const [frameCopy, referenceCopy] = await Promise.all([reviewCopy(frame), productReference ? reviewCopy(productReference) : undefined])
-  try {
-    return await runGate(reviewer, frameCopy, shot, referenceCopy, 3000, industry)
-  } catch (error) {
-    const inconclusive = gateFailure(error)
-    return { pass: false, score: -1, issues: [`reviewer inconclusive (${inconclusive.cause})`], inconclusive }
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await runGate(reviewer, frameCopy, shot, referenceCopy, 3000, industry)
+    } catch (error) {
+      const inconclusive = gateFailure(error)
+      // A dropped connection says nothing about the frame: ask once more. A reviewer that ran out of budget would again.
+      if (inconclusive.cause === 'transport' && attempt === 0) continue
+      return { pass: false, score: -1, issues: [`reviewer inconclusive (${inconclusive.cause})`], inconclusive }
+    }
   }
 }
 
@@ -71,8 +80,12 @@ ${productReference ? '- the product in image 1 is a different product from image
 ${/\b(hand|hands|person|people|student|man|woman|girl|boy|model|holding|drinking|sipping)\b/i.test(`${shot.must_show} ${shot.image_prompt}`) ? '' : '- a person, a hand or fingers appear although this shot does not call for them;\n'}- extra limbs, malformed hands or a distorted face;
 - the product is cropped, floating or physically implausible, or a drink that should be clear is an odd colour;
 - the product appears twice, as a ghost outline, a transparent overlay or a second copy;
-- the product carries a brand name, logo or wordmark that is not on image 2 (a small badge that matches image 2 is fine)${LIT_LIKE_ELECTRONICS.includes(industry) ? ';\n- the lighting is rainbow or multicoloured (several hues at once): this product is lit in one or two colours' : ''}.
-Decide quickly; do not deliberate at length. Reply with JSON only: {"pass": boolean, "score": 0-100, "issues": ["short issue"]}. Pass requires score >= 80 and none of the reject conditions.`,
+- the product carries a brand name, logo or wordmark that is not on image 2 (a small badge that matches image 2 is fine)${LIT_LIKE_ELECTRONICS.includes(industry) ? ';\n- the lighting is rainbow or multicoloured (several hues at once): this product is lit in one or two colours' : ''};
+- it looks like CGI or AI art rather than a photograph: plastic or waxy skin, over-smooth surfaces, melted or warped geometry, impossible reflections, a glossy illustration look;
+- the light is flat or muddy, or the product is not the sharpest and best-lit thing in the frame;
+- the composition is cluttered, accidentally tilted, or the subject is jammed against an edge.
+Also rate the craft as a commercial cinematographer would, 0-10 each: light (motivated, sculpted, one clear key), composition (balance, depth, room for a title), realism (reads as a real photograph).
+Decide quickly; do not deliberate at length. Reply with JSON only: {"pass": boolean, "score": 0-100, "craft": {"light": 0-10, "composition": 0-10, "realism": 0-10}, "issues": ["short issue"]}. Pass requires score >= 80, every craft rating >= ${CRAFT_FLOOR} and none of the reject conditions.`,
     },
     (verdict) => (typeof verdict.pass === 'boolean' && typeof verdict.score === 'number' ? [] : ['need boolean "pass" and numeric "score"']),
     1,
@@ -81,6 +94,10 @@ Decide quickly; do not deliberate at length. Reply with JSON only: {"pass": bool
     return { pass: false, score: -1, issues: ['reviewer inconclusive (malformed)'], inconclusive: { cause: 'malformed', detail: run.unresolved.join('; ').slice(0, 200), seconds: run.seconds, completionTokens: run.completionTokens, finishReason: run.finishReason } }
   }
   const issues = Array.isArray(run.value.issues) ? run.value.issues : []
-  return { pass: run.value.pass && run.value.score >= 80, score: run.value.score, issues }
+  const c = run.value.craft
+  const craft = c && [c.light, c.composition, c.realism].every((v) => typeof v === 'number') ? { light: c.light, composition: c.composition, realism: c.realism } : undefined
+  const weak = craft ? (Object.entries(craft) as Array<[string, number]>).filter(([, v]) => v < CRAFT_FLOOR) : []
+  if (weak.length) issues.push(`craft below ${CRAFT_FLOOR}: ${weak.map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  return { pass: run.value.pass && run.value.score >= 80 && weak.length === 0, score: run.value.score, issues, ...(craft ? { craft } : {}) }
 }
 

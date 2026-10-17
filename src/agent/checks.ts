@@ -119,6 +119,12 @@ export function checkBrief(brief: Brief): string[] {
   return problems
 }
 
+/**
+ * Stock phrases that make copy read as machine-written or as a template: abstract promises instead of something a
+ * viewer can see, taste or feel. A line that leans on one is sent back with the instruction to say the concrete thing.
+ */
+export const AI_CLICHES = /开启[^，。]{0,6}(新篇章|新旅程|新时代)|焕新|赋能|不止于|满满的|让[^，。]{0,8}成为可能|臻享|尽享|非凡体验|品质生活|美好生活|全新升级|极致体验|匠心之作|邂逅|一站式|颠覆|重新定义|引领潮流|点亮生活|治愈|氛围感|高级感|仪式感|灵感迸发|无限可能|梦想起航|触手可及/
+
 export function checkScript(script: Script, brief: Brief): string[] {
   const problems: string[] = []
   const expected = brief.durationSeconds / 5
@@ -130,6 +136,8 @@ export function checkScript(script: Script, brief: Brief): string[] {
     if (!beat.see?.trim()) problems.push(`${label}: "see" is empty`)
     if (!beat.vo?.trim()) problems.push(`${label}: "vo" is empty`)
     else {
+      const cliche = AI_CLICHES.exec(`${beat.vo} ${beat.text ?? ''}`)?.[0]
+      if (cliche) problems.push(`${label}: "${cliche}" is stock ad-speak that sounds machine-written; say the concrete thing a viewer sees, tastes or feels, the way a person would say it out loud`)
       if (!CJK.test(beat.vo)) problems.push(`${label}: voiceover must be in Chinese`)
       else if (/[A-Za-z]{3,}/.test(beat.vo.replace(brief.brandText, ''))) problems.push(`${label}: voiceover mixes an English word into Chinese (${/[A-Za-z]{3,}/.exec(beat.vo)?.[0]}); write it in Chinese`)
       if (spokenLength(beat.vo) < VO_MIN_CHARS) problems.push(`${label}: voiceover has only ${spokenLength(beat.vo)} characters; write ${VO_MIN_CHARS}-${VO_MAX_CHARS} so the beat is not mostly silence`)
