@@ -20,7 +20,7 @@ async function fakeJev(answer: (state: any, questions: any) => Record<string, un
   return { config, calls, close: () => server.close() }
 }
 
-const brief = { id: 'soda', title: 't', product: 'sparkling water', category: 'food', audience: 'a', message: 'm', ratio: '9:16', durationSeconds: 10, tone: 'fresh', brandText: '冷' } as const
+const brief = { id: 'coffee', title: 't', product: 'specialty coffee', category: 'food', audience: 'a', message: 'm', ratio: '9:16', durationSeconds: 10, tone: 'warm', brandText: '拾豆' } as const
 
 describe('Jev structured judge', () => {
   it('turns calibrated answers into block / review copy findings', async () => {
@@ -33,7 +33,7 @@ describe('Jev structured judge', () => {
         naturalness: { type: 'score', score: bad ? 0.8 : 1.9, probabilities: {}, confidence: 0.9 },
       }
     })
-    const script = { structure: 's', beats: [{ beat: 1, job: 'hook', see: 'x', vo: '全网第一的气泡水', text: '第一' }, { beat: 2, job: 'payoff', see: 'y', vo: '一口下去，气泡在舌尖炸开', text: '气泡' }] }
+    const script = { structure: 's', beats: [{ beat: 1, job: 'hook', see: 'x', vo: 'The number one specialty coffee.', zh: '全网第一的精品咖啡', text: '第一' }, { beat: 2, job: 'payoff', see: 'y', vo: 'One sip, and the crema settles.', zh: '一口下去 醇香在舌尖化开', text: '醇香' }] }
     const result = await judgeCopy(jev.config, brief as never, script)
     jev.close()
     expect(jev.calls).toHaveLength(2)
@@ -60,10 +60,10 @@ describe('Jev structured judge', () => {
     }))
     const shot = (n: number, image_prompt: string, video_prompt: string, must_show: string) => ({ shot: n, seconds: 5, framing: 'macro', camera: 'push-in', image_prompt, video_prompt, on_screen_text: '', must_show })
     const storyboard = { style: 's', product: 'p', shots: [
-      shot(1, 'the product on ice', 'Slow push-in.', 'the can'),
-      shot(2, 'the product with the slogan painted above', 'Push-in then pan.', 'the can'),
-      shot(3, 'a hand lifting the product', 'Static.', 'a hand holding the can'),
-      shot(4, 'a hand lifting the product', 'Static.', 'the can upright'),
+      shot(1, 'the product on ice', 'Slow push-in.', 'the cup'),
+      shot(2, 'the product with the slogan painted above', 'Push-in then pan.', 'the cup'),
+      shot(3, 'a hand lifting the product', 'Static.', 'a hand holding the cup'),
+      shot(4, 'a hand lifting the product', 'Static.', 'the cup upright'),
     ] }
     const result = await judgeStoryboard(jev.config, storyboard)
     jev.close()

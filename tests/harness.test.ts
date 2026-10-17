@@ -12,16 +12,16 @@ import { startFakeComfy } from './fake-comfy.js'
  * the final cut. ffmpeg is real. Voice and music are skipped (silent) so no model is needed.
  */
 
-const STYLE = 'cool backlit morning light, pastel teal and coral, fine film grain'
+const STYLE = 'warm backlit morning light, deep brown and cream, fine film grain'
 /** Shot 1's gate prompt carries this, so the fake gate can reject shot 1 whatever order the queued frames reach it in. */
 const SHOT_1_MUST_SHOW = 'the can upright on crushed ice with its label readable'
 const replies = {
-  brief: { id: 'model-chose-this', title: '冷·气泡水', product: 'sugar-free sparkling water', category: 'food', audience: '大学生', message: '清爽一夏', ratio: '9:16', durationSeconds: 10, tone: 'fresh, cinematic', brandText: '冷', industry: 'drink' },
-  badScript: { structure: 'sensory -> reveal', beats: [{ beat: 1, job: 'hook', see: 'ice', vo: '全网第一的气泡水来了', text: '第一' }, { beat: 2, job: 'payoff', see: 'can', vo: '冷', text: '冷' }] },
-  script: { structure: 'sensory -> reveal', beats: [{ beat: 1, job: 'hook', see: 'ice cracking', vo: '冰块轻响，夏天开罐', text: '开罐' }, { beat: 2, job: 'payoff', see: 'the can', vo: '零糖气泡，清爽入口', text: '零糖' }] },
+  brief: { id: 'model-chose-this', title: '拾豆·冷萃咖啡', product: 'cold brew coffee in a can', category: 'food', audience: '大学生', message: '一口慢下来', ratio: '9:16', durationSeconds: 10, tone: 'warm, cinematic', brandText: '拾豆', industry: 'drink' },
+  badScript: { structure: 'sensory -> reveal', beats: [{ beat: 1, job: 'hook', see: 'ice', vo: 'The number one cold brew is here.', zh: '全网第一的冷萃来了', text: '第一' }, { beat: 2, job: 'payoff', see: 'can', vo: 'Smooth.', zh: '醇', text: '醇' }] },
+  script: { structure: 'sensory -> reveal', beats: [{ beat: 1, job: 'hook', see: 'ice cracking', vo: 'Ice cracks, and the morning opens with a hiss.', zh: '冰块轻响 清晨开罐', text: '开罐' }, { beat: 2, job: 'payoff', see: 'the can', vo: 'Steeped overnight, every note still there.', zh: '冷萃一夜 风味一点不少', text: '冷萃' }] },
   review: { approve: true, issues: [] },
   storyboard: {
-    style: STYLE, product: 'a slim silver aluminium can with a teal band that reads "冷"',
+    style: STYLE, product: 'a slim silver aluminium can with a dark brown band that reads "拾豆"',
     shots: [1, 2].map((shot) => ({ shot, seconds: 5, framing: shot === 1 ? 'macro' : 'medium', camera: 'slow push-in', image_prompt: `Shot ${shot}: the product on crushed ice, backlit mist`, video_prompt: 'Slow push-in. Mist drifts. No people and no hands enter the frame.', on_screen_text: '', must_show: shot === 1 ? SHOT_1_MUST_SHOW : 'the can upright with its label readable' })),
   },
 }
@@ -34,7 +34,7 @@ const prompts: string[] = []
 let scriptCalls = 0
 let shot1Rejected = false
 let storyboardBroken = false
-let photoLetteringReply = '冷'
+let photoLetteringReply = '拾豆'
 
 beforeAll(async () => {
   // The casting library on this machine must not decide what the fake creative director may cast.
@@ -56,7 +56,7 @@ beforeAll(async () => {
       let reply: unknown
       if (hasImage && system.includes('describe product photos')) {
         seen.push('photo')
-        reply = { description: `A slim silver aluminium can with a brushed finish and a teal band printed with "${photoLetteringReply}".` }
+        reply = { description: `A slim silver aluminium can with a brushed finish and a dark brown band printed with "${photoLetteringReply}".` }
       } else if (hasImage) {
         seen.push('gate')
         // Reject shot 1's first frame once, to exercise the regeneration loop. Frames are gated as
@@ -83,8 +83,8 @@ beforeAll(async () => {
 afterAll(() => { llm.close(); comfy.close() })
 
 const TREATMENT = {
-  insight: '忙碌的人想要片刻安静', proposition: '一口清爽', concept: '喧闹中打开罐子，世界安静下来', brandVoice: 'restrained and premium',
-  visual: { concept: 'a cold can glowing in a dark quiet room', light: 'night, cool backlight from behind, soft fill', palette: ['deep blue', 'silver', 'lime'], texture: 'condensation, brushed metal' },
+  insight: '忙碌的人想要片刻安静', proposition: '一口醇香', concept: '喧闹中打开罐子，世界安静下来', brandVoice: 'restrained and premium',
+  visual: { concept: 'a cold can of coffee glowing in a dark quiet room', light: 'night, warm backlight from behind, soft fill', palette: ['deep brown', 'silver', 'cream'], texture: 'condensation, brushed metal' },
   rhythm: 'quiet hook, build, hero',
   sound: { voice: 'default', voiceDirection: 'unhurried and warm', music: 'sparse piano, slow, resolves softly', ambience: 'a quiet room at night' },
 }
@@ -97,12 +97,12 @@ describe('Cinefoundry Harness', () => {
     const { runHarness } = await import('../src/agent/harness.js')
     const log: string[] = []
     // 720p keeps the real ffmpeg steps fast in tests; 60 fps exercises the RIFE interpolation path.
-    const result = await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'soda-test', silent: true, candidates: 1, resolution: '720p', fps: 60, log: (line) => log.push(line) })
+    const result = await runHarness({ brief: '给“拾豆”冷萃咖啡做一条 10 秒竖版广告', id: 'coffee-test', silent: true, candidates: 1, resolution: '720p', fps: 60, log: (line) => log.push(line) })
 
     // Stage order, and the first script (absolute claim, 1-character voiceover) was sent back.
     expect(seen.filter((name) => name !== 'gate' && name !== 'repair')).toEqual(['brief', 'creative', 'script', 'script', 'review', 'storyboard'])
     expect(result.rejectedAttempts.script).toBe(1)
-    expect(readFileSync(join(projects, 'soda-test', 'script', 'copy.txt'), 'utf8')).not.toContain('全网第一')
+    expect(readFileSync(join(projects, 'coffee-test', 'script', 'copy.txt'), 'utf8')).not.toContain('全网第一')
 
     // Gate: hero passes, shot 1 is rejected once and repaired, shot 2 passes.
     expect(seen.filter((name) => name === 'repair')).toHaveLength(1)
@@ -124,12 +124,12 @@ describe('Cinefoundry Harness', () => {
 
     // Final cut: two 5 s shots plus a 3 s end card, crossfaded, with typeset titles.
     expect(existsSync(result.finalCut!)).toBe(true)
-    const ass = readFileSync(join(projects, 'soda-test', 'cut', 'titles.ass'), 'utf8')
+    const ass = readFileSync(join(projects, 'coffee-test', 'cut', 'titles.ass'), 'utf8')
     expect(ass).toContain('开罐')
-    expect(ass).toMatch(/Closing,,0,0,0,,.*清爽一夏/)
-    const state = JSON.parse(readFileSync(join(projects, 'soda-test', 'state.json'), 'utf8'))
+    expect(ass).toMatch(/Closing,,0,0,0,,.*一口慢下来/)
+    const state = JSON.parse(readFileSync(join(projects, 'coffee-test', 'state.json'), 'utf8'))
     expect(Object.values(state.stages).every((stage: any) => stage.status === 'done')).toBe(true)
-    const delivery = readFileSync(join(projects, 'soda-test', 'reports', 'delivery.md'), 'utf8')
+    const delivery = readFileSync(join(projects, 'coffee-test', 'reports', 'delivery.md'), 'utf8')
     expect(delivery).toContain('# 交付报告')
     expect(delivery).toMatch(/\| 1 \| macro · slow push-in \| 2 \| pass 92/)
     expect(state.assets.map((asset: any) => asset.id).sort()).toEqual(['clip-1', 'clip-2', 'final-cut', 'frame-1', 'frame-2', 'product-hero'])
@@ -143,7 +143,7 @@ describe('Cinefoundry Harness', () => {
     const { runHarness } = await import('../src/agent/harness.js')
     const before = comfy.graphs.length
     const log: string[] = []
-    await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'photo-test', silent: true, candidates: 1, productImage: photo, resolution: '720p', fps: 24, log: (line) => log.push(line) })
+    await runHarness({ brief: '给“拾豆”冷萃咖啡做一条 10 秒竖版广告', id: 'photo-test', silent: true, candidates: 1, productImage: photo, resolution: '720p', fps: 24, log: (line) => log.push(line) })
 
     // No text-to-image graph: the first picture job is already an edit anchored to the photo.
     const graphs = comfy.graphs.slice(before)
@@ -159,7 +159,7 @@ describe('Cinefoundry Harness', () => {
     expect(brief.photo.description).toContain('brushed finish')
     // The look is the photo's, not the storyboard artist's paraphrase.
     expect(JSON.parse(readFileSync(join(projects, 'photo-test', 'storyboard', 'storyboard.json'), 'utf8')).product).toBe(brief.photo.description)
-    expect(prompts.some((prompt) => prompt.includes('brushed finish and a teal band') && prompt.includes('Approved script'))).toBe(true)
+    expect(prompts.some((prompt) => prompt.includes('brushed finish and a dark brown band') && prompt.includes('Approved script'))).toBe(true)
     // Normalised to PNG, longest side capped at 1328 px.
     const hero = join(projects, 'photo-test', 'refs', 'product.png')
     expect(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', hero]).toString().trim()).toBe('1328,996')
@@ -171,7 +171,7 @@ describe('Cinefoundry Harness', () => {
   it('stops before any model call when the product photo does not exist', async () => {
     const { runHarness } = await import('../src/agent/harness.js')
     const calls = seen.length
-    await expect(runHarness({ brief: '给“冷”气泡水做一条广告', productImage: '/nonexistent/photo.jpg', log: () => {} })).rejects.toThrow('Product image not found')
+    await expect(runHarness({ brief: '给“拾豆”冷萃咖啡做一条广告', productImage: '/nonexistent/photo.jpg', log: () => {} })).rejects.toThrow('Product image not found')
     expect(seen.length).toBe(calls)
   })
 
@@ -181,14 +181,14 @@ describe('Cinefoundry Harness', () => {
     const photo = join(projects, 'photo.jpg')
     execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gold:s=800x600', '-frames:v', '1', photo])
     const { runHarness } = await import('../src/agent/harness.js')
-    photoLetteringReply = 'LENG'
-    // The scripted storyboard still says "冷", so the run stops there; the brief is written before that.
-    await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'lettering-test', silent: true, candidates: 1, productImage: photo, log: () => {} }).catch(() => undefined)
-    photoLetteringReply = '冷'
+    photoLetteringReply = 'SHIDOU'
+    // The scripted storyboard still says "拾豆", so the run stops there; the brief is written before that.
+    await runHarness({ brief: '给“拾豆”冷萃咖啡做一条 10 秒竖版广告', id: 'lettering-test', silent: true, candidates: 1, productImage: photo, log: () => {} }).catch(() => undefined)
+    photoLetteringReply = '拾豆'
     const brief = JSON.parse(readFileSync(join(projects, 'lettering-test', 'brief.json'), 'utf8'))
-    expect(brief.brandText).toBe('LENG')
+    expect(brief.brandText).toBe('SHIDOU')
     expect(brief.industry).toBe('drink')
-    expect(readFileSync(join(projects, 'lettering-test', 'reports', 'run.jsonl'), 'utf8')).toContain('"from":"冷","to":"LENG"')
+    expect(readFileSync(join(projects, 'lettering-test', 'reports', 'run.jsonl'), 'utf8')).toContain('"from":"拾豆","to":"SHIDOU"')
   })
 
   it('carries on without the judge when it cannot be reached, instead of rewriting the copy', async () => {
@@ -197,7 +197,7 @@ describe('Cinefoundry Harness', () => {
     const { runHarness } = await import('../src/agent/harness.js')
     scriptCalls = 1
     try {
-      const result = await runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'jev-test', silent: true, candidates: 1, planOnly: true, log: () => {} })
+      const result = await runHarness({ brief: '给“拾豆”冷萃咖啡做一条 10 秒竖版广告', id: 'jev-test', silent: true, candidates: 1, planOnly: true, log: () => {} })
       expect(result.rejectedAttempts.script).toBe(0)
       expect(result.rejectedAttempts.storyboard).toBe(0)
     } finally {
@@ -214,7 +214,7 @@ describe('Cinefoundry Harness', () => {
     const { runHarness } = await import('../src/agent/harness.js')
     storyboardBroken = true
     try {
-      await expect(runHarness({ brief: '给“冷”气泡水做一条 10 秒竖版广告', id: 'broken-test', silent: true, candidates: 1, log: () => {} })).rejects.toThrow('storyboard still fails its checks')
+      await expect(runHarness({ brief: '给“拾豆”冷萃咖啡做一条 10 秒竖版广告', id: 'broken-test', silent: true, candidates: 1, log: () => {} })).rejects.toThrow('storyboard still fails its checks')
     } finally {
       storyboardBroken = false
     }

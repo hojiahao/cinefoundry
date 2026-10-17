@@ -3,6 +3,10 @@
 </p>
 
 <p align="center">
+  <b>English</b> · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
   <a href="LICENSE"><img alt="License: BUSL-1.1" src="https://img.shields.io/badge/license-BUSL--1.1-d9b26a"></a>
   <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A5%2022-5fa04e">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.8-3178c6">
@@ -11,284 +15,221 @@
 </p>
 
 <p align="center">
-  <a href="#项目说明">项目说明</a> ·
-  <a href="#快速开始">快速开始</a> ·
-  <a href="#部署说明">部署说明</a> ·
+  <a href="#why-cinefoundry">Why Cinefoundry</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#formats-and-specs">Formats</a> ·
+  <a href="#quality-system">Quality</a> ·
   <a href="#agent-skills">Agent Skills</a> ·
-  <a href="#技术栈说明">技术栈</a> ·
-  <a href="#已知局限">已知局限</a>
+  <a href="#tech-stack-and-deployment">Tech stack</a> ·
+  <a href="#license-and-commercial-use">License</a>
 </p>
 
-**Cinefoundry（影工坊）** 是一个运行在单台 NVIDIA DGX Spark 上的智能体影像工作室：**一个想法进去，一部成片出来。** 一套通用的 Agent 引擎承载各类片型的制作流水线，由一组各司其职的智能体完成创意、编剧、选角、拍摄、配音、配乐、剪辑与逐帧质检；素材、模型与生成的每一帧全程留在本机。
+**Cinefoundry is an agentic film studio that runs on a single NVIDIA DGX Spark. One idea in, a finished film out.**
 
-- **广告片**：30 秒主片与 15 秒、6 秒剪辑版，画面、配音、配乐齐全，字幕正确，文案合规，16:9 原生 1080p、60 fps。
-- **短视频**：面向抖音、B 站、YouTube Shorts 的口播、测评、知识与剧情短片，前三秒钩子与平台包装一并交付。
-- **微短剧**：竖屏连续剧，从剧集圣经、角色定妆到英文对白口型同步与中英双语字幕，逐集成片。
+A crew of AI agents — creative director, screenwriter, director of photography, casting, voice director, sound designer, editor, compliance reviewer and QC — takes a single sentence to a delivered film: picture, performance, dialogue, sound design, score, bilingual subtitles and AI labels, every frame checked before the next stage starts. Every model runs on the machine; no footage, script or product photo leaves it.
 
-第三届 NVIDIA DGX Spark 黑客松 · Agent Skills 开发挑战赛**优秀奖** · 作者：贺家豪 · 十日谈征文：[《十日谈：在一台 DGX Spark 上做广告片的十天》](https://zhuanlan.zhihu.com/p/2088218312492828625)
+| Format | What you get |
+|---|---|
+| **Ad film** | A 30-second master with 15- and 6-second cutdowns, English announcer, Chinese-over-English subtitles, compliance-checked copy. 16:9, native 1080p, 60 fps. |
+| **Short video** | Presenter pieces, reviews, explainers and skits for Douyin, Bilibili and YouTube Shorts, with a three-second hook and the packaging the feed needs: three titles to test, cover, description, hashtags. |
+| **Micro-drama** | A vertical series: series bible, a cast with locked faces and designed voices, lip-synced English dialogue, sound design and score, delivered episode by episode. |
 
-| 痛点 | 现有 AI 视频工具 | Cinefoundry |
-|---|---|---|
-| 未发布新品的素材不能上云 | 生图、生视频走云端 API | Nemotron、Step3-VL、Qwen-Image、Wan2.2 全部运行在一台 Spark 上，断网也能出片 |
-| 产品在镜头之间变样，画面里出现乱码字 | 每个镜头单独生成，模型直接画字 | 先出一张通过质检的**产品定妆图**，每一帧都以它为参考；画面**不让模型写字**，标题字幕后期用真字体排版 |
-| 生成结果无人把关，返工发生在最贵的环节 | 生成完再人工检查 | 文案先过**《广告法》用词扫描与独立审稿**；每一帧先过**视觉质检**再生成视频，返工拦在约 1 分钟的生图阶段，而不是 6 分钟的生视频阶段 |
+## Why Cinefoundry
 
----
+| | Traditional production | General AI video tools | Cinefoundry |
+|---|---|---|---|
+| **Who does the work** | A crew of specialists over weeks | One person prompting clip by clip | A crew of 25 role agents, each working under the craft standard of its role |
+| **Consistency** | Real product, real actors | The product and the faces drift from shot to shot | One gated hero still per product, one locked reference portrait per character; every frame is generated from it |
+| **Quality control** | Producers, editors, QC houses | Whoever watches the output | A vision gate on every frame, Whisper on every spoken line, an independent compliance reviewer on every word, before the next, more expensive stage |
+| **On-screen text** | Typeset in post | The model paints it, often garbled | The model never draws text; titles and subtitles are typeset in a real font checked for every glyph |
+| **Compliance** | Agency legal review | None | Advertising Law wording scan, broadcast rules for micro-dramas, explicit and implicit AI labels (GB 45438-2025) on every deliverable |
+| **Data** | On set | Uploaded to a cloud API | Never leaves the machine; cloud routes exist only when you switch them on, and are labelled `cloud` |
+| **Record** | Production reports | None | Every model call, gate verdict and measured time in `run.jsonl`; a delivery report lists every open item |
 
-## 项目说明
-
-### 核心亮点与技术实现
-
-- **自研智能体运行时 Cinefoundry Harness。** `cinefoundry harness "一句创意"` 按需求、脚本、合规、分镜、生图、质检、生视频、成片八个阶段推进，每个阶段交给一个加载了对应 Skill 的子智能体。顺序和验收由代码负责，判断由模型负责：每份产出先过确定性校验，不合格就带着具体问题退回重写。
-- **先审后生成。** 文案先过《广告法》用词扫描（本地、可复现），再交给没有参与写稿的审稿智能体；可选的 Jev 对绝对化用语、功效声称等给出校准概率。存在 `block` 级问题的文案到不了生成环节。
-- **产品定妆图锁定一致性。** 先生成一张产品定妆图并过质检，之后每个镜头都以它为参考。只靠文字描述时，产品会在镜头之间漂移。
-- **用户的原话优先于模型。** 创意中写明的画幅、时长与产品外观由代码逐字保留，校验器据此检查分镜，模型不能擅自改动。
-- **首帧过质检才生成视频。** 阶跃星辰 Step3-VL 对照定妆图复核每一帧：内容缺失、多余文字、乱码、产品不符，任一项即拒，按问题类型改提示词重生成，最多两次。
-- **画面不让模型写字。** 标题和字幕后期用真字体排版，排版前检查字体是否缺字。
-- **广播级配音。** 旁白音色由 Qwen3-TTS 按文字描述设计生成，不取自任何真人；逐句克隆后经压缩、提亮、限幅处理，与 ACE-Step 本地生成的配乐自动混音。
-- **可追溯。** 每支片子自动生成交付报告 `reports/delivery.md`：逐镜头质检记录、各阶段实测耗时、内存与生成位置，以及遗留问题。
-- **可被其他智能体调用。** 入口 Skill `cinefoundry-ad-film` 已在 DeepSeek Harness 中实测：由本机 Nemotron 驱动，仅授予“工作区内修改”权限，一句需求即可加载 Skill、启动 Harness、失败时自行重试，最后读交付报告作答（演示视频 1:34 起）。
-
-### 架构设计
+## How it works
 
 <p align="center">
-  <img src="docs/assets/architecture.png" alt="Cinefoundry 系统架构：创作者 → Cinefoundry Harness（导演智能体与子智能体）→ Agent Skills → cinefoundry CLI → projects 记录 → Studio；Nemotron、Step3-VL、ComfyUI 均在 DGX Spark 本地" width="760">
+  <img src="docs/assets/architecture.png" alt="Cinefoundry architecture: one agent engine, a pipeline per format, crafts, role skills and gates, local models on one DGX Spark" width="760">
 </p>
 
-<p align="center"><sub><a href="docs/architecture/cinefoundry-architecture.html">可交互版本</a>（缩放、搜索、关系追踪）· 用 <a href="https://github.com/tt-a1i/archify">archify</a> 绘制</sub></p>
+- **One engine, many formats.** The Cinefoundry Engine (`src/engine`) owns what every production needs: preflight, the one-film-at-a-time lock, stage status on the studio board, the run log, agent prompts, model scheduling and failure handling. A format is a pipeline (`src/pipelines/ad`, `short`, `drama`): an ordered list of stages, each run by an agent under its skills.
+- **Code owns the order and the acceptance checks; models own the judgement.** Every agent's output passes deterministic validators before the next stage; a rejected draft goes back with the exact reasons. The same validators score the with/without-skill evaluation.
+- **Shared crafts.** Writing, picture, sound and post (`src/crafts`) are shared between formats: the ad's creative treatment, the narrative screenplay, casting, identity-gated frames, lip-synced dialogue, the four-bus mix and bilingual subtitles.
+- **Gates between stages.** Copy and dialogue that fail compliance never reach generation; a frame that fails the vision gate is regenerated before any video time is spent; a line Whisper mishears is retaken.
+- **One memory pool, scheduled.** CPU and GPU share 121.7 GB of unified memory. Both language models stay resident; diffusion models are loaded per phase and released at every phase boundary, so one diffusion family is resident at a time.
+- **Skills are an open format.** All 25 skills drive the `cinefoundry` CLI through files and JSON, so Claude Code, Codex, DeepSeek Harness or any client that loads Agent Skills can run the studio.
 
-设计取舍：
-
-- **分阶段推进，而不是让模型自由循环。** 广告成片本身是流水线。顺序和验收交给代码，结果稳定、可测试，“带 / 不带 Skill”的对比也能用同一套校验器评分。
-- **Skill 是开放格式，不绑定运行时。** 十个 Skill 通过 `cinefoundry` 子命令完成工作，输入输出都是文件和 JSON，既可由 Cinefoundry Harness 加载，也可被 Claude Code、Codex、DeepSeek Harness 等支持 Agent Skills 的客户端直接使用。
-- **按实测分工。** Nemotron 关闭思考后能在秒级给出结构化结果，负责规划、文案、审稿和英文提示词；Step3-VL 始终先推理再作答，约 18 token/秒，只负责看图。
-- **一个内存池分阶段调度。** CPU 与 GPU 共用 121.7 GB 统一内存。两个语言模型常驻，Harness 在每个阶段切换时释放上一阶段的扩散模型，一次只保留一族。
-- **记录即界面。** Studio 只读取 `projects/` 中的记录，本身不持有状态。
-
-## 快速开始
+## Quick start
 
 ```bash
 git clone https://github.com/hojiahao/cinefoundry.git && cd cinefoundry
-npm install && npm run build
-npm test                      # 57 个测试：校验器、工具链与 Cinefoundry Harness 全流程
+npm install && npm run build && npm test
 
-node dist/cli.js studio       # 本机打开 http://127.0.0.1:3090 ，输入创意，点“开拍”
-node dist/cli.js ad "给一款叫“雾岸”的木质调香水做一条 30 秒广告，面向三十岁左右的都市女性"   # 或使用命令行
-node dist/cli.js harness "<创意>" --product-image 产品照.jpg   # 用产品实拍图代替生成的定妆图，外形与 logo 以照片为准
+HF_ENDPOINT=https://hf-mirror.com scripts/download-models.sh   # weights, resumable
+scripts/spark-up.sh                                            # Nemotron, Step3-VL and ComfyUI, with a self-check
 ```
 
-无需 GPU 即可体验的两个命令：
+One command per format:
 
 ```bash
-echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --category cosmetics   # 合规扫描
-node dist/cli.js shots some-ad.mp4 --out breakdown                                 # 参考片切镜
+node dist/cli.js ad    "A 30-second film for Misthaven, a woody fragrance in a heavy faceted glass bottle, for women around thirty"
+node dist/cli.js short "A 45-second skit in a specialty coffee bar: a barista talks a regular into trying a natural-process Ethiopian"
+node dist/cli.js drama "A fake-dating romance: to save her late grandmother's perfume shop, a young perfumer signs a three-month contract with the heir buying up the street" --episodes 3 --produce 1
 ```
 
-## 部署说明
+Add `--plan-only` to approve the script, screenplay or shot list before any GPU time is spent. `node dist/cli.js studio` opens the studio board at `http://127.0.0.1:3090`: the live log, every stage, every frame and clip with where and how fast it was made, the finished film and its delivery report.
 
-### 1. 如何利用本地算力部署智能体
+No GPU needed for the compliance scanner:
 
 ```bash
-HF_ENDPOINT=https://hf-mirror.com scripts/download-models.sh   # 权重约 150 GB，可断点续传
-scripts/spark-up.sh                                            # 启动 Nemotron、Step3-VL、ComfyUI 并自检
+echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --category cosmetics
 ```
 
-`spark-up.sh` 先检查统一内存余量（默认要求 95 GB 可用，不足则拒绝启动），三个服务就绪后运行 `cinefoundry doctor`，把工作流模板与运行中的 ComfyUI 逐节点比对，缺节点、缺权重当场报出。Harness 默认连接本机端口（Nemotron 8001、Step3-VL 8002、ComfyUI 8188），可通过 `CINEFOUNDRY_PLANNER_URL`、`CINEFOUNDRY_VISION_URL`、`COMFYUI_URL` 修改。
+## Formats and specs
 
-**配音。** 默认引擎 Kokoro 随下载脚本安装。样片使用的广告旁白音色需额外构建容器并设计一次音色：
+| | Ad film | Short video | Micro-drama |
+|---|---|---|---|
+| Command | `cinefoundry ad` | `cinefoundry short` | `cinefoundry drama` |
+| Frame | 16:9 (9:16, 1:1 on request) | 9:16 (16:9 for Bilibili, YouTube) | 9:16 |
+| Resolution | Native 1080p; 2K, 4K, 6K delivery presets (upscaled, and reported as such) | Native 1080p | Native 1080p |
+| Frame rate | 60 fps, interpolated from 24 with RIFE | 30 fps (60 for product and motion) | 24 fps, the film look |
+| Length | 30 s master, 15 s and 6 s cutdowns | 45 s by default | 60 s episodes, a series plan of any length |
+| Voice | English announcer cast from the voice library | Presenter or characters, lip-synced English | Characters, lip-synced English |
+| Subtitles | Chinese over English | Chinese over English, inside the vertical safe zone | Chinese over English, inside the vertical safe zone |
+| Loudness | −16 LUFS, −1.5 dBTP | −14 LUFS | −14 LUFS |
+| AI labels | Explicit label on the opening and the end card, implicit AIGC metadata | Same, plus the disclosure in the description | Same, on every episode |
 
-```bash
-docker build -t cinefoundry/qwen-tts:local deploy/spark/qwen-tts
-docker run --rm --device nvidia.com/gpu=all -v "$PWD:/repo:ro" -v "${SPARK_MODEL_DIR:-$HOME/models}/tts:/models:ro" \
-  -v "$PWD/runtime-data/step-audio:/work" cinefoundry/qwen-tts:local \
-  /repo/scripts/voice-design.py --model /models/Qwen3-TTS-12Hz-1.7B-VoiceDesign --out /work/voices
-export CINEFOUNDRY_TTS_ENGINE=qwen-tts CINEFOUNDRY_TTS_REF_WAV=runtime-data/step-audio/voices/male-2.wav
-```
+Subtitles follow the Netflix timed-text style guide per language: at most 16 Chinese characters a line on 16:9 and 12 on 9:16, spaces instead of commas and full stops, English under it at 60 % of the size, each line on screen while it is spoken.
 
-`voices/voices.json` 记录了每个音色的参考文本，将其设为 `CINEFOUNDRY_TTS_REF_TEXT` 即可。
+## Quality system
 
-**本地为默认，云端为可选。** 设置 `ARK_API_KEY` 后可用 `--video-model seedance` 将视频生成交给火山方舟 Seedance（协议已用模拟服务测试，未对真实服务验证）；设置 `STEPFUN_API_KEY` 后文字审稿改由 Step-3.7-Flash 承担。云端生成的素材在记录与工作台中均标注为 `cloud`。仓库中不含任何密钥。
+- **Vision gate on every frame.** Step3-VL compares each first frame with the approved reference — the product's hero still in an ad, each character's locked portrait in a story — and rejects a different product or face, stray or garbled text, malformed hands, a CGI look, or light and composition below the craft floor. Rejected frames are regenerated with new seeds, then with prompts repaired against the gate's own words.
+- **Every spoken line checked by ear.** Whisper large-v3-turbo transcribes each take; English is scored by word, Chinese by toned syllable, and a line above the threshold is retaken. A line no retake fixes is listed as an open item, never passed silently.
+- **Compliance before generation.** A deterministic scan for Advertising Law wording in both languages, then an independent reviewer on another model who did not write the copy. Micro-dramas and shorts are reviewed against the NRTA micro-drama rules, the 2026 content clean-up categories, AI labelling and likeness rights. Characters are adults; faces and voices are designed, never a real person's.
+- **Delivery labels.** The explicit "AI-generated" label opens every film and closes it on the end card at 5 % of the frame's short side, clear of the player's own UI; the implicit AIGC metadata follows GB 45438-2025.
 
-GB10 上的环境要点已写入配置：Docker 通过 CDI（`nvidia.com/gpu=all`）使用 GPU；Step3-VL 的 FP8 权重需设置 `VLLM_USE_DEEP_GEMM=0`；ComfyUI 镜像基于 vLLM 镜像构建，复用已在 GB10 上验证的 PyTorch。启动参数取自各模型卡的 DGX Spark 配方，完整见 [`deploy/spark/compose.yaml`](deploy/spark/compose.yaml)。
+**Skills measurably improve the agents.** The same Nemotron, the same eight briefs, two runs each; the only variable is whether the stage agent loads its skill. Each stage gets one attempt and the engine's validators ([`src/agent/checks.ts`](src/agent/checks.ts)) count violations:
 
-### 2. 如何优化大模型
+| | Without skill (Sep 21) | With skill (Sep 21) | Without skill (Sep 22) | With skill (Sep 22) | Without skill (Sep 23) | With skill (Sep 23) |
+|---|---:|---:|---:|---:|---:|---:|
+| Script passes first time | 0/16 | 6/16 | 13/16 | 15/16 | 11/16 | 14/16 |
+| Script violations (mean) | 3.63 | 1.06 | 0.38 | 0.06 | 0.38 | 0.13 |
+| Storyboard passes first time | 0/16 | 8/14 | 0/16 | 7/15 | 0/15 | 6/15 |
+| Storyboard violations (mean) | 8.00 | 0.71 | 3.88 | 0.80 | 3.80 | 0.80 |
 
-| 手段 | 做法 | 为什么 |
-|---|---|---|
-| NVFP4 量化 | Nemotron 3.5 Lightning 30B-A3B 用官方 NVFP4 权重，21.6 GB | 30B 参数只激活 3B，GB10 的内存带宽是瓶颈，权重越小解码越快 |
-| 投机解码 | 搭配官方 `-DSpark` 草稿权重，`num_speculative_tokens=3` | NVIDIA 为 DGX Spark 低并发场景调优的方案，无损加速 |
-| FP8 KV cache 与前缀缓存 | `--kv-cache-dtype fp8 --enable-prefix-caching` | 导演智能体每轮都带同一段系统提示和 Skill，前缀命中率高 |
-| FP8 视觉模型 | Step3-VL-10B-FP8，15.1 GB；设 `VLLM_USE_DEEP_GEMM=0` | 质检要常驻，体积必须小。DeepGEMM 的 FP8 内核在 GB10 上断言失败，改走 vLLM 通用 FP8 路径 |
-| 8 步蒸馏 LoRA | Qwen-Image + Lightning 8-step，cfg 1 | 单张 1080×1920 首帧实测 22.7 秒，质检重生成才负担得起 |
-| 14B 视频模型 + 4 步蒸馏 | Wan2.2 I2V A14B（FP8，高噪/低噪两个专家）+ lightx2v 4-step LoRA | 实测 353 秒一段，不比 5B 模型（365 秒）慢，画面明显更好；`--video-model wan22-14b` |
-| 蒸馏视频模型（默认） | LTX-2.5 Fast：22B 蒸馏版，Comfy INT8 主干 + INT8 Gemma 4 12B 文本编码器，半尺寸 8 步 + 两倍潜空间放大 + 3 步精修；`--video-model ltx25-fast` | 同一组首帧与提示词，实测每段 90–126 秒，约为 Wan2.2 的三分之一；产品外形保持得更稳，因此设为默认；特效描述仍可能画到产品表面上 |
-| 按任务开关思考 | 脚本、分镜、审稿关闭 Nemotron 的思考模式 | 开着时会把整个 token 额度用在推理上、正文为空；关掉后 0.3 秒出结构化结果，由校验器和重试兜底 |
-| 原生分辨率预算 | 超过 1328×1328 像素总量的请求先按预算生成再放大 | 扩散耗时随像素数增长，预算内生成、Lanczos 放大 |
-| 校准概率做分流 | 可选：Jev 对每句文案和每个镜头回答类型化问题（绝对化用语、健康功效、品类语感、是否要求画字、一镜多动作…），p ≥ 0.7 直接退回重写，0.3–0.7 交审稿智能体裁决 | 自由文本 JSON 的“分数”不校准（本地视觉模型几乎只给 30/40/90 三档）；类型化答案能设阈值，也不会出现“思考完没额度写结论”的故障。实测每句 1.6 s |
-| 分阶段显存调度 | vLLM 按总内存池比例预占（0.25 + 0.20）；Harness 在定妆图、首帧、视频三个阶段切换时调用 ComfyUI `/free` | 三个扩散模型同时留在内存里会让 GPU 驱动分配失败（实测发生过），一次只留一族 |
-
-**本机实测**（DGX Spark，单请求）
-
-| 项目 | 实测值 |
-|---|---|
-| Nemotron 3.5 Lightning 解码速度（含 DSpark 投机解码） | 98–106 tok/s |
-| Nemotron 服务占用统一内存 | 约 35 GB |
-| Step3-VL-10B KV cache（内存比例 0.20） | 47,616 token，32K 上下文可用 |
-| 两个语言模型常驻后的可用统一内存 | 47.6 GB |
-| 定妆图（Qwen-Image，8 步） | 约 42 s（含质检约 66 s） |
-| 带参考图的首帧（Qwen-Image-Edit） | 60–75 s |
-| Wan2.2 I2V A14B + 4 步 LoRA，5 秒 720p 片段 | 335–370 s |
-| LTX-2.5 Fast（INT8），5 秒 720p 片段 | 90–126 s（首段含模型加载） |
-| 视频阶段最低可用内存：Wan2.2 / LTX-2.5 Fast | 12.3 GiB / 10.6 GiB |
-| 阶段切换释放扩散模型 | 可用内存约 27 GB → 55 GB |
-
-### 3. 如何设计 Agent Skills
-
-- **一个 Skill 只管一个判断。** “写脚本”和“审脚本”是两个 Skill，且审查方不能是产出方。
-- **description 写触发条件，而不是功能介绍。** 每条都写明何时使用，以及用户会说的原话（如“能不能这么说”“拉片”），智能体据此决定加载哪个 Skill。
-- **确定的交给脚本，需要判断的交给模型。** 广告法用词、切镜、内存预算由 `cinefoundry` 命令给出可复现结果；是否有依据、如何改写才由模型判断。
-- **写明失败分支。** 每个 Skill 都说明出错后怎么办：质检不过如何改提示词、切镜只得到一个镜头如何调阈值、工作流被拒先运行 `doctor`。
-- **每一次失败都沉淀为规则。** 例如“标题中提到的容器必须是产品真有的”“3C 产品最多一个手镜头”，都来自真实的失败运行。
-- **格式对齐 NVIDIA 官方 Skills 仓库。** frontmatter 包含 `version`、`license`、`metadata`；每个 Skill 附 `evals/evals.json`（共 29 条任务），用于“带 / 不带 Skill”的对比评测。
+From September 22 the hard limits (beat count, line length, shot count) moved into the stage prompts, which lifted the baseline: rules that can be written down belong in the prompt, judgement belongs in the skill. The storyboard gap stays wide. Reports: [script](.agents/skills/ad-script-writing/BENCHMARK.md) · [storyboard](.agents/skills/storyboard-design/BENCHMARK.md) · raw data [1](eval/results/ablation.json) · [2](eval/results/ablation-v2.json) · [3](eval/results/ablation-v3.json). Reproduce with `cinefoundry eval --repeats 2`.
 
 ## Agent Skills
 
-25 个 Skill，一个 Skill 对应真实制作中的一个岗位，按六类组织；三类片型共用视觉、声音与后期岗位，编剧与合规按片型分工。
+25 skills, one per real production role, in six categories. The three formats share the picture, sound and post crews; writing and compliance are specialised per format.
 
-**制片统筹**
+**Production**
 
-| Skill | 岗位 | 做什么 |
+| Skill | Role | What it does |
 |---|---|---|
-| [`cinefoundry-ad-film`](.agents/skills/cinefoundry-ad-film/SKILL.md) | 广告片制片人 | 外部智能体（Claude Code、Codex、DSH 等）的广告片入口：一句创意到成片，读交付报告如实汇报 |
-| [`cinefoundry-short-video`](.agents/skills/cinefoundry-short-video/SKILL.md) | 短视频制片人 | 短视频入口：选题到成片与平台包装 |
-| [`cinefoundry-micro-drama`](.agents/skills/cinefoundry-micro-drama/SKILL.md) | 短剧监制 | 微短剧入口：剧集圣经、选角定妆到逐集成片 |
-| [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | 客户经理 / 策划 | 解读简报，只问阻塞项，其余自己定并说明 |
-| [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | 广告法务 | 《广告法》用词扫描 + 独立审稿智能体，`block` 级必须改写 |
-| [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | 内容审核 | 广电微短剧管理办法、内容红线、AI 生成内容标识、平台 AIGC 申报、肖像与声音权利 |
-| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | 技术质检与交付 | 时长、帧率、码率、响度与真峰值、黑帧静音、字幕越界、显式与隐式 AI 标识 |
-| [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | 技术统筹 | 统一内存先量后排，分阶段加载与释放 |
+| [`cinefoundry-ad-film`](.agents/skills/cinefoundry-ad-film/SKILL.md) | Ad producer | Entry point for external agents: one brief to a finished ad, reported from the delivery record |
+| [`cinefoundry-short-video`](.agents/skills/cinefoundry-short-video/SKILL.md) | Short-video producer | Entry point: topic to finished short and its packaging |
+| [`cinefoundry-micro-drama`](.agents/skills/cinefoundry-micro-drama/SKILL.md) | Series producer | Entry point: series bible, casting and episodes |
+| [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | Account planner | Reads the brief, asks only what blocks it, decides the rest |
+| [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | Advertising legal | Advertising Law wording scan and an independent reviewer; `block` findings must be rewritten |
+| [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | Content review | Micro-drama regulation, content red lines, AI labelling, platform disclosure, likeness and voice rights |
+| [`delivery-qc`](.agents/skills/delivery-qc/SKILL.md) | QC and delivery | Duration, frame rate, bitrate, loudness and true peak, black frames and silence, subtitle overflow, AI labels |
+| [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | Technical producer | Measures unified memory, then loads and releases models phase by phase |
 
-**编剧创作**
+**Writing**
 
-| Skill | 岗位 | 做什么 |
+| Skill | Role | What it does |
 |---|---|---|
-| [`creative-direction`](.agents/skills/creative-direction/SKILL.md) | 创意总监 | 洞察、单一主张、创意概念与导演阐述，文案、分镜与声音都从它出发 |
-| [`ad-script-writing`](.agents/skills/ad-script-writing/SKILL.md) | 广告文案 | 顶级广告的文案工艺：节拍、口播、标题、品类语感 |
-| [`series-development`](.agents/skills/series-development/SKILL.md) | 剧集开发 | 剧集圣经：logline、世界观、人物、分集钩子与集尾悬念、付费卡点 |
-| [`screenwriting`](.agents/skills/screenwriting/SKILL.md) | 编剧 | 场次、动作、潜台词，美剧式英文对白与中文字幕 |
-| [`short-video-scripting`](.agents/skills/short-video-scripting/SKILL.md) | 短视频编剧 | 前三秒钩子、留存结构、口播 / 测评 / 科普 / 剧情等形态 |
+| [`creative-direction`](.agents/skills/creative-direction/SKILL.md) | Creative director | Insight, proposition, concept and the director's treatment every later stage works from |
+| [`ad-script-writing`](.agents/skills/ad-script-writing/SKILL.md) | Copywriter | Top-agency broadcast copy: beats, announcer lines, titles, category register |
+| [`series-development`](.agents/skills/series-development/SKILL.md) | Showrunner | Series bible: logline, world, characters, per-episode hooks and cliffhangers, paywall placement |
+| [`screenwriting`](.agents/skills/screenwriting/SKILL.md) | Screenwriter | Scenes, action and subtext; American-TV English dialogue with natural Chinese subtitles |
+| [`short-video-scripting`](.agents/skills/short-video-scripting/SKILL.md) | Creator-content writer | The three-second hook, retention structure, presenter, review, explainer and skit formats |
 
-**视觉**
+**Picture**
 
-| Skill | 岗位 | 做什么 |
+| Skill | Role | What it does |
 |---|---|---|
-| [`storyboard-design`](.agents/skills/storyboard-design/SKILL.md) | 导演 / 分镜 | 镜头设计与节奏：30 秒主片六个镜头各司其职 |
-| [`cinematography-and-art-direction`](.agents/skills/cinematography-and-art-direction/SKILL.md) | 摄影指导 / 美术 | 镜头语言、统一光线逻辑、置景道具、产品造型、选角与表演 |
-| [`character-and-continuity`](.agents/skills/character-and-continuity/SKILL.md) | 选角 / 服装 / 场记 | 角色定妆照、服装与道具连戏、轴线与视线、跨镜头跨集的长相一致 |
-| [`spark-local-media-generation`](.agents/skills/spark-local-media-generation/SKILL.md) | 拍摄执行 | 定妆图 → 参考图首帧 → 首帧驱动视频，原生 1080p、RIFE 插帧 |
-| [`shot-quality-gate`](.agents/skills/shot-quality-gate/SKILL.md) | 现场监看 / 质检 | 对照参考图逐帧质检：主体不符、多余文字、乱码、CG 感一票否决 |
+| [`storyboard-design`](.agents/skills/storyboard-design/SKILL.md) | Director, storyboard | Shot design and rhythm: six shots of a 30-second master, each with its job |
+| [`cinematography-and-art-direction`](.agents/skills/cinematography-and-art-direction/SKILL.md) | DP, production design | Lens language, one light logic, sets and props, product styling, casting and performance |
+| [`character-and-continuity`](.agents/skills/character-and-continuity/SKILL.md) | Casting, wardrobe, script supervisor | Locked reference portraits, wardrobe and prop continuity, screen direction, the same face across shots and episodes |
+| [`spark-local-media-generation`](.agents/skills/spark-local-media-generation/SKILL.md) | Camera crew | Hero still, reference-anchored first frames, first-frame-driven video at native 1080p, RIFE interpolation |
+| [`shot-quality-gate`](.agents/skills/shot-quality-gate/SKILL.md) | Video assist, QC | Every frame against its reference: wrong subject, stray text, garbled lettering or a CGI look is rejected |
 
-**声音**
+**Sound**
 
-| Skill | 岗位 | 做什么 |
+| Skill | Role | What it does |
 |---|---|---|
-| [`dialogue-and-voice`](.agents/skills/dialogue-and-voice/SKILL.md) | 配音导演 / 对白 | 为每个角色设计声线，表演指导，Whisper 逐句校音与重录，口型同步镜头规则 |
-| [`sound-design-and-music`](.agents/skills/sound-design-and-music/SKILL.md) | 声音设计 / 作曲 | 逐镜音效、分场环境声、配乐方向，全部本地生成 |
+| [`dialogue-and-voice`](.agents/skills/dialogue-and-voice/SKILL.md) | Voice director, dialogue | Casts each character's designed voice, directs delivery, checks every line with Whisper, sets lip-sync shot rules |
+| [`sound-design-and-music`](.agents/skills/sound-design-and-music/SKILL.md) | Sound designer, composer | Effects per shot, ambience per scene, score direction, all generated locally |
 
-**后期**
+**Post**
 
-| Skill | 岗位 | 做什么 |
+| Skill | Role | What it does |
 |---|---|---|
-| [`editing-and-versioning`](.agents/skills/editing-and-versioning/SKILL.md) | 剪辑 | 节奏与叙事、动作剪辑点、短视频留存剪辑、30 / 15 / 6 秒版本、集尾悬念 |
-| [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | 后期合成 | 定版、真字体标题字幕、调色、配音与配乐混音 |
-| [`bilingual-subtitles`](.agents/skills/bilingual-subtitles/SKILL.md) | 字幕 | 中文大字在上、英文小字在下，字数、阅读速度、时长与安全区规范 |
-| [`platform-packaging`](.agents/skills/platform-packaging/SKILL.md) | 平台包装 | 三套标题测试、封面、简介、话题标签、AI 申报 |
+| [`editing-and-versioning`](.agents/skills/editing-and-versioning/SKILL.md) | Editor | Rhythm and story, cutting on action, retention editing for shorts, 30/15/6-second versions, episode endings |
+| [`final-cut-assembly`](.agents/skills/final-cut-assembly/SKILL.md) | Finishing | End card, typeset titles and subtitles, grade, voice and score mix |
+| [`bilingual-subtitles`](.agents/skills/bilingual-subtitles/SKILL.md) | Subtitles | Chinese over English: line length, reading speed, timing and safe areas |
+| [`platform-packaging`](.agents/skills/platform-packaging/SKILL.md) | Packaging | Three titles to test, cover, description, hashtags, AI disclosure |
 
-**研究**
+**Research**
 
-| Skill | 岗位 | 做什么 |
+| Skill | Role | What it does |
 |---|---|---|
-| [`ad-reference-breakdown`](.agents/skills/ad-reference-breakdown/SKILL.md) | 拉片研究 | 参考片切镜、逐镜描述、映射到新产品 |
+| [`ad-reference-breakdown`](.agents/skills/ad-reference-breakdown/SKILL.md) | Reference research | Cuts a reference film into shots, describes each, maps it to the new product |
 
-### 带 Skill 与不带 Skill 的对比
+## Tech stack and deployment
 
-同一个 Nemotron、同一批 8 个创意各跑 2 轮，唯一变量是子智能体是否加载对应 Skill。每个阶段只给一次机会，由 Harness 的校验器（[`src/agent/checks.ts`](src/agent/checks.ts)）统计违规条数。三次评测全部保留：
-
-| | 不带 Skill（9 月 21 日） | 带 Skill（9 月 21 日） | 不带 Skill（9 月 22 日） | 带 Skill（9 月 22 日） | 不带 Skill（9 月 23 日） | 带 Skill（9 月 23 日） |
-|---|---:|---:|---:|---:|---:|---:|
-| 脚本一次合格 | 0/16 | 6/16 | 13/16 | 15/16 | 11/16 | 14/16 |
-| 脚本平均违规数 | 3.63 | 1.06 | 0.38 | 0.06 | 0.38 | 0.13 |
-| 分镜一次合格 | 0/16 | 8/14 | 0/16 | 7/15 | 0/15 | 6/15 |
-| 分镜平均违规数 | 8.00 | 0.71 | 3.88 | 0.80 | 3.80 | 0.80 |
-
-9 月 22 日起，节拍数、字数、镜头数等硬性约束直接写进了阶段提示词，不带 Skill 的基线随之改善，Skill 的边际收益缩小：能写成规则的应当写进提示词，Skill 留给需要判断的部分。分镜阶段差距始终明显，不带 Skill 时的常见错误是用中文写图像提示词、一个镜头塞多个运镜、让模型画字。完整报告：[脚本](.agents/skills/ad-script-writing/BENCHMARK.md) · [分镜](.agents/skills/storyboard-design/BENCHMARK.md) · 原始数据 [第一次](eval/results/ablation.json) · [第二次](eval/results/ablation-v2.json) · [第三次](eval/results/ablation-v3.json)。复现：`cinefoundry eval --repeats 2`。
-
-## Studio
-
-`node dist/cli.js studio` 在 `http://127.0.0.1:3090` 提供网页工作台：输入创意，选择画幅、时长和视频模型，点“开拍”即在后台开始制作（一次一支）。页面实时显示运行日志、八个阶段的状态、按镜头排列的首帧与片段、每个素材的生成位置与耗时、成片与交付报告，以及统一内存占用。地址后加 `?record=1` 进入录制模式，只显示最近的一支片子。
-
-## 技术栈说明
-
-**NVIDIA**
-
-| 组件 | 用途 |
+| Layer | Components |
 |---|---|
-| DGX Spark（GB10 Grace Blackwell，aarch64，统一内存） | 全部推理与生成的运行平台 |
-| `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4` | **每一支片子都在用**：需求、文案、审稿、分镜与英文提示词；也是 DeepSeek Harness 调用 Cinefoundry 时的驱动模型 |
-| `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark` | 为 DGX Spark 调优的投机解码草稿权重 |
-| NVFP4 量化（TensorRT Model Optimizer 产出的官方权重） | 降低权重体积与带宽压力 |
-| NVIDIA Container Toolkit（CDI） | GPU 容器运行时：vLLM、ComfyUI 与两个配音容器都通过 `nvidia.com/gpu=all` 使用 GPU |
-| CUDA | vLLM 与 ComfyUI 的计算后端 |
-| [NVIDIA/skills](https://github.com/NVIDIA/skills) 规范 | Skill 的 frontmatter、`evals/`、评测报告格式对齐 |
+| Platform | NVIDIA DGX Spark: GB10 Grace Blackwell, aarch64, 121.7 GB unified memory; Docker with the NVIDIA Container Toolkit (CDI) |
+| Language | `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4` with its DGX Spark speculative-decoding draft (vLLM): planning, writing, review, shot design, English media prompts |
+| Vision | `stepfun-ai/Step3-VL-10B-FP8` (vLLM): the quality gate and reference-film breakdown |
+| Image | Qwen-Image and Qwen-Image-Edit with Lightning LoRAs (ComfyUI): hero stills, reference portraits, reference-anchored frames |
+| Video | LTX-2.5 Fast NVFP4 (ComfyUI), native 1080p, including audio-driven lip-sync against a frozen dialogue track; Wan2.2 I2V A14B as an alternative; RIFE 4.26 interpolation |
+| Voice | Qwen3-TTS 1.7B VoiceDesign and Base: a casting library of 52 designed voices — English and Mandarin, female and male, five adult age bands — each kept only if Whisper, pitch and level checks pass |
+| Speech check | Whisper large-v3-turbo |
+| Sound and music | MOSS-SoundEffect v2 (48 kHz effects and ambience), ACE-Step (score) |
+| Finishing | ffmpeg and libass: grade, typeset titles and subtitles, four-bus mix, loudness, AIGC metadata |
+| Engine | TypeScript on Node.js 22, no runtime dependencies; Vitest |
 
-**StepFun 阶跃星辰**
+**Deploy.** `scripts/spark-up.sh` refuses to start without enough free unified memory, brings up Nemotron (:8001), Step3-VL (:8002) and ComfyUI (:8188), then runs `cinefoundry doctor`, which checks every workflow template node by node against the running ComfyUI. Ports are configurable with `CINEFOUNDRY_PLANNER_URL`, `CINEFOUNDRY_VISION_URL` and `COMFYUI_URL`; the full configuration is in [`deploy/spark/compose.yaml`](deploy/spark/compose.yaml). The voice and sound containers are built from `deploy/spark/qwen-tts` and `deploy/spark/moss-audio`; `scripts/voice-design.py` and `scripts/voice-qc.py` build the voice library from [`deploy/voices/library.json`](deploy/voices/library.json).
 
-| 组件 | 用途 |
+**Optimisation.**
+
+| Technique | How | Why |
+|---|---|---|
+| NVFP4 | Nemotron 3.5 Lightning 30B-A3B in NVIDIA's NVFP4 weights (21.6 GB); LTX-2.5 Fast in NVFP4 | GB10 decoding is bandwidth-bound: smaller weights decode faster |
+| Speculative decoding | The official DGX Spark draft weights, three speculative tokens | Lossless speed-up tuned for single-stream use |
+| FP8 KV cache, prefix caching | `--kv-cache-dtype fp8 --enable-prefix-caching` | Every agent call repeats the same system prompt and skill |
+| Thinking only where it pays | Writing and review run with reasoning off; reasoning is used on the last attempts of a rejected draft | Reasoning on every call spent the whole token budget and returned nothing |
+| Phase scheduling | ComfyUI releases each diffusion family at a phase boundary (hero still, frames, clips, interpolation, music) | Two diffusion families resident at once made GPU allocation fail |
+| Queued frames | Every shot's gate loop runs at once; ComfyUI renders while the reviewer judges | The image model is never idle waiting for a verdict |
+
+**Measured on the machine** (single request):
+
+| | Measured |
 |---|---|
-| `stepfun-ai/Step3-VL-10B-FP8`（本地，vLLM） | **每一支片子都在用**：定妆图与每一帧对照复核（质检），参考片逐镜理解 |
-| Step-3.7-Flash（StepFun 开放平台 API，可选，样片未使用） | 创意总监级的方案发散。198B 参数，IQ4_XS 量化仍需约 116 GB，无法与扩散模型同机共存，因此走云端并在记录里标注 `cloud` |
-| `stepfun-ai/Step-Audio-EditX`（本地，可选配音引擎，最终样片未使用） | 从参考音克隆音色并按风格重新演绎口播；`CINEFOUNDRY_TTS_ENGINE=step-audio` 启用。在 vLLM 0.27 与 transformers 5 上需两处本地补丁（`deploy/spark/step-audio/apply-patches.sh`） |
+| Nemotron 3.5 Lightning decode, with speculative decoding | 98–106 tok/s |
+| Unified memory free with both language models resident | 47.6 GB |
+| Product hero still (Qwen-Image, 8 steps) | about 42 s, 66 s with its gate |
+| Reference-anchored first frame (Qwen-Image-Edit) | 60–75 s |
+| LTX-2.5 Fast NVFP4, one 5-second clip at native 1080p | 247 s |
+| LTX-2.5 Fast NVFP4, one 5-second lip-synced dialogue shot at native 1080p | 238 s |
+| RIFE 4.26, one clip to a 120 fps master | 49 s |
+| MOSS-SoundEffect v2, one 10-second ambience bed | 41 s, 16 GB peak |
 
-**其他开源组件**
+**Local by default.** With `ARK_API_KEY` set, `--video-model seedance` sends video generation to Volcano Engine Seedance; with `STEPFUN_API_KEY`, text review can use Step-3.7-Flash; with `TYPESAFE_API_KEY`, the Jev judge scores copy. Every cloud asset is recorded as `cloud`. The repository contains no keys.
 
-| 组件 | 用途 |
-|---|---|
-| vLLM | 两个 LLM 的 OpenAI 兼容服务 |
-| ComfyUI · Qwen-Image / Qwen-Image-Edit-2509（含 Lightning 8-step LoRA） | 首帧生成；带产品参考图的生成；能渲染中文字 |
-| ComfyUI · Wan2.2 I2V A14B（FP8）+ lightx2v 4-step LoRA | 备选视频模型：首帧驱动的 5 秒片段，`--video-model wan22-14b` |
-| ComfyUI · Wan2.2 TI2V-5B | 备选视频模型，支持无首帧的文生视频 |
-| ComfyUI · LTX-2.5 Fast（Lightricks，22B 蒸馏；INT8 或 NVFP4 主干） | 默认视频模型：首帧驱动，24 fps（`--video-model ltx25-fast`，或 `ltx25-fast-nvfp4`）。权重在 Hugging Face 受限仓库 `Lightricks/LTX-2.5`，需登录并同意条款后下载（约 60 GB，`scripts/download-models.sh` 未包含），按 LTX-2.x 社区许可使用 |
-| ffmpeg · libass | 参考片切镜、尾帧续接；成片的转场、调色、颗粒、暗角、真字体标题字幕与混音 |
-| Qwen3-TTS-12Hz-1.7B VoiceDesign / Base（本地，容器 `cinefoundry/qwen-tts`） | 样片与演示片的配音：VoiceDesign 按文字描述设计出不存在的旁白音色（`scripts/voice-design.py`），Base 用这段参考音逐句克隆，再过广播级后期链（压缩、提亮、限幅）。`CINEFOUNDRY_TTS_ENGINE=qwen-tts` 启用 |
-| Kokoro-82M-v1.1-zh | 离线中文配音的默认引擎，无需额外容器 |
-| [Jev](https://docs.typesafe.ai/)（TypeSafe，云端 API，可选） | 结构化评估：对文案和分镜提出类型化问题，返回校准概率；`TYPESAFE_API_KEY` 存在时启用，只发送文本，记录标为 `cloud` |
-| ComfyUI · ACE-Step v1 3.5B | 本地生成器乐背景音乐 |
-| TypeScript · Node.js 22 · Vitest | Cinefoundry Harness、CLI、Studio 与测试（零运行时依赖） |
+## License and commercial use
 
-## 已知局限
+Cinefoundry is developed and owned by 贺家豪 (Jiahao He) and released under the [Business Source License 1.1](LICENSE): the source is available for learning, evaluation, and non-commercial personal and academic projects. Producing advertising or other video content for a business or organisation, or offering Cinefoundry or a derivative as a product or service, requires a commercial license from the author. Each version converts to Apache-2.0 four years after its first release (at the latest on 2030-10-17). Versions released on or before 2026-10-13 (commit 36bf724 and earlier) remain under the MIT license.
 
-- **制作耗时较长。** 一支 15 秒成片在本机约 30 到 40 分钟，其中视频生成约占六成。
-- **个别镜头可能带着瑕疵交付。** 一个镜头最多重生成两次，仍不合格时保留得分最高的一张继续，并在交付报告中标注。
-- **新品类需要补充拍法。** 3C 产品经过五版迭代才稳定，新品类可能需要先在分镜 Skill 中补充对应拍法。
-- **暂无音效层。** 目前只有口播与配乐。
+**Commercial licensing:** open an issue or contact the author on GitHub ([@hojiahao](https://github.com/hojiahao)).
 
-本仓库中的性能数据均为实测。
+The models Cinefoundry runs keep their own licenses (LTX-2.5 under the LTX-2.x community license). Brands in the sample films are fictional; voices are designed from written descriptions and belong to no real person. Content made with Cinefoundry and published must carry the platform's AI-generated label.
 
-## 目录
+## Author
 
-```text
-AGENTS.md                导演智能体的流水线与规则
-.agents/skills/          10 个 Agent Skill（9 个阶段 Skill + 1 个入口 Skill；SKILL.md · references · evals）
-src/agent/               Cinefoundry Harness：导演与子智能体、校验器、评测
-src/                     cinefoundry CLI、媒体管线与 Studio（TypeScript）
-workflows/               ComfyUI API 格式的工作流模板
-deploy/spark/            本地推理栈（compose）、Harness 提供方配置
-scripts/                 模型下载、一键启动、音色设计、演示视频生成与录屏
-docs/                    架构图、开发日志、演示脚本、十日谈征文、B 站投稿材料
-eval/                    评测用创意与原始结果
-tests/                   单元测试与端到端流水线测试
-```
-
-## 致谢与许可
-
-Cinefoundry（影工坊）由贺家豪个人开发，版权归贺家豪所有，以 [Business Source License 1.1](LICENSE)（BUSL-1.1）发布：源码公开，可用于学习、评估以及非商业的个人项目和学术研究；为企业或组织制作广告等视频内容、或把本项目及其衍生作品作为产品或服务提供给第三方，均须取得作者的商业授权。每个版本自首次公开发布满四年（最迟 2030-10-17）后转为 Apache-2.0。2026-10-13 及以前（提交 36bf724 及之前）发布的版本仍按原 MIT 许可证提供。运行时依赖 vLLM、ComfyUI 以及 NVIDIA、StepFun、Qwen、Wan、Lightricks 等团队开源的模型，各自遵循其许可证（LTX-2.5 为 LTX-2.x 社区许可，年收入 1000 万美元以下免费商用）。样片中的品牌均为虚构，配音音色由模型按文字描述生成，不取自任何真人。使用 Cinefoundry 生成并对外发布的内容，请按平台规范标注“AI 生成”。
+Built by 贺家豪 (Jiahao He). Excellence Award, Agent Skills Challenge, 3rd NVIDIA DGX Spark Hackathon. Essay: [*Ten Days: making ad films on one DGX Spark*](https://zhuanlan.zhihu.com/p/2088218312492828625) (Chinese).
