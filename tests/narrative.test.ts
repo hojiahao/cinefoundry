@@ -209,3 +209,13 @@ describe('episode shape', () => {
     expect(checkScreenplay(good, bible, { seconds: 120, ratio: '9:16' })).toEqual([])
   })
 })
+
+import { unchangedFindings } from '../src/crafts/narrative/writing.js'
+
+describe('premise revision', () => {
+  it('is answered only when every passage a finding quotes is gone', () => {
+    const issues = ['"顾言在走廊里把林夏拉到一边" - reads as coercion']
+    expect(unchangedFindings(issues, '顾言在走廊里把林夏拉到一边，低声说话')).toHaveLength(1)
+    expect(unchangedFindings(issues, '顾言在走廊尽头停下，等林夏先开口')).toEqual([])
+  })
+})

@@ -317,8 +317,21 @@ describe('creator short end to end', () => {
 })
 
 describe("writers' room end to end", () => {
+  it('gives the planner and the vision model back when the run fails inside the room', async () => {
+    process.env.CINEFOUNDRY_WRITER_URL = process.env.CINEFOUNDRY_PLANNER_URL!.replace(/\/v1$/, '/writer/v1')
+    dockerCalls.length = 0
+    episodeReview = 'reject'
+    try {
+      await expect(runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-room-fail'))).rejects.toThrow()
+    } finally {
+      delete process.env.CINEFOUNDRY_WRITER_URL
+    }
+    expect(dockerCalls).toEqual([['stop', 'cinefoundry-nemotron-1'], ['stop', 'cinefoundry-stepvl-1'], ['stop', 'cinefoundry-nemotron-super-1'], ['start', 'cinefoundry-nemotron-1'], ['start', 'cinefoundry-stepvl-1']])
+  })
+
   it('writes the whole story, the sound plan and the packaging on the author, and nothing on it after the first picture', async () => {
     process.env.CINEFOUNDRY_WRITER_URL = process.env.CINEFOUNDRY_PLANNER_URL!.replace(/\/v1$/, '/writer/v1')
+    dockerCalls.length = 0
     try {
       await runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-room'))
     } finally {

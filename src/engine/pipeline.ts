@@ -55,4 +55,6 @@ export interface PipelineDef<O, C extends EngineContext, R> {
   init: (options: O, engine: EngineContext) => Promise<C>
   /** The run's result, after the last stage (or after a plan-only stop). */
   finish: (ctx: C) => Promise<R>
+  /** Puts the machine back as the run found it, whether the run finished, failed or was interrupted (e.g. models a stage stopped). */
+  cleanup?: (ctx: C) => Promise<void>
 }

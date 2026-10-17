@@ -51,12 +51,17 @@ async function waitReady(baseUrl: string, seconds: number): Promise<boolean> {
 const docker = (action: 'start' | 'stop', container: string) =>
   exec('docker', [action, container]).catch((error: Error) => { throw new Error(`docker ${action} ${container} failed: ${error.message.slice(0, 200)}`) })
 
-/** Containers the room stopped, started again when it closes (one room per process at a time). */
+/** Containers the room stopped, started again when it closes (one room per process at a time), and whether it is open. */
 const stopped: RoomModel[] = []
+let open = false
+
+/** Whether a writers' room is open in this process: a failed or interrupted run closes it in its cleanup. */
+export const writersRoomOpen = () => open
 
 /** Opens the room: the other models make way, and the author's container is started fresh. */
 export async function openWritersRoom(room: WritersRoom): Promise<void> {
   if (!hasWritersRoom(room)) return
+  open = true
   const started = Date.now()
   const madeWay: string[] = []
   for (const other of room.others) {
@@ -69,6 +74,8 @@ export async function openWritersRoom(room: WritersRoom): Promise<void> {
   }
   await room.freeDiffusion().catch(() => undefined)
   const author = room.author
+  // A room closed earlier in this process (a studio serving several runs) left the author marked released.
+  forgetService(author.endpoint.baseUrl)
   let action: 'ready' | 'started' = 'ready'
   // An author left asleep would need a reload, which breaks it: it is stopped and started instead.
   if ((await isSleeping(author.endpoint.baseUrl)) === true && author.container) await docker('stop', author.container)
@@ -87,7 +94,8 @@ export async function openWritersRoom(room: WritersRoom): Promise<void> {
 
 /** Closes the room before the first picture: the author is stopped (or slept and never woken), the others come back. */
 export async function closeWritersRoom(room: WritersRoom): Promise<void> {
-  if (!hasWritersRoom(room)) return
+  if (!hasWritersRoom(room) || !open) return
+  open = false
   const started = Date.now()
   let released: 'stopped' | 'asleep' | 'kept' = 'kept'
   if (room.author.container && (await docker('stop', room.author.container).then(() => true, () => false))) released = 'stopped'

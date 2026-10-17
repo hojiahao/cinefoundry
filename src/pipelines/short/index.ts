@@ -1,3 +1,5 @@
+import { closeWritersRoom } from '../../lib/writers-room.js'
+import { writersRoom } from '../../crafts/narrative/context.js'
 import { writeNarrativeDeliveryReport } from '../../crafts/narrative/delivery.js'
 import type { PipelineDef } from '../../engine/pipeline.js'
 import type { NarrativeContext, NarrativeOptions } from '../../crafts/narrative/context.js'
@@ -21,6 +23,8 @@ export const shortPipeline: PipelineDef<NarrativeOptions, NarrativeContext, Shor
   ],
   preflight: async (options) => { options.brandKit = await narrativePreflight({ fps: 30, ...options, episodes: 1 }, { maxSeconds: 180, maxEpisodes: 1 }) },
   init: async (options, engine) => narrativeContext({ fps: 30, ...options, episodes: 1, produce: 1 }, engine, { writer: { role: 'creator-content writer', skill: 'short-video-scripting' }, seconds: 60, ratio: '9:16' }),
+  // A run that fails or is stopped inside the writers' room gives the planner and the vision model their memory back.
+  cleanup: (ctx) => closeWritersRoom(writersRoom(ctx)),
   finish: async (ctx) => {
     if (ctx.outputs.size) await writeNarrativeDeliveryReport(ctx)
     const wallSeconds = (Date.now() - ctx.started) / 1000

@@ -77,10 +77,13 @@ export async function runPipeline<O extends EngineOptions, C extends EngineConte
   }
   const board = stageBoard(() => current.id)
   // A run stopped from outside (Ctrl-C, systemctl stop) never reaches the catch below; mark its stage before exiting.
-  const detach = onInterrupt(board.failRunning, release)
+  let built: C | undefined
+  const cleanup = async () => { if (built && pipeline.cleanup) await pipeline.cleanup(built).catch((error: Error) => log(`  cleanup: ${error.message.slice(0, 200)}`)) }
+  const detach = onInterrupt(board.failRunning, async () => { await cleanup(); await release() })
 
   try {
     const ctx = await pipeline.init(options, engine)
+    built = ctx
     for (const stage of pipeline.stages) {
       if (stage.when && !stage.when(ctx)) continue
       for (const id of [stage.id, ...(stage.alsoMarks ?? []).map((m) => m.id)]) await board.mark(id, 'running')
@@ -94,6 +97,7 @@ export async function runPipeline<O extends EngineOptions, C extends EngineConte
     throw error
   } finally {
     detach()
+    await cleanup()
     await release()
   }
 }

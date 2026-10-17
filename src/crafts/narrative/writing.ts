@@ -56,8 +56,8 @@ Return JSON only:
     ctx.log(`  premise sent back (${premise.issues.join(' | ').slice(0, 160)})`)
     const redo = await chatJson<SeriesBible & { id?: string; title?: string; clientNames?: string[] }>(ctx.author, {
       system: await ctx.agentPrompt(ctx.writer.role, [ctx.writer.skill, 'content-compliance']), thinking: false, maxTokens: 5000, temperature: 0.6,
-      user: `Your series bible:\n${json(draft)}\n\nThe compliance reviewer did not clear it:\n${premise.issues.map((i) => `- ${i}`).join('\n')}\nKeep the client's story and names; change only what the findings name. Return the corrected bible as JSON only, same shape.`,
-    }, bibleProblems, 4)
+      user: `Your series bible:\n${json(draft)}\n\nThe compliance reviewer did not clear it:\n${premise.issues.map((i) => `- ${i}`).join('\n')}\nKeep the client's story and names. Rewrite every passage the findings quote - the beat itself, not just its wording: the quoted words must not appear again. Return the corrected bible as JSON only, same shape.`,
+    }, (value) => [...bibleProblems(value), ...unchangedFindings(premise.issues, premiseSource(value))], 4)
     draft = redo.value
     premise = await reviewPremise(ctx, draft)
   }
@@ -221,12 +221,21 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
 /** What the regulation allows, stated in the reviewer's own instruction so it is weighed, not skimmed. */
 export const ALLOWED = `Allowed when the values are sound: wealthy characters, inheritances, business acquisitions, contract or fake relationships, arranged matches, rivals who fall in love. Judge the treatment: wealth is never the measure of a person or a weapon of humiliation; no coercion, confinement or "taming" as romance; the lead has her own skill, choices and voice; conflict resolves through truth and character, not revenge; titles carry no 霸总-style or click-bait words.`
 
+/** The words of a bible the premise review reads. */
+export const premiseSource = (bible: SeriesBible) => `${bible.logline}\n${bible.genre}\n${(bible.characters ?? []).map((c) => `${c.name} ${c.role} ${c.arc}`).join('\n')}\n${(bible.episodes ?? []).map((e) => `${e.title} ${e.synopsis} ${e.hook} ${e.cliffhanger}`).join('\n')}`
+
+/** A finding is answered only when the passage it quotes is gone: a revision that kept "拉到一边" after two notes was not one. */
+export function unchangedFindings(issues: string[], source: string): string[] {
+  const quoted = issues.flatMap((issue) => [...issue.matchAll(/["“「]([^"”」]{4,80})["”」]/g)].map((m) => m[1]!.trim()))
+  return quoted.filter((q) => source.includes(q)).map((q) => `"${q}" is still in the bible: the reviewer's finding quotes it, so rewrite that beat`)
+}
+
 async function reviewPremise(ctx: NarrativeContext, bible: SeriesBible): Promise<ContentReview> {
-  const source = `${bible.logline}\n${bible.genre}\n${bible.characters.map((c) => `${c.name} ${c.role} ${c.arc}`).join('\n')}\n${bible.episodes.map((e) => `${e.title} ${e.synopsis} ${e.hook} ${e.cliffhanger}`).join('\n')}`
+  const source = premiseSource(bible)
   ctx.log(`▸ compliance   series premise · independent reviewer · ${ctx.editor.name}`)
   const run = await chatJson<ContentReview>(ctx.editor, {
     system: await ctx.agentPrompt('compliance reviewer. You did not write this series', 'content-compliance'), thinking: false, maxTokens: 2500, temperature: 0.2,
-    user: `Clear this micro-drama series for production (premise, characters, episode titles and plans):\n${source}\n\n${ALLOWED}\nEvery issue quotes the exact words it is about, in quotation marks. Return JSON only: {"approve": true|false, "issues": ["\\"quoted words\\" - why"]}`,
+    user: `Clear this micro-drama series for production (premise, characters, episode titles and plans):\n${source}\n\n${ALLOWED}\nYou clear content only: values, coercion, discrimination, minors, regulated claims. How a line is quoted, written or shot is the writers' and the director's craft, never a finding.\nEvery issue quotes the exact words it is about, in quotation marks. Return JSON only: {"approve": true|false, "issues": ["\\"quoted words\\" - why"]}`,
   }, (r) => checkReviewEvidence(r, source), 3).catch((error: Error) => { throw new Error(`the series premise could not be reviewed (${error.message.slice(0, 160)}); the run stops here`) })
   await ctx.record('compliance', 'premise-reviewer', ctx.editor, { approve: run.value.approve, issues: run.value.issues, unresolved: run.unresolved })
   return { ...run.value, approve: run.value.approve && run.unresolved.length === 0 }
