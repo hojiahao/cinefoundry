@@ -21,10 +21,23 @@ import { startFakeComfy } from './fake-comfy.js'
 
 /** Docker is never called for real: the writers' room's container stops and starts are recorded here. */
 const dockerCalls: string[][] = []
+/** Containers the fake docker has stopped: their fake server stops answering /models. */
+const down = new Set<string>()
 vi.mock('../src/lib/exec.js', async (original) => {
   const real = await original<typeof import('../src/lib/exec.js')>()
-  return { ...real, exec: (command: string, args: string[], ...rest: unknown[]) => (command === 'docker' ? (dockerCalls.push(args), Promise.resolve({ stdout: '', stderr: '' })) : (real.exec as (...a: unknown[]) => unknown)(command, args, ...rest)) }
+  return {
+    ...real,
+    exec: (command: string, args: string[], ...rest: unknown[]) => {
+      if (command !== 'docker') return (real.exec as (...a: unknown[]) => unknown)(command, args, ...rest)
+      dockerCalls.push(args)
+      if (args[0] === 'stop') down.add(args[1]!)
+      else down.delete(args[1]!)
+      return Promise.resolve({ stdout: '', stderr: '' })
+    },
+  }
 })
+/** Which fake service a /models path belongs to, by its container. */
+const containerOf = (url: string) => (url.startsWith('/writer/') ? 'cinefoundry-nemotron-super-1' : url.startsWith('/vision/') ? 'cinefoundry-stepvl-1' : 'cinefoundry-nemotron-1')
 
 vi.mock('../src/lib/containers.js', async (original) => ({
   ...(await original<typeof import('../src/lib/containers.js')>()),
@@ -126,7 +139,7 @@ beforeAll(async () => {
     request.on('data', (chunk) => chunks.push(chunk))
     request.on('end', () => {
       // The writers' room checks its model serves; sleep and wake calls get 404 (no sleep mode) and are left alone.
-      if (request.url?.endsWith('/v1/models')) return response.writeHead(200, { 'content-type': 'application/json' }).end('{"data":[]}')
+      if (request.url?.endsWith('/v1/models')) return down.has(containerOf(request.url)) ? response.writeHead(503).end() : response.writeHead(200, { 'content-type': 'application/json' }).end('{"data":[]}')
       if (!request.url?.endsWith('/chat/completions')) return response.writeHead(404).end()
       const body = JSON.parse(Buffer.concat(chunks).toString())
       const system: string = body.messages[0].content
@@ -142,7 +155,7 @@ beforeAll(async () => {
   await new Promise<void>((done) => llm.listen(0, '127.0.0.1', done))
   const url = `http://127.0.0.1:${(llm.address() as { port: number }).port}/v1`
   Object.assign(process.env, {
-    CINEFOUNDRY_PROJECTS: join(root, 'projects'), COMFYUI_URL: comfy.url, CINEFOUNDRY_PLANNER_URL: url, CINEFOUNDRY_VISION_URL: url,
+    CINEFOUNDRY_PROJECTS: join(root, 'projects'), COMFYUI_URL: comfy.url, CINEFOUNDRY_PLANNER_URL: url, CINEFOUNDRY_VISION_URL: url.replace(/\/v1$/, '/vision/v1'),
     CINEFOUNDRY_STEP_AUDIO_DIR: audio, CINEFOUNDRY_VOICE_LIBRARY: join(root, 'library.json'),
     // The fake ComfyUI holds no weights: do not walk the machine's model folder at every phase.
     CINEFOUNDRY_RELEASE_CACHE: '0',
@@ -320,6 +333,7 @@ describe("writers' room end to end", () => {
   it('gives the planner and the vision model back when the run fails inside the room', async () => {
     process.env.CINEFOUNDRY_WRITER_URL = process.env.CINEFOUNDRY_PLANNER_URL!.replace(/\/v1$/, '/writer/v1')
     dockerCalls.length = 0
+    down.clear()
     episodeReview = 'reject'
     try {
       await expect(runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-room-fail'))).rejects.toThrow()
@@ -332,6 +346,7 @@ describe("writers' room end to end", () => {
   it('writes the whole story, the sound plan and the packaging on the author, and nothing on it after the first picture', async () => {
     process.env.CINEFOUNDRY_WRITER_URL = process.env.CINEFOUNDRY_PLANNER_URL!.replace(/\/v1$/, '/writer/v1')
     dockerCalls.length = 0
+    down.clear()
     try {
       await runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-room'))
     } finally {

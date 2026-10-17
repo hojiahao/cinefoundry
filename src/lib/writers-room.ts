@@ -101,9 +101,12 @@ export async function closeWritersRoom(room: WritersRoom): Promise<void> {
   if (room.author.container && (await docker('stop', room.author.container).then(() => true, () => false))) released = 'stopped'
   else if (await retireService(room.author.endpoint.baseUrl).catch(() => false)) released = 'asleep'
   if (released === 'stopped') markRetired(room.author.endpoint.baseUrl)
+  // Every model production needs comes back - those the room stopped, and any found down (a run killed earlier).
+  stopped.splice(0)
   const back: string[] = []
-  for (const other of stopped.splice(0)) {
-    await docker('start', other.container!)
+  for (const other of room.others) {
+    if (!other.container || (await ready(other.endpoint.baseUrl))) continue
+    await docker('start', other.container)
     if (!(await waitReady(other.endpoint.baseUrl, 1200))) throw new Error(`${other.endpoint.name} (${other.container}) did not come back within 20 minutes after the writers' room`)
     back.push(other.endpoint.name)
   }

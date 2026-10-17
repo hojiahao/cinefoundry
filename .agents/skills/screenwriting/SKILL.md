@@ -43,7 +43,7 @@ Dialogue at the level of a well-made American cable drama: people talk past each
 ## English dialogue
 
 - **At most 12 words per line** (*checked*): about 4.4 seconds of speech inside a five-second shot. Most good lines are 3-8 words. If a thought needs more, split it into two lines - and usually give the second to the other person.
-- **Contractions and fragments**: "You're not coming." "Since when?" "Since now." Spoken American English, not written English.
+- **Contractions and fragments** (*checked*: at most two lines of an episode keep a full form such as "I am" or "do not", for emphasis): "You're not coming." "Since when?" "Since now." Spoken American English, not written English.
 - **Subtext over statement.** "Did you eat?" can mean "I forgive you". Let the action and the delivery carry what the words withhold.
 - **One speaker per shot, so no overlaps.** Interruptions are written as a line that ends on a dash and the next speaker's line; no two people speak at once, no group chorus.
 - **Lip-sync friendliness**: avoid strings of initials and numbers spoken as digits ("Room 1408" → "the room at the end"), long proper nouns, and tongue-twisters; each costs a broken mouth.

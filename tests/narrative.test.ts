@@ -214,6 +214,8 @@ describe('episode shape', () => {
     const mixedProblems = checkScreenplay(mixed, bible, { seconds: 15, ratio: '9:16' }).join(' ')
     expect(mixedProblems).toMatch(/mixes in English \("favor"\)/)
     expect(mixedProblems).not.toMatch(/"AI"/)
+    const stiff = { episode: 1, title: 't', scenes: [{ ...scene(1, 6), lines: ['I am buying the lane.', 'I do not sell.', 'You do not fall for me.', 'Not today.', 'Not today.', 'Not today.'].map((en, i) => ({ speaker: i % 2 ? 'leo' : 'mia', en, zh: '今天不行' })) }, { ...scene(2, 6), heading: 'EXT. LANE - DUSK' }, scene(3, 4)] }
+    expect(checkScreenplay(stiff, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/3 lines avoid contractions/)
     const good = { episode: 1, title: 't', scenes: [scene(1, 6), { ...scene(2, 6), heading: 'EXT. LANE - DUSK' }, scene(3, 4)] }
     expect(checkScreenplay(good, bible, { seconds: 120, ratio: '9:16' })).toEqual([])
   })
@@ -233,5 +235,17 @@ describe('premise revision', () => {
     expect(unchangedFindings(['"三个月假恋爱协议" - distorted view of love'], '林夏签下三个月假恋爱协议', request)).toEqual([])
     expect(premiseFindingProblems({ approve: false, issues: ['"三个月假恋爱协议" - distorted view of love'] }, request).join(' ')).toMatch(/client's own premise/)
     expect(premiseFindingProblems({ approve: false, issues: ['"顾言低声说这条街迟早会是他的" - wealth as a weapon'] }, request)).toEqual([])
+  })
+})
+
+import { premiseObjections } from '../src/crafts/narrative/writing.js'
+
+describe('episode compliance judges execution, not the cleared premise', () => {
+  it('sends back a finding against the contract relationship itself, and keeps one about a threat on screen', () => {
+    const premise = 'scene 1 line 6: "三个月 你当我女友" - a contract girlfriend demanded by the wealthier party is a coercive, unequal premise presented as romance'
+    const staged = 'scene 2 line 4: "够应付家族就行" - the fake relationship staged for the family treats love as a transaction'
+    const threat = 'scene 1 line 5: "Sign, or the shop is gone" - the fake relationship is forced on her with a threat'
+    expect(premiseObjections({ approve: false, issues: [premise, staged] })).toHaveLength(2)
+    expect(premiseObjections({ approve: false, issues: [threat] })).toEqual([])
   })
 })

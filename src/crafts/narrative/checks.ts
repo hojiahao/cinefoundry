@@ -14,6 +14,9 @@ const DIALOGUE_FRAMINGS = ['medium', 'close-up', 'over-the-shoulder', 'medium cl
 
 /** The Chinese half of "English / 中文". */
 const zhName = (name: string | undefined) => (name?.split('/')[1] ?? '').trim()
+/** Full forms speech contracts. */
+const UNCONTRACTED = /\b(I am|you are|we are|they are|he is|she is|it is|that is|do not|does not|did not|cannot|can not|is not|are not|was not|will not|would not|I will|I have not|have not)\b/i
+export const MAX_UNCONTRACTED = 2
 const words = (text: string) => text.trim().split(/\s+/).filter(Boolean).length
 const zhLength = (text: string) => [...text.replace(/\s/g, '')].length
 
@@ -128,6 +131,10 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
   // Every line is one shot and every scene needs at least one shot without dialogue (an establishing view, a reaction).
   if (lines + scenes.length > budget) problems.push(`${lines} lines in ${scenes.length} scenes need ${lines + scenes.length} shots (one per line, one more per scene) but ${want.seconds} seconds hold ${budget}: cut lines or merge scenes`)
   if (lines === 0) problems.push('no dialogue: characters speak on screen in this format')
+  // Spoken American English contracts: "I am buying the lane. I do not sell." reads as a translation. An uncontracted
+  // form is kept for emphasis now and then, not as the voice of the episode.
+  const stiff = scenes.flatMap((s) => (s.lines ?? []).map((l) => l.en ?? '')).filter((en) => UNCONTRACTED.test(en))
+  if (stiff.length > MAX_UNCONTRACTED) problems.push(`${stiff.length} lines avoid contractions (${stiff.slice(0, 3).map((l) => `"${l}"`).join(', ')}): spoken English says "I'm", "don't", "can't", "you're"; keep the full form for at most ${MAX_UNCONTRACTED} lines of emphasis`)
   // Wall-to-wall dialogue leaves no shot for the look that lands a line, and too little leaves the story unspoken:
   // between half and three quarters of the shots carry a line.
   const maxLines = Math.round(budget * 0.75)

@@ -73,6 +73,7 @@ describe("writers' room", () => {
   it('closes by stopping the author and starting what it stopped; nothing can wake the author into a reload', async () => {
     const author = await fakeVllm({ asleep: false })
     const vision = await vllmWithoutSleep()
+    onDocker = (args) => { if (args[1] === 'stepvl') vision.state.up = args[0] === 'start' }
     await openWritersRoom(room(author.model('super'), [vision.model('stepvl')]))
     expect(docker).toEqual([['stop', 'stepvl']])
     await closeWritersRoom(room(author.model('super'), [vision.model('stepvl')]))
@@ -83,13 +84,26 @@ describe("writers' room", () => {
 
 /** A vLLM server without sleep mode: it serves, and answers 404 to sleep calls. */
 async function vllmWithoutSleep() {
+  const state = { up: true }
   const server: Server = createServer((request, response) => {
     const path = new URL(request.url ?? '/', 'http://fake').pathname
-    if (path === '/v1/models') return response.writeHead(200, { 'content-type': 'application/json' }).end('{"data":[]}')
+    if (path === '/v1/models') return state.up ? response.writeHead(200, { 'content-type': 'application/json' }).end('{"data":[]}') : response.writeHead(503).end()
     response.writeHead(404).end()
   })
   await new Promise<void>((done) => server.listen(0, '127.0.0.1', done))
   servers.push(server)
   const baseUrl = `http://127.0.0.1:${(server.address() as { port: number }).port}/v1`
-  return { model: (container?: string) => ({ endpoint: { name: 'v', baseUrl, model: 'v', apiKey: 'local', execution: 'local-dgx-spark' as const }, container }) }
+  return { state, model: (container?: string) => ({ endpoint: { name: 'v', baseUrl, model: 'v', apiKey: 'local', execution: 'local-dgx-spark' as const }, container }) }
 }
+
+describe("writers' room close", () => {
+  it('also starts a production model it finds down - left stopped by a run killed earlier', async () => {
+    const author = await fakeVllm({ asleep: false })
+    const vision = await vllmWithoutSleep()
+    vision.state.up = false
+    onDocker = (args) => { if (args[1] === 'stepvl') vision.state.up = args[0] === 'start' }
+    await openWritersRoom(room(author.model('super'), [vision.model('stepvl')]))
+    await closeWritersRoom(room(author.model('super'), [vision.model('stepvl')]))
+    expect(docker).toEqual([['stop', 'super'], ['start', 'stepvl']])
+  })
+})

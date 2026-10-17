@@ -261,6 +261,22 @@ async function reviewPremise(ctx: NarrativeContext, bible: SeriesBible): Promise
   return { ...run.value, approve: run.value.approve && run.unresolved.length === 0 }
 }
 
+/** Words that object to the arrangement itself - a fake or contract relationship, an arranged match - rather than to a line. */
+const PREMISE_WORDS = /\b(fake|contract(ual)?|staged|arranged|pretend(ed)?)\b.{0,40}\b(relationship|girlfriend|boyfriend|romance|dating|marriage|match)\b|\bpremise\b|假恋爱|协议恋爱|契约恋爱|假装恋爱|畸形婚恋/i
+/** Words of a treatment the regulation forbids: a finding with them is about what happens on screen, not the premise. */
+const TREATMENT_WORDS = /\b(threat\w*|forc\w*|humiliat\w*|insult\w*|grab\w*|pin\w*|confin\w*|blackmail\w*|demean\w*|mock\w*|degrad\w*|harass\w*|stalk\w*)\b|威胁|强迫|羞辱|侮辱|胁迫|骚扰/i
+
+/**
+ * An episode finding that objects to the cleared premise itself is sent back: a reviewer condemned "三个月 你当我女友"
+ * because a contract girlfriend is "an unequal premise", in a series whose premise review had cleared exactly that.
+ * A finding that names a forbidden treatment (a threat, humiliation, force) is kept, whatever else it says.
+ */
+export function premiseObjections(review: ContentReview): string[] {
+  if (!Array.isArray(review.issues)) return []
+  return review.issues.filter((issue) => { const why = issue.replace(/["“「][^"”」]*["”」]/g, ''); return PREMISE_WORDS.test(why) && !TREATMENT_WORDS.test(why) })
+    .map((issue) => `this finding objects to the series premise, which was cleared (contract and fake relationships are allowed): name what this line does wrong on screen - a threat, humiliation, force - or drop it: ${issue.slice(0, 80)}`)
+}
+
 export type ContentReview = { approve: boolean; issues: string[]; revised?: Array<{ scene: number; line: number; en: string; zh: string }> }
 
 /**
@@ -315,7 +331,7 @@ ${play.scenes.map((s) => `Scene ${s.scene} ${s.heading}: ${s.action}\n${s.lines.
 ${scan.length ? `The deterministic scan found: ${scan.join('; ')}. Each of these must be rewritten.\n` : ''}${brandNote}The series premise has already been cleared; judge how this episode executes it - its lines, actions and on-screen behaviour.\n${ALLOWED}\nJudge only what is written above. Every issue quotes the exact words it is about, in quotation marks.
 Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted words\\" - why"], "revised": [{"scene": N, "line": M, "en": "...", "zh": "..."}]}`,
         },
-        (r) => checkReviewEvidence(r, source),
+        (r) => [...checkReviewEvidence(r, source), ...premiseObjections(r)],
         3,
       ).catch((error: Error) => { throw new Error(`compliance review of episode ${play.episode} could not be completed (${error.message.slice(0, 160)}); the run stops here rather than shoot unreviewed lines`) })
       const review = { ...run.value, approve: run.value.approve && scan.length === 0 && run.unresolved.length === 0 }
