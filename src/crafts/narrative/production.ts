@@ -14,8 +14,9 @@ import { audioWork, designVoices, generateSfx, scoreSpeech, speakChecked } from 
 import { loadVoiceLibrary, voiceReference, voicesDir, type LibraryVoice } from '../../lib/voices.js'
 import { existsSync } from 'node:fs'
 import { buildAss, type TitleCue } from '../../lib/titles.js'
+import { NARRATIVE_EDIT_MODEL, NARRATIVE_IMAGE_MODEL, castPictures, referencePrompt, saveCharacterRecord, selectReferences } from './casting.js'
 import { produced, key, type NarrativeContext } from './context.js'
-import { sheetGate, shotGate } from './gate.js'
+import { shotGate } from './gate.js'
 import { mixNarrative } from './mix.js'
 import type { Character, NarrativeShot } from './types.js'
 
@@ -26,41 +27,37 @@ const LINE_OFFSET = 0.4
 const REALISM = 'Photorealistic frame from a modern American television drama shot on a cinema camera: natural skin with pores and fine texture, real hair, motivated light, shallow depth of field, subtle film grain. No text, captions or logos.'
 const castOf = (ctx: NarrativeContext, ids: string[]) => ids.map((id) => ctx.bible!.characters.find((c) => c.id === id)).filter((c): c is Character => !!c)
 
-/** Casting: a locked reference portrait and a designed voice for every character, both checked before anyone is shot. */
+/**
+ * Casting: a casting brief, a gated casting call and an identity-gated reference pack per character (casting.ts), and a
+ * voice for each; all recorded in cast/<id>/character.json, which later episodes and series runs reuse.
+ */
 export async function castingStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
-  const dir = ctx.dir!
-  const comfy = (ctx.comfy ??= new ComfyClient())
-  await mkdir(join(dir, 'cast'), { recursive: true })
-  await ctx.rest('casting (Qwen-Image)', [ctx.planner])
-  await enterPhase(comfy, 'casting (Qwen-Image)', ctx.record)
-  for (const character of bible.characters) {
-    let best: { path: string; verdict: QaVerdict } | undefined
-    for (let attempt = 0; attempt < 3 && !best?.verdict.pass; attempt++) {
-      const path = join(dir, 'cast', `${character.id}${attempt ? `_r${attempt}` : ''}.png`)
-      const image = await generateImage(comfy, {
-        size: '1328x1328', output: path,
-        prompt: `Casting reference portrait of ${character.look}, a ${character.gender === 'female' ? 'woman' : 'man'}, wearing ${character.wardrobe}. Chest-up, three-quarter view, looking just off camera with a relaxed natural expression, soft window key light, plain softly lit background. ${bible.look}. ${REALISM}`,
-      })
-      const verdict = await sheetGate(ctx.reviewer, path, character)
-      ctx.log(`▸ cast ${character.id.padEnd(10)} ${image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
-      await ctx.record('casting', 'sheet-gate', ctx.reviewer, { character: character.id, attempt, imageSeconds: image.seconds, ...verdict })
-      if (!best || verdict.score > best.verdict.score) best = { path, verdict }
-    }
-    const sheet = join(dir, 'cast', `${character.id}.sheet.png`)
-    await copyFile(best!.path, sheet)
-    ctx.sheets.set(character.id, sheet)
-    await addAsset(ctx.projectId!, { id: `cast-${character.id}`, kind: 'image', stage: 'casting', path: `cast/${character.id}.sheet.png`, execution: 'local-dgx-spark', model: 'qwen_image_lightning', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (best of 3, not passed)'}` })
-  }
-  await comfy.free()
-  // Voices: a character is cast from the library when a QC-passed voice fits (same gender, within twelve years, the
-  // timbre the bible asks for); only a character no library voice fits gets a voice designed for them alone.
+  await mkdir(join(ctx.dir!, 'cast'), { recursive: true })
+  const pictures = await castPictures(ctx)
+  // Voices: a recorded voice is kept. Otherwise a character is cast from the library when a QC-passed voice fits (same
+  // gender, within twelve years, the timbre the bible asks for); only a character no library voice fits gets a voice
+  // designed for them alone.
   const library = loadVoiceLibrary()
+  const available = library.voices.filter((v) => existsSync(join(voicesDir(), `${v.id}.wav`)))
   const unmatched: Character[] = []
   for (const character of bible.characters) {
-    const match = castFromLibrary(character, library.voices.filter((v) => existsSync(join(voicesDir(), `${v.id}.wav`))))
+    const member = ctx.cast.get(character.id)
+    const recorded = member?.record.voice
+    if (recorded?.library && available.some((v) => v.id === recorded.library)) {
+      ctx.voices.set(character.id, voiceReference(recorded.library))
+      ctx.log(`▸ voice ${character.id.padEnd(10)} ${recorded.library} (cast record)`)
+      continue
+    }
+    if (member && recorded?.wav && recorded.text && existsSync(join(member.dir, recorded.wav))) {
+      ctx.voices.set(character.id, { wav: join(member.dir, recorded.wav), text: recorded.text })
+      ctx.log(`▸ voice ${character.id.padEnd(10)} designed voice (cast record)`)
+      continue
+    }
+    const match = castFromLibrary(character, available)
     if (match) {
       ctx.voices.set(character.id, voiceReference(match.id))
+      if (member) { member.record.voice = { description: character.voice, library: match.id }; await saveCharacterRecord(member) }
       await ctx.record('casting', 'voice', undefined, { character: character.id, library: match.id })
       ctx.log(`▸ voice ${character.id.padEnd(10)} ${match.id} (casting library)`)
     } else unmatched.push(character)
@@ -72,45 +69,52 @@ export async function castingStage(ctx: NarrativeContext): Promise<string> {
     const scores = await scoreSpeech(takes.map((t) => ({ path: t.path, text: t.text })))
     for (const character of unmatched) {
       const mine = takes.map((t, i) => ({ ...t, cer: scores[i]?.cer ?? 1 })).filter((t) => t.id === character.id).sort((a, b) => a.cer - b.cer)
-      const wav = join(outDir, `${character.id}.wav`)
+      const member = ctx.cast.get(character.id)
+      // A designed voice lives with the cast record, so a later run speaks with the same voice.
+      const wav = member ? join(member.dir, 'voice.wav') : join(outDir, `${character.id}.wav`)
       await copyFile(mine[0]!.path, wav)
       ctx.voices.set(character.id, { wav, text: reference })
+      if (member) { member.record.voice = { description: character.voice, wav: 'voice.wav', text: reference }; await saveCharacterRecord(member) }
       await ctx.record('casting', 'voice', undefined, { character: character.id, designed: true, takes: mine.map((t) => ({ cer: t.cer, seconds: t.seconds })) })
       ctx.log(`▸ voice ${character.id.padEnd(10)} designed for this character (error ${(mine[0]!.cer * 100).toFixed(0)}%)`)
     }
   }
-  return `${bible.characters.length} characters cast`
+  return `${bible.characters.length} characters · ${pictures.cast.length} cast · ${pictures.reused.length} reused`
 }
 
-/** First frames: edited from the reference portraits of the characters in the shot, judged for identity and realism. */
+/**
+ * First frames: edited with Qwen-Image-Edit-2511 from the reference views the shot needs (close-up the master, wide the
+ * full-length, profile the profile; at most three across everyone in frame), and judged for identity against the masters.
+ */
 export async function narrativeFramesStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
   const comfy = (ctx.comfy ??= new ComfyClient())
   const size = videoSize(generationResolution(ctx.options.resolution ?? '1080p'), ctx.ratio).join('x')
-  await ctx.rest('frames (Qwen-Image-Edit)', [ctx.planner])
-  await enterPhase(comfy, 'frames (Qwen-Image-Edit)', ctx.record)
+  await ctx.rest('frames (Qwen-Image-Edit-2511)', [ctx.planner])
+  await enterPhase(comfy, 'frames (Qwen-Image-Edit-2511)', ctx.record)
   let made = 0
   for (const episode of produced(ctx)) {
     const play = ctx.plays.find((p) => p.episode === episode)!
     for (const shot of ctx.shots.get(episode) ?? []) {
       const scene = play.scenes.find((s) => s.scene === shot.scene)!
-      const cast = castOf(ctx, shot.characters).slice(0, 3).map((character) => ({ character, sheet: ctx.sheets.get(character.id)! }))
-      const identity = cast.map((c, i) => `Image ${i + 1} is ${c.character.name}: the same person - keep the face, hair and build exactly; wearing ${c.character.wardrobe}.`).join(' ')
-      let prompt = `${shot.image_prompt}. ${scene.heading.replace(/^(INT|EXT)\.\s*/, '')}. ${bible.look}. ${identity} ${REALISM}`
+      const references = selectReferences(shot, ctx.cast)
+      const inFrame = castOf(ctx, [...new Set(references.map((r) => r.id))])
+      const cast = inFrame.map((character) => ({ character, sheet: ctx.sheets.get(character.id)! }))
+      let prompt = `${shot.image_prompt}. ${scene.heading.replace(/^(INT|EXT)\.\s*/, '')}. ${bible.look}. ${referencePrompt(references, inFrame)} ${REALISM}`
       let best: { path: string; verdict: QaVerdict } | undefined
       const tries = Math.max(1, ctx.options.candidates ?? 2) + 1
       for (let attempt = 0; attempt < tries && !best?.verdict.pass; attempt++) {
         const path = join(ctx.dir!, 'frames', `${shotName(episode, shot.shot)}${attempt ? `_r${attempt}` : ''}.png`)
-        const image = await generateImage(comfy, { prompt, size, output: path, references: cast.map((c) => c.sheet) })
+        const image = await generateImage(comfy, { prompt, size, output: path, references: references.map((r) => r.path), model: NARRATIVE_IMAGE_MODEL, editModel: NARRATIVE_EDIT_MODEL })
         const verdict = await shotGate(ctx.reviewer, path, shot, cast)
         ctx.log(`▸ frame ${episode}.${shot.shot}${attempt ? `_r${attempt}` : ''}  ${image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
-        await ctx.record('frames', 'shot-gate', ctx.reviewer, { episode, shot: shot.shot, attempt, imageSeconds: image.seconds, ...verdict })
+        await ctx.record('frames', 'shot-gate', ctx.reviewer, { episode, shot: shot.shot, attempt, imageSeconds: image.seconds, references: references.map((r) => `${r.id}:${r.view}`), ...verdict })
         if (!best || verdict.score > best.verdict.score) best = { path, verdict }
         // The last try carries the gate's own words as fixes: a new seed alone repeats a systematic fault.
         if (!verdict.pass && attempt === tries - 2 && verdict.issues.length) { prompt = `${prompt} Avoid: ${verdict.issues.slice(0, 3).join('; ')}.`; ctx.qaRegenerations++ }
       }
       ctx.frames.set(key(episode, shot.shot), best!.path)
-      await addAsset(ctx.projectId!, { id: `frame-${episode}-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(ctx.dir!.length + 1), shot: shot.shot, execution: 'local-dgx-spark', model: cast.length ? 'qwen_image_edit_lightning' : 'qwen_image_lightning', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}` })
+      await addAsset(ctx.projectId!, { id: `frame-${episode}-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(ctx.dir!.length + 1), shot: shot.shot, execution: 'local-dgx-spark', model: references.length ? 'qwen_image_edit_2511_lightning' : 'qwen_image_2512', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}` })
       made++
     }
   }

@@ -3,6 +3,7 @@ import type { ModelEndpoint } from '../../agent/llm.js'
 import type { EngineContext } from '../../engine/pipeline.js'
 import type { EngineOptions } from '../../engine/run.js'
 import type { VideoModel } from '../../lib/media.js'
+import type { CastMember } from './casting.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
 export interface NarrativeOptions extends EngineOptions {
@@ -20,6 +21,8 @@ export interface NarrativeOptions extends EngineOptions {
   videoModel?: VideoModel
   /** Frames generated per shot before the gate picks one. */
   candidates?: number
+  /** A cast folder of an earlier run (projects/<id>/cast): characters recorded there are reused, not recast. */
+  castDir?: string
   /** Stop after the shot breakdown, before any GPU time. */
   planOnly?: boolean
 }
@@ -35,7 +38,9 @@ export interface NarrativeContext extends EngineContext {
   episodeSeconds: number
   ratio: '9:16' | '16:9' | '1:1'
   bible?: SeriesBible
-  /** Character id -> locked reference portrait. */
+  /** Character id -> the cast record and reference pack (cast/<id>/). */
+  cast: Map<string, CastMember>
+  /** Character id -> locked master portrait, the identity of record. */
   sheets: Map<string, string>
   /** Character id (and "vo") -> the designed voice every line is cloned from. */
   voices: Map<string, { wav: string; text: string }>

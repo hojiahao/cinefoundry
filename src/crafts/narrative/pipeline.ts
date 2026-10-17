@@ -32,7 +32,7 @@ export function narrativeContext(options: NarrativeOptions, engine: EngineContex
     options, planner, reviewer, editor, writer: defaults.writer,
     episodeSeconds: options.episodeSeconds ?? defaults.seconds,
     ratio: (options.ratio as NarrativeContext['ratio'] | undefined) ?? defaults.ratio,
-    sheets: new Map(), voices: new Map(), plays: [], shots: new Map(), frames: new Map(), clips: new Map(), lines: new Map(), sound: new Map(), outputs: new Map(), qaRegenerations: 0,
+    cast: new Map(), sheets: new Map(), voices: new Map(), plays: [], shots: new Map(), frames: new Map(), clips: new Map(), lines: new Map(), sound: new Map(), outputs: new Map(), qaRegenerations: 0,
   }) as NarrativeContext
 }
 

@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { ComfyClient } from '../comfy/client.js'
-import { loadWorkflow, renderWorkflow } from '../comfy/workflow.js'
+import { dropUnusedImages, loadWorkflow, renderWorkflow, type WorkflowGraph } from '../comfy/workflow.js'
 import { cloudVideoConfig, generateCloudVideo } from './cloudvideo.js'
 import { exec } from './exec.js'
 import { concatCopy, extractLastFrame, scaleImage } from './ffmpeg.js'
@@ -76,30 +76,82 @@ export function videoSize(resolution: string, ratio: string): [number, number] {
 
 const seed = () => Math.floor(Math.random() * 2 ** 31)
 
+/**
+ * Text-to-image models. `qwen-image` (Lightning, 8 steps) is the ad default, chosen for Chinese lettering in layouts;
+ * `qwen-image-2512` runs the model card's full fifty steps and casts people (skin, hair and age read as real).
+ */
+export type ImageModel = 'qwen-image' | 'qwen-image-2512'
+/** Edit models, both with the 8-step Lightning LoRA: 2511 holds identity and several people better than 2509. */
+export type EditModel = 'qwen-image-edit-2509' | 'qwen-image-edit-2511'
+export const IMAGE_MODELS: Record<ImageModel, { workflow: string }> = {
+  'qwen-image': { workflow: 'qwen_image_lightning' },
+  'qwen-image-2512': { workflow: 'qwen_image_2512' },
+}
+/** `repeat` fills unused reference slots with the last reference (the 2509 graph as shipped); `drop` removes them. */
+export const EDIT_MODELS: Record<EditModel, { workflow: string; unusedSlots: 'repeat' | 'drop' }> = {
+  'qwen-image-edit-2509': { workflow: 'qwen_image_edit_lightning', unusedSlots: 'repeat' },
+  'qwen-image-edit-2511': { workflow: 'qwen_image_edit_2511_lightning', unusedSlots: 'drop' },
+}
+export const MAX_REFERENCES = 3
+/** The negative prompt of the Qwen-Image-2512 model card; only the full-quality graph (CFG above one) reads it. */
+export const IMAGE_NEGATIVE = '低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲。'
+
+function pickModel<T extends string>(kind: string, value: string | undefined, known: Record<T, unknown>, fallback: T): T {
+  if (value === undefined || value === '') return fallback
+  if (!(value in known)) throw new Error(`Unknown ${kind} ${JSON.stringify(value)}; use ${Object.keys(known).join(', ')}.`)
+  return value as T
+}
+
+/**
+ * The graph a request runs. An explicit model wins, then CINEFOUNDRY_IMAGE_MODEL / CINEFOUNDRY_EDIT_MODEL, then the
+ * ad defaults (Qwen-Image Lightning, Qwen-Image-Edit-2509). Any reference selects the edit model.
+ */
+export function imageWorkflow(
+  references: number,
+  choice: { model?: ImageModel; editModel?: EditModel } = {},
+  env: Record<string, string | undefined> = process.env,
+): { workflow: string; model: ImageModel | EditModel; unusedSlots?: 'repeat' | 'drop' } {
+  if (references > MAX_REFERENCES) throw new Error(`at most ${MAX_REFERENCES} reference images, got ${references}`)
+  if (references > 0) {
+    const model = pickModel<EditModel>('edit model', choice.editModel ?? env.CINEFOUNDRY_EDIT_MODEL, EDIT_MODELS, 'qwen-image-edit-2509')
+    return { workflow: EDIT_MODELS[model].workflow, model, unusedSlots: EDIT_MODELS[model].unusedSlots }
+  }
+  const model = pickModel<ImageModel>('image model', choice.model ?? env.CINEFOUNDRY_IMAGE_MODEL, IMAGE_MODELS, 'qwen-image')
+  return { workflow: IMAGE_MODELS[model].workflow, model }
+}
+
+/** The ComfyUI graph for one image request, references already uploaded under `image_1..n`. Pure. */
+export function imageGraph(template: Record<string, unknown>, plan: { unusedSlots?: 'repeat' | 'drop' }, references: number, values: Record<string, unknown>): WorkflowGraph {
+  return renderWorkflow(plan.unusedSlots === 'drop' ? dropUnusedImages(template, references) : template, values)
+}
+
 export async function generateImage(
   comfy: ComfyClient,
-  request: { prompt: string; size: string; output: string; references?: string[]; seed?: number },
+  request: { prompt: string; size: string; output: string; references?: string[]; seed?: number; model?: ImageModel; editModel?: EditModel; negative?: string },
 ): Promise<MediaResult> {
   const started = Date.now()
   const [width, height] = parseSize(request.size)
   const [nativeWidth, nativeHeight] = nativeSize(width, height)
   const references = request.references ?? []
-  const workflow = references.length > 0 ? 'qwen_image_edit_lightning' : 'qwen_image_lightning'
+  const plan = imageWorkflow(references.length, request)
+  const workflow = plan.workflow
 
   const values: Record<string, unknown> = {
     prompt: request.prompt,
+    negative: request.negative ?? IMAGE_NEGATIVE,
     width: nativeWidth,
     height: nativeHeight,
     seed: request.seed ?? seed(),
     filename_prefix: `cinefoundry/${Date.now()}`,
   }
-  // The edit graph has three reference slots; with fewer references the last one repeats.
-  for (let slot = 0; slot < 3 && references.length > 0; slot++) {
+  // The edit graphs have three reference slots: 2509 repeats the last reference into empty ones, 2511 drops them.
+  const slots = plan.unusedSlots === 'drop' ? references.length : references.length > 0 ? MAX_REFERENCES : 0
+  for (let slot = 0; slot < slots; slot++) {
     const source = references[Math.min(slot, references.length - 1)]!
     values[`image_${slot + 1}`] = await comfy.uploadImage(await readFile(source), `ref_${Date.now()}_${slot}.png`)
   }
 
-  const outputs = await comfy.run(renderWorkflow(await loadWorkflow(workflow), values))
+  const outputs = await comfy.run(imageGraph(await loadWorkflow(workflow), plan, references.length, values))
   await mkdir(dirname(request.output), { recursive: true })
   const upscaled = nativeWidth !== width || nativeHeight !== height
   if (upscaled) {
@@ -115,7 +167,7 @@ export async function generateImage(
     seconds: (Date.now() - started) / 1000,
     width,
     height,
-    detail: { nativeSize: `${nativeWidth}x${nativeHeight}`, upscaled, references: references.length },
+    detail: { model: plan.model, nativeSize: `${nativeWidth}x${nativeHeight}`, upscaled, references: references.length },
   }
 }
 
