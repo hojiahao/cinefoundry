@@ -64,11 +64,10 @@ A crew of AI agents — creative director, screenwriter, director of photography
 
 ```bash
 git clone https://github.com/hojiahao/cinefoundry.git && cd cinefoundry
-npm install && npm run build && npm test
-
-HF_ENDPOINT=https://hf-mirror.com scripts/download-models.sh   # weights, resumable
-scripts/spark-up.sh                                            # Nemotron, Step3-VL and ComfyUI, with a self-check
+scripts/install.sh            # checks the machine, installs, downloads and verifies every weight (sha256), builds the voice library, starts the stack
 ```
+
+`scripts/install.sh --check` reports what is missing without changing anything; every option is in [docs/install.md](docs/install.md).
 
 One command per format:
 
