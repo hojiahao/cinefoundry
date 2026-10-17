@@ -94,7 +94,8 @@ const CONTAINER_WORDS = ['罐', '瓶']
 // 回弹 is left out: skin and foam rebound too.
 const KEYBOARD_WORDS = /[青红茶黑银]轴|轴体|键帽|键程|按键手感/
 const KEYBOARD_PRODUCT = /keyboard|keycap|键盘|键帽/i
-const CANNED_DRINK = /\bcans?\b|bottle|水|饮|汽|气泡|啤酒|可乐|茶|juice|soda|water|drink|beverage|beer|cola|tea/i
+// Drinks by name, not by a character: a bare 水 matched 香水 (perfume) and a bare "bottle" matched a perfume's glass bottle.
+const CANNED_DRINK = /\bcans?\b|汽水|气泡|矿泉水|苏打水|饮|啤酒|可乐|茶|咖啡|果汁|juice|soda|sparkling water|mineral water|drink|beverage|beer|cola|\btea\b|coffee/i
 
 // Everything a caption may contain: CJK, Latin letters, digits and ordinary punctuation. Anything else
 // (emoji, replacement characters, stray symbols, other scripts) is how garbage reaches the screen.
@@ -343,8 +344,8 @@ export const sanitizeStyle = (style: string) =>
  * `computing` (computers, workstations, servers, GPUs) is lit like `electronics` but sold on what it runs,
  * not on how it feels: under `electronics` a desktop AI computer got keyboard copy ("青轴响亮").
  */
-export type Industry = 'computing' | 'electronics' | 'drink' | 'skincare' | 'food' | 'general'
-export const INDUSTRIES: Industry[] = ['computing', 'electronics', 'drink', 'skincare', 'food', 'general']
+export type Industry = 'computing' | 'electronics' | 'automotive' | 'fragrance' | 'drink' | 'skincare' | 'food' | 'general'
+export const INDUSTRIES: Industry[] = ['computing', 'electronics', 'automotive', 'fragrance', 'drink', 'skincare', 'food', 'general']
 export const LIT_LIKE_ELECTRONICS: Industry[] = ['computing', 'electronics']
 
 /**
@@ -354,7 +355,10 @@ export const LIT_LIKE_ELECTRONICS: Industry[] = ['computing', 'electronics']
 export function industryOf(text: string): Industry {
   if (/\b(computers?|mini[- ]?PCs?|PCs?|laptops?|workstations?|servers?|supercomputers?|GPUs?|AI (box|system|appliance))\b|电脑|计算机|主机|服务器|工作站|显卡|超算|超级计算机|笔记本电脑/i.test(text)) return 'computing'
   if (/\b(keyboards?|mouse|mice|headphones?|earbuds?|earphones?|phones?|smartphones?|laptops?|tablets?|cameras?|smartwatch(es)?|watch(es)?|speakers?|chargers?|monitors?|consoles?|routers?|drones?|projectors?)\b|键盘|鼠标|耳机|手机|平板|相机|手表|音箱|充电|显示器|路由器|无人机|投影仪/i.test(text)) return 'electronics'
-  if (/\b(cans?|bottles?|soda|drinks?|beverages?|water|beer|cola|tea|coffee|juice|milk)\b|饮料|饮品|汽水|气泡水|矿泉水|啤酒|可乐|茶(?!几|具|台|杯)|咖啡|果汁|牛奶|酸奶/i.test(text)) return 'drink'
+  if (/\b(cars?|sedans?|coupes?|SUVs?|grand[- ]tourers?|roadsters?|vehicles?|automobiles?|hatchbacks?|wagons?)\b|汽车|轿车|跑车|越野车|旅行车|车型|座驾/i.test(text)) return 'automotive'
+  // Before drinks: a perfume comes in a bottle and 香水 contains 水.
+  if (/\b(perfumes?|fragrances?|colognes?|eau de (parfum|toilette)|parfums?)\b|香水|香氛|古龙水|淡香精|淡香水/i.test(text)) return 'fragrance'
+  if (/\b(cans?|soda|drinks?|beverages?|water|beer|cola|tea|coffee|juice|milk)\b|饮料|饮品|汽水|气泡水|矿泉水|啤酒|可乐|茶(?!几|具|台|杯)|咖啡|果汁|牛奶|酸奶/i.test(text)) return 'drink'
   if (/\b(creams?|serums?|lotions?|skincare|cosmetics?|lipsticks?)\b|面霜|精华|乳液|护肤|口红|化妆品/i.test(text)) return 'skincare'
   if (/\b(snacks?|chocolates?|biscuits?|cakes?|noodles?|rice|sauces?)\b|零食|巧克力|饼干|蛋糕|面条|方便面|拉面|意面|挂面|面包|米饭|大米|米粉|酱料|辣酱/i.test(text)) return 'food'
   return 'general'
@@ -373,6 +377,10 @@ const INDUSTRY_ANCHOR: Record<Industry, string> = {
   // "Cool rim light" turned a gold DGX Spark blue: the image and video models read cool as blue and spread it over the whole metal body.
   computing: 'Premium computer commercial photography: dark studio, soft warm golden key light and rim light along the edges, at most a faint green accent far in the background, reflective dark tabletop, shallow depth of field so any small printed legends fall softly out of focus, no blue or cyan light, no neon, no rainbow lighting',
   electronics: ELECTRONICS_ANCHOR,
+  // How the great car spots are lit: long raking light that draws the body lines, the world reflected across the paint.
+  automotive: 'Premium automotive commercial cinematography: low raking light drawing a long highlight along the body lines, sky and road reflected cleanly across the paint, golden-hour or blue-hour exterior, wet asphalt sheen, long-lens compression that honours the proportions, controlled highlights on chrome and glass, the whole car undistorted and true to its design',
+  // How fragrance films are lit: one sculpted light through the glass, refraction and facets, the juice glowing.
+  fragrance: 'Luxury fragrance commercial cinematography: one sculpted key light passing through the glass, caustic refractions and light catching every facet, the liquid glowing where the light passes through, deep velvety shadows, rich materials such as dark stone, silk and still water, a slow drift of haze, shallow depth of field',
   drink: 'High-end beverage commercial cinematography: strong backlight and a hard edge light carving the silhouette, crisp condensation beads with tiny specular highlights, liquid glowing where the light passes through, deep controlled shadows, clean gradient backdrop, shallow depth of field with smooth round bokeh',
   skincare: 'Luxury skincare commercial cinematography: large soft wrap-around key light, gentle highlight roll-off along the jar, pale stone, glass and silk surfaces, rich creamy texture detail, airy low-contrast palette, shallow depth of field',
   food: 'Premium food commercial cinematography: warm low side light raking across the texture, backlit steam, rich true-to-life colour, appetising micro-detail, dark natural surface, shallow depth of field',
@@ -393,7 +401,9 @@ const NO_TEXT = 'No captions, no subtitles, no slogans, no watermark, no numbers
 /** The hero still that every shot is anchored to. */
 export function composeProductPrompt(storyboard: Storyboard, industry: Industry = 'general', brandText?: string): string {
   // "Stands upright" is right for a can and wrong for a keyboard: the hero once showed a keyboard on its end, and the end card inherited it.
-  const pose = LIT_LIKE_ELECTRONICS.includes(industry)
+  const pose = industry === 'automotive'
+    ? 'The car stands on a seamless studio floor in a three-quarter front view, the whole car in frame with room around it, wheels turned slightly toward camera'
+    : LIT_LIKE_ELECTRONICS.includes(industry)
     ? 'The product rests flat in its natural working position, seen from a slightly elevated three-quarter angle, centred and fully visible, on a seamless dark backdrop with a cool rim light. Apart from its one small badge it carries no other words, logos or brand names anywhere'
     : 'The product stands upright, centred, fully visible, on a seamless neutral backdrop with soft even light'
   return `Studio product photograph of ${storyboard.product.trim().replace(/[.。]$/, '')}. ${pose}. ${brandText ? `The only lettering anywhere in the picture is the label "${brandText}", written once, exactly like that, with no other words, slogans, claims or quotation marks. ` : ''}${NO_TEXT}. ${sanitizeStyle(storyboard.style)}`
@@ -403,6 +413,8 @@ export function composeProductPrompt(storyboard: Storyboard, industry: Industry 
 const VIDEO_ANCHOR: Record<Industry, string> = {
   computing: 'The light stays soft warm gold for the whole clip, with at most a faint green accent in the background: no blue or cyan glow, no glowing edges or LED strips, no colour cycling, no flashing. The product keeps its own colours and stays exactly where it is',
   electronics: 'The lighting keeps its one cool colour for the whole clip: no colour cycling, no rainbow, no flashing. The product stays exactly where it is',
+  automotive: 'The car keeps its exact body shape, proportions, wheels, lights and badge for the whole clip; the wheels turn at the speed the car moves; reflections slide naturally along the paint; the body never bends or morphs',
+  fragrance: 'The bottle keeps its exact shape, facets, cap and label; only light, haze and liquid move',
   drink: 'The container keeps its shape and label; liquid and light move, the product does not deform',
   skincare: 'Slow and quiet; the jar keeps its shape and label',
   food: 'Steam and light move; the pack keeps its shape and print',
@@ -413,6 +425,8 @@ const VIDEO_ANCHOR: Record<Industry, string> = {
 const VIDEO_NEGATIVE_EXTRA: Record<Industry, string> = {
   computing: 'blue light, blue tint, cyan glow, neon edge light, glowing LED strip, rainbow lighting, RGB colour cycling, colour changing light, multicoloured glow, flashing, duplicated product, ghost copy, transparent overlay, second computer',
   electronics: 'rainbow lighting, RGB colour cycling, colour changing light, multicoloured glow, flashing, duplicated product, ghost copy, transparent overlay, second keyboard',
+  automotive: 'warped body panels, melting car, bending body, extra wheels, wheels not turning, wobbling wheels, sliding car, distorted headlights, duplicated car, floating car, cartoon car',
+  fragrance: 'duplicated bottle, melting glass, warped facets, bending bottle, extra cap, spilling',
   drink: 'duplicated product, second can, melting label',
   skincare: 'duplicated product, opening lid, spilling',
   food: 'duplicated product',

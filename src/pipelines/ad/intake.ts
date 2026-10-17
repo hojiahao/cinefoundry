@@ -26,7 +26,7 @@ Return JSON only:
 {"id": "lowercase-dashed-project-id", "title": "short Chinese title", "product": "what is being advertised", "category": "general|food|health_food|cosmetics|medical",
  "audience": "...", "message": "the one thing the viewer should remember, in Chinese", "ratio": "9:16|16:9|1:1", "durationSeconds": 30,
  "tone": "tone and visual style in English", "brandText": "the lettering actually printed on the product, copied exactly: at most 4 common Chinese characters or 12 Latin letters; never an abbreviation or model name that is not printed on it",
- "industry": "computing|electronics|drink|skincare|food|general: how this product is shot and sold (a computer, workstation, server or GPU is computing; a keyboard, earphones or a phone is electronics)",
+ "industry": "computing|electronics|automotive|fragrance|drink|skincare|food|general: how this product is shot and sold (a computer, workstation, server or GPU is computing; earphones, a phone or a camera is electronics; a car is automotive; a perfume is fragrance)",
  "tagline": "the closing line the request quotes for the end card (after 字幕/口号/广告语/slogan), copied character for character in the request's language; empty if the request quotes none",
  "appearance": "the product's look copied word for word from the request (container, material, colours, label); empty if the request says nothing about it"}`,
     },

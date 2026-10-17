@@ -24,16 +24,17 @@ The client's request, in their own words:
 ${ctx.request}
 
 Format: ${episodes} episode(s) of ${ctx.episodeSeconds} seconds, ${ctx.ratio}. Every shot is 5 seconds; characters speak English on screen (lip-synced), with Chinese subtitles.
+Characters the client names keep exactly those names: "name" is the English (pinyin) form, then the client's own Chinese, e.g. "Lin Xia / 林夏". List the names the client wrote in "clientNames".
 Return JSON only:
-{"id": "lowercase-dashed-project-id", "title": "short Chinese title", "logline": "中文", "genre": "English", "world": "English, words only", "look": "English, words only: light, palette, texture",
+{"id": "lowercase-dashed-project-id", "title": "short Chinese title", "clientNames": ["names exactly as the request writes them"], "logline": "中文", "genre": "English", "world": "English, words only", "look": "English, words only: light, palette, texture",
  "characters": [{"id": "mia", "name": "Mia / 米娅", "role": "lead", "age": 28, "gender": "female", "look": "English", "wardrobe": "English", "arc": "中文", "voice": "English"}],
  "episodes": [{"episode": 1, "title": "中文", "synopsis": "中文", "hook": "中文", "cliffhanger": "中文"}]}`,
     },
-    (value) => checkBible(value, { episodes }),
+    (value) => checkBible(value, { episodes, request: ctx.request }),
     5,
   )
-  failIfHardProblems('development', checkBible(run.value, { episodes }), run.attempts)
-  const { id: modelId, title, ...bible } = run.value
+  failIfHardProblems('development', checkBible(run.value, { episodes, request: ctx.request }), run.attempts)
+  const { id: modelId, title, clientNames: _names, ...bible } = run.value as SeriesBible & { id?: string; title?: string; clientNames?: string[] }
   const id = ctx.options.id ?? (modelId && /^[a-z0-9][a-z0-9-]{0,40}$/.test(modelId) ? modelId : `${ctx.format}-${Date.now().toString(36)}`)
   const dir = await ctx.openProject({ id, title: title ?? bible.logline.slice(0, 20), ratio: ctx.ratio, durationSeconds: ctx.episodeSeconds })
   ctx.bible = bible

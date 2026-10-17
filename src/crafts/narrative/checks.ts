@@ -12,8 +12,18 @@ const DIALOGUE_FRAMINGS = ['medium', 'close-up', 'over-the-shoulder', 'medium cl
 const words = (text: string) => text.trim().split(/\s+/).filter(Boolean).length
 const zhLength = (text: string) => [...text.replace(/\s/g, '')].length
 
-export function checkBible(bible: SeriesBible, want: { episodes: number; maxCharacters?: number }): string[] {
+export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want: { episodes: number; maxCharacters?: number; request?: string }): string[] {
   const problems: string[] = []
+  // A name the client wrote is theirs: "林夏" came back as "Mia / 米娅". Every name listed must be in the request, and
+  // every listed name must be a character's name exactly as written.
+  if (want.request !== undefined) {
+    const names = Array.isArray(bible.clientNames) ? bible.clientNames : []
+    if (!Array.isArray(bible.clientNames)) problems.push('"clientNames" must list the character names the request gives (an empty list if it gives none)')
+    for (const name of names) {
+      if (!want.request.includes(name)) problems.push(`clientNames: "${name}" is not written in the request; list only names the client wrote, exactly`)
+      else if (!(bible.characters ?? []).some((c) => c.name?.includes(name))) problems.push(`the client named a character "${name}": that character keeps the name exactly (e.g. "Lin Xia / ${name}"), not a new one`)
+    }
+  }
   for (const key of ['logline', 'genre', 'world', 'look'] as const) if (!bible[key]?.trim()) problems.push(`${key} is empty`)
   for (const key of ['world', 'look'] as const) {
     if (DIGIT.test(bible[key] ?? '')) problems.push(`${key} must be words only (no numbers): it prompts the image model`)

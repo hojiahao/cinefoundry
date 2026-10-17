@@ -39,6 +39,8 @@ let photoLetteringReply = '拾豆'
 beforeAll(async () => {
   // The casting library on this machine must not decide what the fake creative director may cast.
   process.env.CINEFOUNDRY_VOICE_LIBRARY = join(tmpdir(), 'no-voice-library.json')
+  // The fake ComfyUI holds no weights: do not walk the machine's model folder at every phase.
+  process.env.CINEFOUNDRY_RELEASE_CACHE = '0'
   comfy = await startFakeComfy()
   llm = createServer((request, response) => {
     const chunks: Buffer[] = []

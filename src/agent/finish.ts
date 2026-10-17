@@ -5,7 +5,7 @@ import { generateMusic, mixSoundtrack, synthesizeVoices } from '../lib/audio.js'
 import { existsSync } from 'node:fs'
 import { assembleFilm, clipStart, filmLength, fontCovers, GRADES, stillToClip } from '../lib/ffmpeg.js'
 import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
-import { memoryStatus } from '../lib/memory.js'
+import { memoryStatus, modelRoots, releaseFileCache } from '../lib/memory.js'
 import { buildAss } from '../lib/titles.js'
 import { industryOf, type Brief, type Script, type Storyboard } from './checks.js'
 import type { Treatment } from '../crafts/treatment.js'
@@ -33,8 +33,10 @@ export type Recorder = (stage: 'run' | 'cut', agent: string, endpoint: undefined
 export async function enterPhase(comfy: ComfyClient, phase: string, record: Recorder): Promise<void> {
   const before = await memoryStatus()
   await comfy.free()
+  // Weights already loaded stay in the page cache, which CUDA on DGX Spark cannot allocate from: release them too.
+  const cache = await releaseFileCache(modelRoots())
   await new Promise((resolve) => setTimeout(resolve, 3000))
-  await record('run', 'scheduler', undefined, { phase, availableBeforeGb: before.availableGb, availableAfterFreeGb: (await memoryStatus()).availableGb })
+  await record('run', 'scheduler', undefined, { phase, availableBeforeGb: before.availableGb, availableAfterFreeGb: (await memoryStatus()).availableGb, freeBeforeCacheReleaseGb: cache.freeBeforeGb, freeAfterCacheReleaseGb: cache.freeAfterGb })
 }
 
 export interface FinishInput {

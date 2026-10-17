@@ -101,6 +101,10 @@ export const filmLength = (durations: number[], overlaps: number | number[]) => 
 /** Picture looks, applied to the whole joined film so shots from different generations read as one. Kept restrained. */
 export const GRADES: Record<string, string> = {
   neutral: 'eq=contrast=1.05:saturation=1.04:gamma=0.99,unsharp=3:3:0.25:3:3:0.0,noise=alls=3:allf=t+u,vignette=PI/6',
+  // Automotive: deep clean blacks, crisp metal, cool shadows against warm highlights - the paint reads expensive.
+  automotive: 'eq=contrast=1.09:saturation=1.0:gamma=0.97,colorbalance=bs=0.025:gs=0.005:rh=0.02:gh=0.005,unsharp=3:3:0.3:3:3:0.0,noise=alls=2:allf=t+u,vignette=PI/5.5',
+  // Fragrance: rich and sculpted, amber in the highlights, velvety shadows, gentle bloom, no sharpening.
+  fragrance: 'eq=contrast=1.07:saturation=0.98:gamma=0.99,colorbalance=rh=0.03:gh=0.01:bh=-0.02:bs=0.01,curves=all=0/0 0.85/0.83 1/0.97,noise=alls=3:allf=t+u,vignette=PI/5.5',
   // Drama: filmic and restrained - gentle contrast, slightly held-back saturation, warm skin, soft highlight roll-off, grain.
   drama: 'eq=contrast=1.04:saturation=0.94:gamma=1.0,colorbalance=rs=0.015:gs=0.005:bs=-0.01:bh=0.01,curves=all=0/0 0.85/0.82 1/0.96,noise=alls=4:allf=t+u,vignette=PI/6',
   // Drinks: clean and cool in the highlights, crisp; keep whites white.
