@@ -4,7 +4,7 @@ import { chatJson } from '../../agent/llm.js'
 import { failIfHardProblems } from '../repair.js'
 import { scanCopy } from '../../lib/compliance.js'
 import { EN_ABSOLUTES } from '../../agent/checks.js'
-import { checkBible, checkScreenplay, checkShots } from './checks.js'
+import { checkBible, checkScreenplay, checkShots, maxZhChars } from './checks.js'
 import { produced, type NarrativeContext } from './context.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
@@ -59,6 +59,29 @@ Return JSON only:
   return `${bible.characters.length} characters · ${bible.episodes.length} episodes`
 }
 
+/** Chinese subtitles use a space where prose uses a comma or a full stop (Netflix Simplified Chinese style guide). */
+export const normalizeSubtitle = (zh: string) => zh.replace(/[，,、；;。.！!]+/g, ' ').replace(/\s+/g, ' ').trim()
+
+/**
+ * The subtitle editor: punctuation normalised, then every subtitle still longer than the frame's line width is
+ * tightened by an agent working under bilingual-subtitles, keeping the meaning of the English line it translates.
+ */
+export async function fitSubtitles(ctx: NarrativeContext, play: Screenplay): Promise<Screenplay> {
+  const max = maxZhChars(ctx.ratio)
+  let fitted: Screenplay = { ...play, scenes: play.scenes.map((s) => ({ ...s, lines: s.lines.map((l) => ({ ...l, zh: normalizeSubtitle(l.zh ?? '') })) })) }
+  const long = () => fitted.scenes.flatMap((s) => s.lines.map((l, n) => ({ scene: s.scene, line: n + 1, en: l.en, zh: l.zh }))).filter((l) => [...l.zh.replace(/\s/g, '')].length > max)
+  const tooLong = long()
+  if (!tooLong.length) return fitted
+  ctx.log(`  subtitle editor: ${tooLong.length} subtitle(s) over ${max} characters`)
+  const run = await chatJson<{ subtitles: Array<{ scene: number; line: number; zh: string }> }>(ctx.planner, {
+    system: await ctx.agentPrompt('subtitle editor', 'bilingual-subtitles'), thinking: false, maxTokens: 1500, temperature: 0.3,
+    user: `Tighten each Chinese subtitle to at most ${max} characters (spaces do not count; no commas or full stops - use a space), keeping what the English line says and how the character says it:\n${tooLong.map((l) => `${l.scene}.${l.line} EN: ${l.en}\n${l.scene}.${l.line} ZH (${[...l.zh.replace(/\s/g, '')].length}): ${l.zh}`).join('\n')}\nReturn JSON only: {"subtitles": [{"scene": 1, "line": 1, "zh": "..."}]}`,
+  }, (r) => (Array.isArray(r.subtitles) ? r.subtitles.flatMap((x) => (!x.zh?.trim() ? [`${x.scene}.${x.line} is empty`] : [...normalizeSubtitle(x.zh).replace(/\s/g, '')].length > max ? [`${x.scene}.${x.line} "${x.zh}" is still over ${max} characters`] : [])).concat(tooLong.filter((t) => !r.subtitles.some((x) => x.scene === t.scene && x.line === t.line)).map((t) => `return ${t.scene}.${t.line} too`)) : ['"subtitles" must be an array']), 4).catch(() => undefined)
+  if (run) fitted = { ...fitted, scenes: fitted.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const fix = run.value.subtitles.find((x) => x.scene === s.scene && x.line === n + 1); return fix ? { ...l, zh: normalizeSubtitle(fix.zh) } : l }) })) }
+  await ctx.record('screenplay', 'subtitle-editor', ctx.planner, { episode: play.episode, tightened: tooLong.length, left: long().length })
+  return fitted
+}
+
 /** Screenplay: one per produced episode, written against the bible; every line fits one shot and carries its subtitle. */
 export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
@@ -81,8 +104,10 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
       (value) => checkScreenplay(value, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio }),
       6,
     )
-    failIfHardProblems(`screenplay ${episode}`, checkScreenplay(run.value, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio }), run.attempts)
-    const play = { ...run.value, episode }
+    // Subtitles are the subtitle editor's craft, not a reason to throw the screenplay away: punctuation is normalised by
+    // rule, and only the lines still too long go to a subtitle editor to tighten.
+    const play = await fitSubtitles(ctx, { ...run.value, episode })
+    failIfHardProblems(`screenplay ${episode}`, checkScreenplay(play, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio }), run.attempts)
     ctx.plays.push(play)
     await writeFile(join(ctx.dir!, 'story', `ep${String(episode).padStart(2, '0')}.screenplay.json`), json(play))
     await ctx.record('screenplay', 'screenwriter', ctx.planner, { episode, seconds: run.seconds, attempts: run.attempts, scenes: play.scenes.length, lines: play.scenes.reduce((n, s) => n + s.lines.length, 0) })

@@ -150,3 +150,12 @@ describe('scene-by-scene shot allocation', () => {
     expect(() => allocateShots(play([5, 5], ['x', 'y']), 10)).toThrow(/12 shots are needed/)
   })
 })
+
+import { normalizeSubtitle } from '../src/crafts/narrative/writing.js'
+
+describe('subtitle editor', () => {
+  it('replaces commas and full stops with a space, as Chinese subtitles are set', () => {
+    expect(normalizeSubtitle('你还是这么毛手毛脚，一点没变。')).toBe('你还是这么毛手毛脚 一点没变')
+    expect(normalizeSubtitle('等等！别走')).toBe('等等 别走')
+  })
+})
