@@ -61,7 +61,7 @@ services:
   nemotron-super:
     <<: *gpu
     profiles: ["super"]
-    image: vllm/vllm-openai:${VLLM_SUPER_TAG:-v0.32.0}
+    image: vllm/vllm-openai:${VLLM_SUPER_TAG:-nightly-3f1bcfd82bb2e93fcd364fc7a5491718453a77e2}
     environment:
       HF_HUB_OFFLINE: "1"
       VLLM_SERVER_DEV_MODE: "1"

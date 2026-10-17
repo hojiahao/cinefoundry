@@ -50,7 +50,7 @@ A crew of AI agents — creative director, screenwriter, director of photography
 ## How it works
 
 <p align="center">
-  <img src="docs/assets/architecture.png" alt="Cinefoundry architecture: one agent engine, a pipeline per format, crafts, role skills and gates, local models on one DGX Spark" width="960">
+  <img src="docs/assets/cinefoundry-architecture.png" alt="Cinefoundry architecture: one agent engine, a pipeline per format, crafts, role skills and gates, local models on one DGX Spark" width="960">
 </p>
 
 - **One engine, many formats.** The Cinefoundry Engine (`src/engine`) owns what every production needs: preflight, the one-film-at-a-time lock, stage status on the studio board, the run log, agent prompts, model scheduling and failure handling. A format is a pipeline (`src/pipelines/ad`, `short`, `drama`): an ordered list of stages, each run by an agent under its skills.

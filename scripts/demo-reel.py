@@ -291,7 +291,7 @@ def card_evidence(path: Path) -> None:
 
 def card_closing(path: Path) -> None:
     image, draw = new_card()
-    arch = ROOT / 'docs/assets/architecture.png'
+    arch = ROOT / 'docs/assets/cinefoundry-architecture.png'
     if arch.exists():
         picture = fit(Image.open(arch).convert('RGB'), (900, 820))
         image.paste(picture, (120, 130))

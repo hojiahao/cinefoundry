@@ -50,7 +50,7 @@
 ## 工作原理
 
 <p align="center">
-  <img src="docs/assets/architecture.zh-CN.png" alt="影工坊架构：一个智能体引擎、每种片型一条流水线、工艺层、岗位 Skill 与质检门、DGX Spark 上的本地模型" width="960">
+  <img src="docs/assets/cinefoundry-architecture.zh-CN.png" alt="影工坊架构：一个智能体引擎、每种片型一条流水线、工艺层、岗位 Skill 与质检门、DGX Spark 上的本地模型" width="960">
 </p>
 
 - **一个引擎，多种片型。** 影工坊引擎（`src/engine`）负责每一部片都需要的事：启动前检查、一次只拍一部的运行锁、工作台上的阶段状态、运行记录、智能体提示词、模型调度与失败处理。每种片型是一条流水线（`src/pipelines/ad`、`short`、`drama`）：一串有序的阶段，每个阶段交给加载了对应 Skill 的智能体。
