@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { env } from '../lib/config.js'
 import { INTERPOLATION_MODEL, VIDEO_MODELS } from '../lib/media.js'
 import { REPO_ROOT } from './manifest.js'
 
@@ -16,7 +17,7 @@ export const LOADER_FOLDERS: Record<string, string> = {
 
 type Graph = Record<string, { class_type?: string; inputs?: Record<string, unknown> } | string>
 
-export const workflowDir = () => process.env.CINEFOUNDRY_WORKFLOWS ?? join(REPO_ROOT, 'workflows')
+export const workflowDir = () => env('CINEFOUNDRY_WORKFLOWS') ?? join(REPO_ROOT, 'workflows')
 
 export function loadWorkflows(dir = workflowDir()): Record<string, Graph> {
   return Object.fromEntries(readdirSync(dir).filter((name) => name.endsWith('.json')).sort().map((name) => [name.replace(/\.json$/, ''), JSON.parse(readFileSync(join(dir, name), 'utf8')) as Graph]))

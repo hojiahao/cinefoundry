@@ -79,8 +79,8 @@
     {
       "id": "skills",
       "type": "frontend",
-      "label": "Agent Skills · 25 个岗位",
-      "sublabel": "制片 7 · 编剧 5 · 视觉 5 · 声音 2 · 后期 5 · 研究 1",
+      "label": "Agent Skills · 26 个岗位",
+      "sublabel": "制片 8 · 编剧 5 · 视觉 5 · 声音 2 · 后期 5 · 研究 1",
       "pos": [
         20,
         150
@@ -1095,7 +1095,7 @@
       "dot": "violet",
       "title": "智能体技能（metadata.category）",
       "items": [
-        "制片 7：cinefoundry-ad-film、cinefoundry-short-video、cinefoundry-micro-drama、ad-brief-intake、ad-compliance-review、content-compliance、spark-model-scheduler",
+        "制片 8：cinefoundry-ad-film、cinefoundry-short-video、cinefoundry-micro-drama、ad-brief-intake、brand-kit、ad-compliance-review、content-compliance、spark-model-scheduler",
         "编剧 5：creative-direction、ad-script-writing、series-development、screenwriting、short-video-scripting",
         "视觉 5：storyboard-design、cinematography-and-art-direction、character-and-continuity、spark-local-media-generation、shot-quality-gate",
         "声音 2：dialogue-and-voice、sound-design-and-music",

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { env } from './config.js'
 
 export interface ExecResult {
   stdout: string
@@ -8,7 +9,7 @@ export interface ExecResult {
 
 /** Run a program to completion. Rejects on a non-zero exit unless `allowFailure` is set. */
 /** No child runs forever: a hung ffmpeg or a stuck container used to hang the harness for good. */
-const DEFAULT_TIMEOUT_MS = Number(process.env.CINEFOUNDRY_EXEC_TIMEOUT_MS) || 45 * 60 * 1000
+const DEFAULT_TIMEOUT_MS = Number(env('CINEFOUNDRY_EXEC_TIMEOUT_MS')) || 45 * 60 * 1000
 
 export function exec(command: string, args: string[], options: { allowFailure?: boolean; timeoutMs?: number; env?: NodeJS.ProcessEnv; cwd?: string } = {}): Promise<ExecResult> {
   return new Promise((resolve, reject) => {

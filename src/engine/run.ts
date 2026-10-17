@@ -16,8 +16,6 @@ export interface EngineOptions {
   log?: (line: string) => void
 }
 
-export type OpenProject = EngineContext['openProject']
-
 /**
  * Runs a pipeline: preflight, the one-film-at-a-time lock, then every stage in order. The engine keeps the studio
  * board truthful - a stage is marked running before it starts and done (with its note) after - and when a run throws
@@ -51,7 +49,7 @@ export async function runPipeline<O extends EngineOptions, C extends EngineConte
       if (slept.length) await engine.record('run', 'scheduler', undefined, { phase, sleeping: slept, availableAfterSleepGb: (await memoryStatus()).availableGb })
     },
     openProject: async ({ id, title, ratio, durationSeconds }) => {
-      await createProject({ id, title, brief: options.brief, ratio, durationSeconds, runId, format: pipeline.id, stages: pipeline.stages.flatMap((s) => [s.id, ...(s.alsoMarks ?? [])]), folders: pipeline.folders })
+      await createProject({ id, title, brief: options.brief, ratio, durationSeconds, runId, format: pipeline.id, stages: pipeline.stages.flatMap((s) => [s.id, ...(s.alsoMarks ?? []).map((m) => m.id)]), folders: pipeline.folders })
       engine.projectId = id
       engine.dir = projectDir(id)
       current = { id }
@@ -82,10 +80,10 @@ export async function runPipeline<O extends EngineOptions, C extends EngineConte
     const ctx = await pipeline.init(options, engine)
     for (const stage of pipeline.stages) {
       if (stage.when && !stage.when(ctx)) continue
-      for (const id of [stage.id, ...(stage.alsoMarks ?? [])]) await mark(id, 'running')
+      for (const id of [stage.id, ...(stage.alsoMarks ?? []).map((m) => m.id)]) await mark(id, 'running')
       const note = await stage.run(ctx)
       // The stage that opened the project could not mark itself running; it is done now all the same.
-      for (const id of [stage.id, ...(stage.alsoMarks ?? [])]) await mark(id, 'done', note ?? undefined)
+      for (const id of [stage.id, ...(stage.alsoMarks ?? []).map((m) => m.id)]) await mark(id, 'done', note ?? undefined)
     }
     return await pipeline.finish(ctx)
   } catch (error) {

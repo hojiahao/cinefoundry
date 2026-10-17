@@ -1,4 +1,5 @@
 import type { WorkflowGraph } from './workflow.js'
+import { env } from '../lib/config.js'
 
 export interface ComfyOutputFile {
   filename: string
@@ -13,7 +14,7 @@ export class ComfyClient {
   private readonly baseUrl: string
 
   constructor(
-    baseUrl = process.env.COMFYUI_URL ?? 'http://127.0.0.1:8188',
+    baseUrl = env('COMFYUI_URL')!,
     private readonly timeoutMs = 3_600_000,
     private readonly pollMs = 1_000,
   ) {

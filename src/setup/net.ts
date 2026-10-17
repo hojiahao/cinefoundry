@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { env } from '../lib/config.js'
 import { exec } from '../lib/exec.js'
 import { hfEndpoint, modelRoot } from './manifest.js'
 
@@ -19,9 +20,11 @@ export interface NetConfig {
 const PROXY_VARS = ['http_proxy', 'https_proxy', 'all_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY']
 
 /** The Hugging Face token: HF_TOKEN, else the token file of HF_HOME, the model root's hf/ cache, or ~/.cache/huggingface. */
-export function findToken(env: Record<string, string | undefined> = process.env): string | undefined {
-  if (env.HF_TOKEN?.trim()) return env.HF_TOKEN.trim()
-  const candidates = [env.HF_HOME && join(env.HF_HOME, 'token'), join(modelRoot(env), 'hf', 'token'), join(homedir(), '.cache', 'huggingface', 'token')]
+export function findToken(source: Record<string, string | undefined> = process.env): string | undefined {
+  const token = env('HF_TOKEN', source)?.trim()
+  if (token) return token
+  const home = env('HF_HOME', source)
+  const candidates = [home && join(home, 'token'), join(modelRoot(source), 'hf', 'token'), join(homedir(), '.cache', 'huggingface', 'token')]
   for (const path of candidates) if (path && existsSync(path)) {
     const token = readFileSync(path, 'utf8').trim()
     if (token) return token
@@ -29,8 +32,8 @@ export function findToken(env: Record<string, string | undefined> = process.env)
   return undefined
 }
 
-export function netConfig(env: Record<string, string | undefined> = process.env, override: { proxy?: string } = {}): NetConfig {
-  return { endpoint: hfEndpoint(env), proxy: override.proxy ?? (env.CINEFOUNDRY_PROXY || undefined), token: findToken(env) }
+export function netConfig(source: Record<string, string | undefined> = process.env, override: { proxy?: string } = {}): NetConfig {
+  return { endpoint: hfEndpoint(source), proxy: override.proxy ?? (env('CINEFOUNDRY_PROXY', source) || undefined), token: findToken(source) }
 }
 
 /** Environment for a download child: proxy variables removed when the proxy is disabled or given explicitly. */

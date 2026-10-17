@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { env } from '../lib/config.js'
 import { exec } from '../lib/exec.js'
 import { loadVoiceLibrary, voicesDir } from '../lib/voices.js'
 import { REPO_ROOT } from './manifest.js'
@@ -66,11 +67,14 @@ export function imagePlans(env: Record<string, string>, mirrors: string[]): Imag
   ]
 }
 
-export const registryMirrors = (env: Record<string, string | undefined> = process.env) =>
-  (env.CINEFOUNDRY_REGISTRY_MIRRORS ?? 'docker.m.daocloud.io').split(',').map((mirror) => mirror.trim().replace(/\/+$/, '')).filter(Boolean)
+export const registryMirrors = (source: Record<string, string | undefined> = process.env) =>
+  env('CINEFOUNDRY_REGISTRY_MIRRORS', source)!.split(',').map((mirror) => mirror.trim().replace(/\/+$/, '')).filter(Boolean)
 
 /** GitHub URL through an optional prefix mirror (CINEFOUNDRY_GITHUB_MIRROR, e.g. https://ghfast.top/). */
-export const githubUrl = (url: string, env: Record<string, string | undefined> = process.env) => (env.CINEFOUNDRY_GITHUB_MIRROR ? `${env.CINEFOUNDRY_GITHUB_MIRROR.replace(/\/*$/, '/')}${url}` : url)
+export const githubUrl = (url: string, source: Record<string, string | undefined> = process.env) => {
+  const mirror = env('CINEFOUNDRY_GITHUB_MIRROR', source)
+  return mirror ? `${mirror.replace(/\/*$/, '/')}${url}` : url
+}
 
 /** Commands that put `dir` at exactly `commit` (a shallow fetch of that one commit; a re-run is a no-op). */
 export function checkoutCommands(dir: string, url: string, commit: string): string[][] {

@@ -5,7 +5,7 @@ import { scanCopy } from '../src/lib/compliance.js'
 import { nativeSize, videoSize } from '../src/lib/media.js'
 import { parseMeminfo, planMemory } from '../src/lib/memory.js'
 import { buildShots } from '../src/lib/shots.js'
-import { extractJson } from '../src/lib/vision.js'
+import { extractJson } from '../src/lib/json.js'
 import { checkRepairedPrompt, checkStoryboard, composeImagePrompt, composeVideoNegative, styleConflicts } from '../src/agent/checks.js'
 
 describe('compliance scan', () => {

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { env } from '../lib/config.js'
 
 /**
  * The model manifest (deploy/models.json): every weight file Cinefoundry can load, pinned to an upstream revision and
@@ -63,8 +64,8 @@ export interface Manifest {
 }
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
-export const manifestPath = () => process.env.CINEFOUNDRY_MODEL_MANIFEST ?? join(REPO_ROOT, 'deploy', 'models.json')
-export const modelRoot = (env: Record<string, string | undefined> = process.env) => resolve(env.SPARK_MODEL_DIR || join(homedir(), 'models'))
+export const manifestPath = () => env('CINEFOUNDRY_MODEL_MANIFEST')!
+export const modelRoot = (source: Record<string, string | undefined> = process.env) => resolve(env('SPARK_MODEL_DIR', source) || join(homedir(), 'models'))
 
 export function loadManifest(path = manifestPath()): Manifest {
   const manifest = JSON.parse(readFileSync(path, 'utf8')) as Manifest
@@ -159,7 +160,7 @@ export function downloadUrl(file: ModelFile, endpoint = hfEndpoint()): string {
   return `${endpoint}/${file.source.repo}/resolve/${file.source.revision}/${path}`
 }
 
-export const hfEndpoint = (env: Record<string, string | undefined> = process.env) => (env.HF_ENDPOINT || 'https://huggingface.co').replace(/\/+$/, '')
+export const hfEndpoint = (source: Record<string, string | undefined> = process.env) => (env('HF_ENDPOINT', source) || 'https://huggingface.co').replace(/\/+$/, '')
 
 export const totalBytes = (files: ModelFile[]) => files.reduce((sum, file) => sum + file.size, 0)
 export const gb = (bytes: number) => Math.round((bytes / 1e9) * 10) / 10

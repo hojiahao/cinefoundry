@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { chmod, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { takeRunLock } from '../engine/lock.js'
+import { env } from '../lib/config.js'
 import { exec } from '../lib/exec.js'
 import { memoryStatus } from '../lib/memory.js'
 import { audioWork } from '../lib/speech.js'
@@ -35,8 +36,8 @@ const ARIA2 = {
 }
 
 /** The model root: SPARK_MODEL_DIR from the environment, else from deploy/spark/spark.env (unless still the placeholder), else ~/models. */
-export function resolveModelRoot(env: Record<string, string | undefined> = process.env): string {
-  if (env.SPARK_MODEL_DIR) return modelRoot(env)
+export function resolveModelRoot(source: Record<string, string | undefined> = process.env): string {
+  if (source.SPARK_MODEL_DIR) return modelRoot(source)
   const fromFile = sparkEnv().SPARK_MODEL_DIR
   return modelRoot({ SPARK_MODEL_DIR: fromFile && !fromFile.startsWith('/path/to') ? fromFile : undefined })
 }
@@ -288,7 +289,7 @@ async function ensureSparkEnv(root: string, options: SetupOptions): Promise<void
     return
   }
   const example = await readFile(join(REPO_ROOT, 'deploy', 'spark', 'spark.env.example'), 'utf8')
-  const text = renderSparkEnv(example, { modelDir: root, pipIndex: process.env.PIP_INDEX_URL })
+  const text = renderSparkEnv(example, { modelDir: root, pipIndex: env('PIP_INDEX_URL') })
   if (options.mode === 'install') {
     await writeFile(sparkEnvPath(), text)
     options.log(`  wrote deploy/spark/spark.env (SPARK_MODEL_DIR=${root})`)
@@ -327,7 +328,7 @@ export async function runSetup(options: SetupOptions): Promise<number> {
   const facts = await probePlatform(root, existsSync(ARIA2.bin) ? ARIA2.bin : undefined)
   const checks = assessPlatform(facts, {
     downloadBytes: totalBytes(quick.filter((status) => status.state === 'missing' || status.state === 'partial').map((status) => status.file)),
-    imagesMissing, startGb: Number(process.env.SPARK_REQUIRED_FREE_GB ?? 95), stackRunning,
+    imagesMissing, startGb: Number(env('SPARK_REQUIRED_FREE_GB')), stackRunning,
   })
   printChecks(checks, log)
   if (checks.some((check) => check.fatal)) {

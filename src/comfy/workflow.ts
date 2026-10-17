@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
+import { env } from '../lib/config.js'
 
 export type WorkflowGraph = Record<string, { class_type: string; inputs: Record<string, unknown> }>
 
-const WORKFLOW_DIR = process.env.CINEFOUNDRY_WORKFLOWS ?? join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', 'workflows')
+const WORKFLOW_DIR = env('CINEFOUNDRY_WORKFLOWS')!
 
 export async function loadWorkflow(name: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(join(WORKFLOW_DIR, `${name}.json`), 'utf8')) as Record<string, unknown>

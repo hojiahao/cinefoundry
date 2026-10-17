@@ -18,7 +18,7 @@ export const shortPipeline: PipelineDef<NarrativeOptions, NarrativeContext, Shor
     ...narrativeStages.map((stage) => (stage.id === 'development' ? { ...stage, label: '选题' } : stage)),
     { id: 'packaging', label: '平台包装', when: (ctx) => !ctx.options.planOnly, run: packagingStage },
   ],
-  preflight: (options) => narrativePreflight({ fps: 30, ...options, episodes: 1 }, { maxSeconds: 180, maxEpisodes: 1 }),
+  preflight: async (options) => { options.brandKit = await narrativePreflight({ fps: 30, ...options, episodes: 1 }, { maxSeconds: 180, maxEpisodes: 1 }) },
   init: async (options, engine) => narrativeContext({ fps: 30, ...options, episodes: 1, produce: 1 }, engine, { writer: { role: 'creator-content writer', skill: 'short-video-scripting' }, seconds: 60, ratio: '9:16' }),
   finish: async (ctx) => {
     const wallSeconds = (Date.now() - ctx.started) / 1000

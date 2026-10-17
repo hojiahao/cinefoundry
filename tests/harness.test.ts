@@ -41,6 +41,8 @@ beforeAll(async () => {
   process.env.CINEFOUNDRY_VOICE_LIBRARY = join(tmpdir(), 'no-voice-library.json')
   // The fake ComfyUI holds no weights: do not walk the machine's model folder at every phase.
   process.env.CINEFOUNDRY_RELEASE_CACHE = '0'
+  // Nor wait for memory to settle after freeing it.
+  process.env.CINEFOUNDRY_PHASE_SETTLE_MS = '0'
   comfy = await startFakeComfy()
   llm = createServer((request, response) => {
     const chunks: Buffer[] = []

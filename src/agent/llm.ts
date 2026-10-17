@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { extname } from 'node:path'
-import { extractJson } from '../lib/vision.js'
+import { extractJson } from '../lib/json.js'
 import { ensureAwake } from '../lib/rest.js'
+import { env } from '../lib/config.js'
 
 export interface ModelEndpoint {
   name: string
@@ -18,15 +19,15 @@ export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; 
     // Text review goes to StepFun's hosted Step-3.7-Flash when a key is configured. The local 10B vision
     // model always reasons first at ~18 tok/s and cannot finish a text review inside a request timeout,
     // so without a key a separate Nemotron agent reviews instead.
-    editor: process.env.STEPFUN_API_KEY
-      ? { name: 'step-3.7-flash', baseUrl: 'https://api.stepfun.com/v1', model: process.env.CINEFOUNDRY_EDITOR_MODEL ?? 'step-3.7-flash', apiKey: process.env.STEPFUN_API_KEY, execution: 'cloud' }
+    editor: env('STEPFUN_API_KEY')
+      ? { name: 'step-3.7-flash', baseUrl: 'https://api.stepfun.com/v1', model: env('CINEFOUNDRY_EDITOR_MODEL')!, apiKey: env('STEPFUN_API_KEY')!, execution: 'cloud' }
       : { ...planner, name: 'nemotron-reviewer' },
     planner,
     reviewer: {
       name: 'step3-vl',
-      baseUrl: (process.env.CINEFOUNDRY_VISION_URL ?? 'http://127.0.0.1:8002/v1').replace(/\/+$/, ''),
-      model: process.env.CINEFOUNDRY_VISION_MODEL ?? 'step3-vl-10b',
-      apiKey: process.env.CINEFOUNDRY_VISION_KEY ?? 'local',
+      baseUrl: env('CINEFOUNDRY_VISION_URL')!.replace(/\/+$/, ''),
+      model: env('CINEFOUNDRY_VISION_MODEL')!,
+      apiKey: env('CINEFOUNDRY_VISION_KEY')!,
       execution: 'local-dgx-spark',
     },
   }
@@ -35,9 +36,9 @@ export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; 
 function plannerEndpoint(): ModelEndpoint {
   return {
     name: 'nemotron',
-    baseUrl: (process.env.CINEFOUNDRY_PLANNER_URL ?? 'http://127.0.0.1:8001/v1').replace(/\/+$/, ''),
-    model: process.env.CINEFOUNDRY_PLANNER_MODEL ?? 'nemotron-3.5-lightning',
-    apiKey: process.env.CINEFOUNDRY_PLANNER_KEY ?? 'local',
+    baseUrl: env('CINEFOUNDRY_PLANNER_URL')!.replace(/\/+$/, ''),
+    model: env('CINEFOUNDRY_PLANNER_MODEL')!,
+    apiKey: env('CINEFOUNDRY_PLANNER_KEY')!,
     execution: 'local-dgx-spark',
   }
 }

@@ -108,6 +108,16 @@ With every step complete, the installer runs `scripts/spark-up.sh`, which refuse
 free unified memory, starts Nemotron (:8001), Step3-VL (:8002) and ComfyUI (:8188), and runs `cinefoundry doctor`. If
 the stack is already running, it runs the doctor only.
 
+The installer then prints a first film of each format at its default length (a 30-second ad master, a 60-second
+short, 120-second micro-drama episodes) and the studio:
+
+```bash
+node dist/cli.js ad    "A 30-second film for Misthaven, a woody fragrance in a heavy faceted glass bottle, for women around thirty"
+node dist/cli.js short "A 60-second skit in a specialty coffee bar: a barista talks a regular into trying a natural-process Ethiopian"
+node dist/cli.js drama "A fake-dating romance: to save her late grandmother's perfume shop, a young perfumer signs a three-month contract with the heir buying up the street" --episodes 3 --produce 1
+node dist/cli.js studio    # http://127.0.0.1:3090
+```
+
 `cinefoundry doctor` reports, as JSON, the platform checks, the model files of the installed features (hash-verified by
 the installer; `--verify` hashes them now), the images, the voice library, the services, and every workflow template
 node by node against the running ComfyUI. A missing file of an optional feature that was not installed is a warning.

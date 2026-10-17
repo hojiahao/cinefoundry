@@ -10,6 +10,7 @@ import type { VersionPlan, VersionSpec } from '../../crafts/versions.js'
 import type { VideoModel } from '../../lib/media.js'
 import type { EngineContext } from '../../engine/pipeline.js'
 import type { EngineOptions } from '../../engine/run.js'
+import type { LoadedBrand } from '../../crafts/brand.js'
 
 export interface AdOptions extends EngineOptions {
   id?: string
@@ -38,6 +39,12 @@ export interface AdOptions extends EngineOptions {
   prefetch?: boolean
   /** 'queue' (default): every shot's gate loop runs at once. 'serial': one shot after another, as before. */
   frameScheduling?: 'queue' | 'serial'
+  /** The brand kit (brands/<id>/) the film is made under; checked in preflight, refused when the check fails. */
+  brand?: string
+  /** The kit's product to advertise, by id; by default the one the request names, else the kit's first. */
+  product?: string
+  /** Set by preflight: the checked kit, so the run uses exactly what was checked. */
+  brandKit?: LoadedBrand
 }
 
 export interface AdResult {
@@ -71,6 +78,8 @@ export interface AdContext extends EngineContext {
   jevReview: Array<{ beat: number; line: string; issue: string; probability: number }>
   rejectedAttempts: Record<string, number>
   qaRegenerations: number
+  /** The brand kit, when the film is made under one. */
+  brand?: LoadedBrand
   brief?: Brief
   treatment?: Treatment
   script?: Script

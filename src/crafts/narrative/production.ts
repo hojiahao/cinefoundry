@@ -6,14 +6,15 @@ import { AI_LABEL, TITLE_FONT, enterPhase } from '../../agent/finish.js'
 import type { QaVerdict } from '../../agent/gate.js'
 import { generateMusic } from '../../lib/audio.js'
 import { exec } from '../../lib/exec.js'
-import { GRADES, assembleFilm, probeDuration } from '../../lib/ffmpeg.js'
+import { GRADES, assembleFilm, fontCovers, probeDuration } from '../../lib/ffmpeg.js'
 import { deliverySize, generationResolution } from '../../lib/formats.js'
 import { generateImage, generateVideo, interpolateVideo, interpolationMultiplier, videoFps, videoSize, VIDEO_NEGATIVE } from '../../lib/media.js'
 import { addAsset } from '../../lib/project.js'
 import { audioWork, designVoices, generateSfx, scoreSpeech, speakChecked } from '../../lib/speech.js'
 import { loadVoiceLibrary, voiceReference, voicesDir, type LibraryVoice } from '../../lib/voices.js'
 import { existsSync } from 'node:fs'
-import { buildAss, type TitleCue } from '../../lib/titles.js'
+import { buildAss, endCardLayout, type TitleCue } from '../../lib/titles.js'
+import { brandFinish, brandPackaging, brandVoices, productReference } from '../brand.js'
 import { NARRATIVE_EDIT_MODEL, NARRATIVE_IMAGE_MODEL, castPictures, referencePrompt, saveCharacterRecord, selectReferences } from './casting.js'
 import { produced, key, type NarrativeContext } from './context.js'
 import { loudnessFor, qcOpenItems, qcSummary, runQc, writeQcReport, type QcReport, type QcSpec, type QcVerdict } from '../qc.js'
@@ -42,8 +43,17 @@ export async function castingStage(ctx: NarrativeContext): Promise<string> {
   const library = loadVoiceLibrary()
   const available = library.voices.filter((v) => existsSync(join(voicesDir(), `${v.id}.wav`)))
   const unmatched: Character[] = []
+  // Voices the brand kit designed for its characters come first: the brand's character sounds the same in every film.
+  const kitVoices = ctx.brand ? brandVoices(ctx.brand) : new Map<string, { wav: string; text: string }>()
   for (const character of bible.characters) {
     const member = ctx.cast.get(character.id)
+    const kitVoice = kitVoices.get(character.id)
+    if (kitVoice && existsSync(kitVoice.wav)) {
+      ctx.voices.set(character.id, kitVoice)
+      ctx.log(`▸ voice ${character.id.padEnd(10)} designed voice (${ctx.brand!.id} brand kit)`)
+      await ctx.record('casting', 'voice', undefined, { character: character.id, brandKit: ctx.brand!.id })
+      continue
+    }
     const recorded = member?.record.voice
     if (recorded?.library && available.some((v) => v.id === recorded.library)) {
       ctx.voices.set(character.id, voiceReference(recorded.library))
@@ -101,21 +111,24 @@ export async function narrativeFramesStage(ctx: NarrativeContext): Promise<strin
       const references = selectReferences(shot, ctx.cast)
       const inFrame = castOf(ctx, [...new Set(references.map((r) => r.id))])
       const cast = inFrame.map((character) => ({ character, sheet: ctx.sheets.get(character.id)! }))
-      let prompt = `${shot.image_prompt}. ${scene.heading.replace(/^(INT|EXT)\.\s*/, '')}. ${bible.look}. ${referencePrompt(references, inFrame)} ${REALISM}`
+      // A shot that shows the brand's product takes the kit's photo of it as a reference, if a slot is free.
+      const product = ctx.brand ? productReference(shot, ctx.brand, ctx.brand.product, references.length) : undefined
+      const referencePaths = [...references.map((r) => r.path), ...(product ? [product.path] : [])]
+      let prompt = `${shot.image_prompt}. ${scene.heading.replace(/^(INT|EXT)\.\s*/, '')}. ${bible.look}. ${referencePrompt(references, inFrame)}${product ? ` ${product.prompt}` : ''} ${REALISM}`
       let best: { path: string; verdict: QaVerdict } | undefined
       const tries = Math.max(1, ctx.options.candidates ?? 2) + 1
       for (let attempt = 0; attempt < tries && !best?.verdict.pass; attempt++) {
         const path = join(ctx.dir!, 'frames', `${shotName(episode, shot.shot)}${attempt ? `_r${attempt}` : ''}.png`)
-        const image = await generateImage(comfy, { prompt, size, output: path, references: references.map((r) => r.path), model: NARRATIVE_IMAGE_MODEL, editModel: NARRATIVE_EDIT_MODEL })
+        const image = await generateImage(comfy, { prompt, size, output: path, references: referencePaths, model: NARRATIVE_IMAGE_MODEL, editModel: NARRATIVE_EDIT_MODEL })
         const verdict = await shotGate(ctx.reviewer, path, shot, cast)
         ctx.log(`▸ frame ${episode}.${shot.shot}${attempt ? `_r${attempt}` : ''}  ${image.seconds.toFixed(1)}s · gate ${verdict.pass ? 'pass' : 'reject'} ${verdict.score}${verdict.issues.length ? ` · ${verdict.issues[0]}` : ''}`)
-        await ctx.record('frames', 'shot-gate', ctx.reviewer, { episode, shot: shot.shot, attempt, imageSeconds: image.seconds, references: references.map((r) => `${r.id}:${r.view}`), ...verdict })
+        await ctx.record('frames', 'shot-gate', ctx.reviewer, { episode, shot: shot.shot, attempt, imageSeconds: image.seconds, references: [...references.map((r) => `${r.id}:${r.view}`), ...(product ? [`product:${ctx.brand!.product.id}`] : [])], ...verdict })
         if (!best || verdict.score > best.verdict.score) best = { path, verdict }
         // The last try carries the gate's own words as fixes: a new seed alone repeats a systematic fault.
         if (!verdict.pass && attempt === tries - 2 && verdict.issues.length) { prompt = `${prompt} Avoid: ${verdict.issues.slice(0, 3).join('; ')}.`; ctx.qaRegenerations++ }
       }
       ctx.frames.set(key(episode, shot.shot), best!.path)
-      await addAsset(ctx.projectId!, { id: `frame-${episode}-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(ctx.dir!.length + 1), shot: shot.shot, execution: 'local-dgx-spark', model: references.length ? 'qwen_image_edit_2511_lightning' : 'qwen_image_2512', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}` })
+      await addAsset(ctx.projectId!, { id: `frame-${episode}-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(ctx.dir!.length + 1), shot: shot.shot, execution: 'local-dgx-spark', model: referencePaths.length ? 'qwen_image_edit_2511_lightning' : 'qwen_image_2512', note: `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}` })
       made++
     }
   }
@@ -245,12 +258,16 @@ Return JSON only: {"ambience": [{"scene": 1, "prompt": "..."}], "effects": [{"sh
 export async function narrativeCutStage(ctx: NarrativeContext): Promise<string> {
   const fps = ctx.options.fps ?? 24
   const [width, height] = deliverySize(ctx.options.resolution ?? '1080p', ctx.ratio)
+  // Under a brand kit: its fonts and grade, and over the last three seconds its logo with clear space and its legal lines.
+  const brand = ctx.brand ? await brandFinish(ctx.brand) : undefined
+  const layout = brand ? endCardLayout(width, height, brand.legal.length, brand.logo) : undefined
   for (const episode of produced(ctx)) {
     const play = ctx.plays.find((p) => p.episode === episode)!
     const shots = ctx.shots.get(episode) ?? []
     const total = shots.length * 5
     const start = (shot: NarrativeShot) => (shot.shot - 1) * 5
     const cues: TitleCue[] = [{ start: 0, end: 3, label: AI_LABEL }, { start: total - 3, end: total, label: AI_LABEL }]
+    for (const [index, line] of (brand?.legal ?? []).entries()) cues.push({ start: total - 3, end: total, legal: line, marginV: layout!.legalMarginV + (brand!.legal.length - 1 - index) * Math.round(layout!.legalSize * 1.3) })
     const dialogue: Array<{ path: string; start: number }> = []
     for (const shot of shots) {
       if (shot.line === undefined) continue
@@ -270,18 +287,26 @@ export async function narrativeCutStage(ctx: NarrativeContext): Promise<string> 
     const effects = [...(sound?.sfx ?? new Map())].map(([shot, path]) => ({ path, start: start(shots.find((s) => s.shot === shot)!) }))
     const soundtrack = join(ctx.dir!, 'audio', `ep${pad(episode)}_mix.wav`)
     await mixNarrative({ totalSeconds: total, dialogue, ambience, effects, music: sound?.music, output: soundtrack })
+    // A brand's own font must hold every character it sets, or the film shows boxes.
+    if (brand) {
+      const covered = await fontCovers(brand.subtitleFont, cues.map((cue) => `${cue.subtitle ?? ''}${cue.legal ?? ''}${cue.label ?? ''}`).join(''))
+      if (!covered.ok) throw new Error(`The font ${brand.subtitleFont} has no glyph for: ${covered.missing.join(' ')}. Refusing to render boxes on screen.`)
+    }
     const ass = join(ctx.dir!, 'cut', `ep${pad(episode)}.ass`)
-    await writeFile(ass, buildAss(cues, width, height, TITLE_FONT))
+    await writeFile(ass, buildAss(cues, width, height, brand?.titleFont ?? TITLE_FONT, brand?.subtitleFont ?? TITLE_FONT))
     const output = join(ctx.dir!, 'cut', `ep${pad(episode)}.mp4`)
     const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Cinefoundry', ProduceID: `${ctx.projectId}-ep${pad(episode)}`, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
     await assembleFilm(shots.map((s) => ctx.clips.get(key(episode, s.shot))!), output, {
-      width, height, fps, durations: shots.map(() => 5), crossfadeSeconds: 0, ass, audio: soundtrack, grade: GRADES.drama ?? GRADES.neutral, loudness: -14,
+      width, height, fps, durations: shots.map(() => 5), crossfadeSeconds: 0, ass, audio: soundtrack, grade: brand?.grade ?? GRADES.drama ?? GRADES.neutral, loudness: -14,
+      ...(layout?.logo ? { logo: { image: brand!.logo!.path, ...layout.logo, start: total - 3 } } : {}),
       metadata: { AIGC: aigc, comment: `${AI_LABEL} · Cinefoundry · ${ctx.projectId} ep${episode}`, title: `${play.title}` },
     })
     ctx.outputs.set(episode, output)
     await addAsset(ctx.projectId!, { id: `episode-${episode}`, kind: 'video', stage: 'cut', path: `cut/ep${pad(episode)}.mp4`, execution: 'local-dgx-spark', model: 'ffmpeg' })
     ctx.log(`▸ cut          episode ${episode}: ${output}`)
   }
+  // A drama has no packaging stage: its brand's handles and hashtags are written for publishing all the same.
+  if (ctx.brand && ctx.format !== 'short') await writeFile(join(ctx.dir!, 'reports', 'packaging.json'), JSON.stringify({ brand: ctx.brand.id, ...brandPackaging(ctx.brand.kit), disclosure: AI_LABEL }, null, 2))
   const qc = await qcEpisodes(ctx)
   return `${ctx.outputs.size} episode(s) · qc ${qc}`
 }

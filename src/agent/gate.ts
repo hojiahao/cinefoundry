@@ -1,12 +1,33 @@
+import { randomUUID } from 'node:crypto'
+import { rename, rm } from 'node:fs/promises'
+import { env } from '../lib/config.js'
+import { exec } from '../lib/exec.js'
 import { LIT_LIKE_ELECTRONICS, type Industry, type Shot } from './checks.js'
 import { chatJson, JsonReplyError, type ModelEndpoint } from './llm.js'
-import { exec } from '../lib/exec.js'
 
-/** The reviewer sees a 1024 px JPEG, not the full still: the verdict does not change, the prefill does. */
-export async function reviewCopy(path: string): Promise<string> {
-  const copy = `${path}.review.jpg`
-  await exec('ffmpeg', ['-y', '-v', 'error', '-i', path, '-vf', "scale='min(1024,iw)':-2", '-q:v', '3', copy])
-  return copy
+/** Proxies being made, per still: gates running together on one still (every frame is judged against the hero) share one. */
+const proxies = new Map<string, Promise<string>>()
+
+/**
+ * The reviewer sees a 1024 px JPEG proxy, not the full still: the verdict does not change, the prefill does. The proxy
+ * is encoded under a name of its own and renamed into place, so a reader never sees a half-written file.
+ */
+export function reviewProxy(path: string): Promise<string> {
+  const pending = proxies.get(path)
+  if (pending) return pending
+  const made = (async () => {
+    const proxy = `${path}.review.jpg`
+    const partial = `${path}.review.${process.pid}.${randomUUID().slice(0, 8)}.jpg`
+    try {
+      await exec('ffmpeg', ['-y', '-v', 'error', '-i', path, '-vf', "scale='min(1024,iw)':-2", '-q:v', '3', partial])
+      await rename(partial, proxy)
+    } finally {
+      await rm(partial, { force: true })
+    }
+    return proxy
+  })().finally(() => proxies.delete(path))
+  proxies.set(path, made)
+  return made
 }
 
 export interface QaVerdict {
@@ -22,7 +43,11 @@ export interface QaVerdict {
 
 /** A frame below this on any craft axis is regenerated even when nothing is wrong with it. */
 // A value that is not a number would disable the floor silently (v < NaN is always false): fall back to 6.
-export const CRAFT_FLOOR = Number.isFinite(Number(process.env.CINEFOUNDRY_CRAFT_FLOOR)) && process.env.CINEFOUNDRY_CRAFT_FLOOR !== '' && process.env.CINEFOUNDRY_CRAFT_FLOOR !== undefined ? Number(process.env.CINEFOUNDRY_CRAFT_FLOOR) : 6
+export const CRAFT_FLOOR = craftFloor(env('CINEFOUNDRY_CRAFT_FLOOR'))
+
+export function craftFloor(value: string | undefined): number {
+  return value !== undefined && value !== '' && Number.isFinite(Number(value)) ? Number(value) : 6
+}
 
 export interface GateFailure {
   /** budget: max_tokens ran out (finish_reason "length"); unparsable: it finished without JSON; malformed: JSON without pass/score; transport: HTTP or connection error. */
@@ -50,7 +75,7 @@ export function gateFailure(error: unknown): GateFailure {
  * (Two escalating budgets once cost 18 minutes on a single frame and then accepted it blind.)
  */
 export async function qualityGate(reviewer: ModelEndpoint, frame: string, shot: Shot, productReference?: string, industry: Industry = 'general'): Promise<QaVerdict> {
-  const [frameCopy, referenceCopy] = await Promise.all([reviewCopy(frame), productReference ? reviewCopy(productReference) : undefined])
+  const [frameCopy, referenceCopy] = await Promise.all([reviewProxy(frame), productReference ? reviewProxy(productReference) : undefined])
   for (let attempt = 0; ; attempt++) {
     try {
       return await runGate(reviewer, frameCopy, shot, referenceCopy, 3000, industry)

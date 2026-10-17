@@ -34,8 +34,8 @@ export interface StageDef<C extends EngineContext> {
   id: Stage
   /** Shown on the studio board and in the log. */
   label: string
-  /** Stages whose status is set together with this one (frames + qa run as one loop). */
-  alsoMarks?: Stage[]
+  /** Stages whose status is set together with this one (frames + qa run as one loop), each with its board label. */
+  alsoMarks?: Array<{ id: Stage; label: string }>
   /** Skip the stage (e.g. no clips in a plan-only run). A skipped stage stays pending. */
   when?: (ctx: C) => boolean
   /** Runs the stage. The returned string is the note on the studio board. */

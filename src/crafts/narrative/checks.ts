@@ -1,3 +1,4 @@
+import { scanBrandWords } from '../../lib/compliance.js'
 import { CLICKBAIT } from './packaging.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
@@ -57,7 +58,10 @@ export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want
   return problems
 }
 
-export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'characters'>, want: { seconds: number; ratio: string }): string[] {
+/** A brand kit's forbidden words, which become restricted wording in every line. */
+export interface ForbiddenWords { brand: string; words: string[] }
+
+export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'characters'>, want: { seconds: number; ratio: string; forbidden?: ForbiddenWords }): string[] {
   const zhMax = maxZhChars(want.ratio)
   const problems: string[] = []
   const ids = new Set(bible.characters.map((c) => c.id))
@@ -85,11 +89,13 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
         if (zhLength(line.zh) > zhMax) problems.push(`${where}: subtitle "${line.zh}" is ${zhLength(line.zh)} characters; at most ${zhMax} on a ${want.ratio} frame`)
         if (/[，。,.]/.test(line.zh)) problems.push(`${where}: Chinese subtitles use a space instead of commas and full stops`)
       }
+      if (want.forbidden) for (const finding of scanBrandWords(`${line.en ?? ''}\n${line.zh ?? ''}`, want.forbidden.words, want.forbidden.brand)) problems.push(`${where}: restricted wording "${finding.text}" (${finding.rule}): ${finding.reason}`)
     })
   })
   // Each line is a shot, and scenes need a few shots without dialogue (establishing, reaction, insert).
   const budget = Math.floor(want.seconds / 5)
-  if (lines > budget) problems.push(`${lines} lines do not fit ${want.seconds} seconds (${budget} shots of 5 s, one line each): cut lines`)
+  // Every line is one shot and every scene needs at least one shot without dialogue (an establishing view, a reaction).
+  if (lines + scenes.length > budget) problems.push(`${lines} lines in ${scenes.length} scenes need ${lines + scenes.length} shots (one per line, one more per scene) but ${want.seconds} seconds hold ${budget}: cut lines or merge scenes`)
   if (lines === 0) problems.push('no dialogue: characters speak on screen in this format')
   return problems
 }

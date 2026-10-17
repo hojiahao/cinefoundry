@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { env } from '../lib/config.js'
 import { inspectFiles } from './download.js'
 import { installedFeatures, resolveModelRoot } from './index.js'
 import { loadManifest, REPO_ROOT, selectFiles, totalBytes, gb } from './manifest.js'
@@ -31,7 +32,7 @@ export async function installationReport(options: { verify?: boolean } = {}): Pr
   const missing = statuses.filter((status) => status.state === 'missing' || status.state === 'partial')
   const checks = assessPlatform(facts, {
     downloadBytes: totalBytes(missing.map((status) => status.file)),
-    imagesMissing: present.some((value) => !value), startGb: Number(process.env.SPARK_REQUIRED_FREE_GB ?? 95), stackRunning: Object.values(health).every(Boolean),
+    imagesMissing: present.some((value) => !value), startGb: Number(env('SPARK_REQUIRED_FREE_GB')), stackRunning: Object.values(health).every(Boolean),
   })
   const voices = existsSync(join(REPO_ROOT, 'deploy', 'voices', 'library.json')) ? voiceLibraryStatus() : { total: 0, ready: [], missing: [] }
   const unverified = statuses.filter((status) => status.state === 'unverified')

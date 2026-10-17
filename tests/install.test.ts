@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, realpathSync, writeFileSync, mkdirSync, utim
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { SETTINGS } from '../src/lib/config.js'
 import { INTERPOLATION_MODEL, VIDEO_MODELS } from '../src/lib/media.js'
 import { aria2Args, aria2Entry, downloadTarget, linkSnapshot, writeRef } from '../src/setup/download.js'
 import { entriesFor, siblingHash, type HubRevision } from '../src/setup/hf.js'
@@ -79,7 +80,11 @@ describe('model manifest', () => {
     for (const match of speech.matchAll(/'\/models\/([\w.-]+)'/g)) expect(targets.has(`tts/${match[1]}`), match[1]).toBe(true)
     expect(speech).toContain("'/asr/whisper-large-v3-turbo'")
     expect(targets.has('asr/whisper-large-v3-turbo')).toBe(true)
-    expect(speech).toContain("'audio', 'MOSS-SoundEffect-v2.0'")
+    // The host folders mounted at /models, /asr and /moss default under the model root (src/lib/config.ts).
+    const defaults = Object.fromEntries(SETTINGS.map((setting) => [setting.name, 'default' in setting ? setting.default : undefined]))
+    expect(defaults.CINEFOUNDRY_TTS_MODEL_DIR).toBe('$SPARK_MODEL_DIR/tts')
+    expect(defaults.CINEFOUNDRY_ASR_MODEL_DIR).toBe('$SPARK_MODEL_DIR/asr')
+    expect(defaults.CINEFOUNDRY_SFX_MODEL_DIR).toBe('$SPARK_MODEL_DIR/audio/MOSS-SoundEffect-v2.0')
     expect(targets.has('audio/MOSS-SoundEffect-v2.0')).toBe(true)
     for (const dir of ['tts/Qwen3-TTS-12Hz-1.7B-VoiceDesign', 'tts/Qwen3-TTS-12Hz-1.7B-Base']) {
       const files = manifest.files.filter((file) => file.target === dir).map((file) => file.filename)

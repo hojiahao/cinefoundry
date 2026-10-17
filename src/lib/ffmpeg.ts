@@ -30,39 +30,6 @@ export async function detectCuts(video: string, threshold: number): Promise<numb
   return [...stderr.matchAll(/pts_time:([0-9.]+)/g)].map((match) => Number(match[1]))
 }
 
-export interface CutOptions {
-  width: number
-  height: number
-  fps: number
-  audio?: string
-  audioGainDb?: number
-  subtitles?: string
-}
-
-/** Normalise every clip to one size and frame rate, join them, then lay audio and subtitles on top. */
-export async function assembleCut(clips: string[], output: string, options: CutOptions): Promise<void> {
-  const inputs = clips.flatMap((clip) => ['-i', clip])
-  const normalise = clips
-    .map((_, index) => `[${index}:v]scale=${options.width}:${options.height}:force_original_aspect_ratio=decrease,pad=${options.width}:${options.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${options.fps}[v${index}]`)
-    .join(';')
-  let chain = `${normalise};${clips.map((_, index) => `[v${index}]`).join('')}concat=n=${clips.length}:v=1:a=0[joined]`
-  let videoLabel = '[joined]'
-  if (options.subtitles) {
-    const escaped = options.subtitles.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'")
-    chain += `;[joined]subtitles='${escaped}'[subbed]`
-    videoLabel = '[subbed]'
-  }
-  const args = ['-hide_banner', '-loglevel', 'error', '-y', ...inputs]
-  if (options.audio) {
-    args.push('-i', options.audio)
-    chain += `;[${clips.length}:a]volume=${options.audioGainDb ?? -10}dB[music]`
-  }
-  args.push('-filter_complex', chain, '-map', videoLabel)
-  if (options.audio) args.push('-map', '[music]', '-shortest', '-c:a', 'aac')
-  args.push('-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', output)
-  await exec('ffmpeg', args)
-}
-
 export async function concatCopy(segments: string[], output: string): Promise<void> {
   const listing = `${output}.txt`
   await writeFile(listing, segments.map((segment) => `file '${segment}'\n`).join(''))
@@ -89,6 +56,8 @@ export interface FilmOptions {
   metadata?: Record<string, string>
   /** Integrated loudness target in LUFS for the soundtrack (web -16, broadcast -24); true peak is held at -1.5 dBTP. */
   loudness?: number
+  /** A brand logo composited over the graded picture from `start` to the end, so its colours are never graded. */
+  logo?: { image: string; x: number; y: number; width: number; height: number; start: number }
 }
 
 const overlapAt = (overlaps: number | number[], join: number) => (Array.isArray(overlaps) ? overlaps[join] ?? 0 : overlaps)
@@ -125,6 +94,16 @@ GRADES.general = GRADES.neutral!
 /** The video bitrate ceiling of a delivery, Mb/s: 0.2 bit per pixel per frame, never under 8 Mb/s. Delivery QC checks against it. */
 export const bitrateCeilingMbps = (width: number, height: number, fps: number) => Math.max(8, Math.round((width * height * fps * 0.2) / 1e6))
 
+/** First loudnorm pass: what the soundtrack measures after the fades, for the second, linear pass. */
+async function measureLoudness(audio: string, prefilter: string, target: number, seconds: number): Promise<Record<'input_i' | 'input_tp' | 'input_lra' | 'input_thresh' | 'target_offset', string> | undefined> {
+  const { stderr } = await exec('ffmpeg', ['-hide_banner', '-nostats', '-i', audio, '-t', seconds.toFixed(3), '-af', `${prefilter},loudnorm=I=${target}:TP=-1.5:LRA=11:print_format=json`, '-f', 'null', '-']).catch(() => ({ stderr: '' }))
+  const json = /\{[^{}]*"input_i"[^{}]*\}/.exec(stderr)?.[0]
+  if (!json) return undefined
+  const values = JSON.parse(json) as Record<string, string>
+  // Silence measures -inf: a linear gain cannot be computed, so the caller falls back to single-pass.
+  return Number.isFinite(Number(values.input_i)) ? (values as Record<'input_i' | 'input_tp' | 'input_lra' | 'input_thresh' | 'target_offset', string>) : undefined
+}
+
 export async function assembleFilm(clips: string[], output: string, options: FilmOptions): Promise<void> {
   const { width, height, fps, durations, crossfadeSeconds } = options
   const conform = clips
@@ -144,9 +123,16 @@ export async function assembleFilm(clips: string[], output: string, options: Fil
   const grade = [options.grade ?? GRADES.neutral, `fade=t=in:st=0:d=0.35,fade=t=out:st=${(total - 0.5).toFixed(3)}:d=0.5`].join(',')
   chain += `;${last}${grade}[graded]`
   let videoLabel = '[graded]'
+  // The logo input comes after the clips and the soundtrack, so the soundtrack keeps its input index.
+  const logoInput = clips.length + (options.audio ? 1 : 0)
+  if (options.logo) {
+    const { x, y, width: w, height: h, start } = options.logo
+    chain += `;[${logoInput}:v]scale=${w}:${h}:flags=lanczos,format=rgba,fade=t=in:st=${start.toFixed(3)}:d=0.4:alpha=1[logo];[graded][logo]overlay=${x}:${y}:enable='gte(t,${start.toFixed(3)})'[branded]`
+    videoLabel = '[branded]'
+  }
   if (options.ass) {
     const escaped = options.ass.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'")
-    chain += `;[graded]ass='${escaped}'[titled]`
+    chain += `;${videoLabel}ass='${escaped}'[titled]`
     videoLabel = '[titled]'
   }
   // Tag the frames themselves: the encoder's -color_* options alone left primaries and transfer untagged (delivery QC).
@@ -156,8 +142,17 @@ export async function assembleFilm(clips: string[], output: string, options: Fil
   if (options.audio) {
     args.push('-i', options.audio)
     const loud = options.loudness ?? -16
-    chain += `;[${clips.length}:a]afade=t=in:st=0:d=0.3,afade=t=out:st=${(total - 0.8).toFixed(3)}:d=0.8,loudnorm=I=${loud}:TP=-1.5:LRA=11,aresample=48000[sound]`
+    const fades = `afade=t=in:st=0:d=0.3,afade=t=out:st=${(total - 0.8).toFixed(3)}:d=0.8`
+    // Two-pass loudness: measure the soundtrack as it will be heard, then normalise from the measurement - one exact
+    // linear gain when its loudness range is within 11 LU, otherwise the measured dynamic mode, which also brings the range
+    // in. Single-pass loudnorm adapts as it goes and missed a −14 LUFS target by 1.8 LU on a 15-second short (delivery QC).
+    const measured = await measureLoudness(options.audio, fades, loud, total)
+    const norm = measured
+      ? `loudnorm=I=${loud}:TP=-1.5:LRA=11:measured_I=${measured.input_i}:measured_TP=${measured.input_tp}:measured_LRA=${measured.input_lra}:measured_thresh=${measured.input_thresh}:offset=${measured.target_offset}:linear=${Number(measured.input_lra) <= 11}`
+      : `loudnorm=I=${loud}:TP=-1.5:LRA=11`
+    chain += `;[${clips.length}:a]${fades},${norm},aresample=48000[sound]`
   }
+  if (options.logo) args.push('-loop', '1', '-t', total.toFixed(3), '-i', options.logo.image)
   args.push('-filter_complex', chain, '-map', videoLabel)
   if (options.audio) args.push('-map', '[sound]', '-t', total.toFixed(3), '-c:a', 'aac', '-b:a', '320k', '-ar', '48000')
   for (const [key, value] of Object.entries(options.metadata ?? {})) args.push('-metadata', `${key}=${value}`)

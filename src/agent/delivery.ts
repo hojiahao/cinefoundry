@@ -1,7 +1,7 @@
 import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Brief, Script, Storyboard } from './checks.js'
+import type { Brief, Storyboard } from './checks.js'
 
 interface Row { ts: string; stage: string; agent: string; execution?: string; model?: string; [key: string]: unknown }
 
@@ -10,7 +10,7 @@ interface Row { ts: string; stage: string; agent: string; execution?: string; mo
  * totals, where each asset came from, and what is still open. Built from run.jsonl, so every
  * number in it was recorded by the harness while it happened.
  */
-export async function writeDeliveryReport(dir: string, brief: Brief, script: Script, storyboard: Storyboard, finalCut: string): Promise<string> {
+export async function writeDeliveryReport(dir: string, brief: Brief, storyboard: Storyboard, finalCut: string): Promise<string> {
   const all = (await readFile(join(dir, 'reports', 'run.jsonl'), 'utf8')).split('\n').filter(Boolean).map((line) => JSON.parse(line) as Row)
   // One run only: run.jsonl is appended to, and a re-run or a re-cut must not mix its numbers with an earlier run's.
   const runId = [...all].reverse().find((row) => row.stage === 'brief' && row.agent === 'intake')?.runId
