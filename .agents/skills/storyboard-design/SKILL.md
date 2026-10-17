@@ -1,6 +1,6 @@
 ---
 name: storyboard-design
-version: "0.1.0"
+version: "0.2.0"
 description: Convert an approved ad script into a shot-by-shot storyboard with image prompts, video motion prompts and reference assignments that the local image and video models can execute. Use after the script passes compliance, when a reference breakdown must be mapped onto a new product, or when the user asks to change shots, framing, camera moves or pacing.
 license: BUSL-1.1
 metadata:
@@ -16,6 +16,61 @@ metadata:
 The storyboard is the contract between the script and the generators. Each shot must be
 specific enough that a model with no memory of the other shots still produces a frame
 that belongs to the same film.
+
+## The standard: a film a top crew would have shot
+
+The bar is a commercial from a top Chinese agency or a Hollywood product film - not "an AI video with nothing wrong in it". Every shot needs a reason, a light and a place in the rhythm. Before writing shots, decide the film as a director would.
+
+### 1. Decide the film before the shots
+
+- **Visual concept** - one sentence a crew could light from: "late-afternoon kitchen, one shaft of backlight through steam, everything slows down". Every shot serves it.
+- **Light logic** - time of day and where the key light comes from (window, lamp, top light, studio strip). Keep the direction and colour temperature the same across all shots: a warm shot cut against a cold one reads as two films.
+- **Palette** - one dominant colour, one supporting, one accent, taken from the product (its label or material). Put all three in `style`.
+- `style` is where the decisions live, because code appends it to every frame: palette, key light and its direction, time of day, texture, mood - one line, words only, no numbers. Example of the form (not content to copy): "warm low afternoon backlight from the left, amber and cream palette with a teal accent, soft haze, fine grain, calm and intimate".
+
+### 2. Rhythm of a 15-second spot
+
+| Beat | Seconds | Job | Typical shot |
+|---|---|---|---|
+| 1 | 0-5 | Hook: grab attention in the first second | the most striking image - a macro detail, a splash, a light moving across the product |
+| 2 | 5-10 | Proof or experience | the product in use or in its world: texture, pour, steam, a hand at a low side angle |
+| 3 | 10-15 | Hero | the product whole, upright, best-lit, with room for the title |
+| End card | 3 s | Brand and closing line | typeset in post - never drawn |
+
+10 s and 20 s films keep the same logic with two or four beats. The first frame of beat 1 has to work as a thumbnail with the sound off.
+
+### 3. Framing and progression
+
+- Neighbouring shots differ in framing: macro / close-up -> medium -> wide, or the reverse for a reveal. Never two neighbours with the same framing and the same move (*checked*).
+- 16:9 composition: subject on a third, never jammed against an edge; horizon on a third; foreground out-of-focus layers for depth. Keep the **upper third calm** (the title is typeset there) and the **bottom fifth clear** (subtitles). Vertical (9:16) films keep the product in the middle third.
+- Express lenses in picture words, never numbers: "telephoto compression with a softly stacked background", "macro probe-lens view skimming the surface", "very shallow depth of field with creamy bokeh", "wide establishing view with the product small in the frame". The image model paints "50mm" or "f/1.4" into the frame as text.
+
+### 4. Camera moves that read as a real crew
+
+- One move per shot, said the way a camera operator would: slow push-in, slow pull-back, lateral dolly, low-angle orbit, crane down, rack focus, locked-off static.
+- State the speed and the end frame in `video_prompt`: "a very slow push-in that travels only a short distance over the whole shot and ends on the label, centred". Fast or wandering moves warp the product.
+- Locked-off shots are not a weakness: light moving across a still product (a sweep, a shadow passing, steam drifting) is a classic product move.
+
+### 5. Light and texture by category
+
+| Category | Key light | What must read | Avoid |
+|---|---|---|---|
+| Drinks | strong backlight plus a hard edge light along the silhouette | condensation beads with tiny highlights, liquid glowing where light passes, ice with real refraction | flat front light, milky liquid, cartoon splashes |
+| Skincare | large soft wrap-around light, gentle highlight roll-off | cream texture, glass and stone surfaces, real skin texture | waxy skin, beauty-filter faces, harsh specular |
+| Food | warm low side light raking across texture, backlit steam | crumbs, oil sheen, grain, steam | over-saturated colour, plastic-looking food |
+| Consumer electronics | dark studio, cool rim light along the bevels, one or two colours | crisp edges, machined metal, a light sweep across the surface | rainbow RGB unless briefed (*checked*), sharp tiny legends |
+| Computers and servers | soft warm gold key and rim light, at most a faint green accent far back | weight and craftsmanship of the casing, scale | blue, cyan or neon light (*checked*), screen contents (*checked*) |
+| Home and lifestyle | motivated practical light - a window, a lamp, a candle | lived-in warmth, layered depth | sterile studio emptiness |
+
+Code already appends the category anchor and a realism clause to every frame (real materials, accurate reflections, natural falloff, grain; not CGI). Put the scene, its light direction and its composition in `image_prompt`; do not repeat the anchor.
+
+### 6. People
+
+At most one shot with a person, and the person is never the subject - the product is. Frame them so face and hands are not the focus: from behind, in profile, out of focus, or a hand at a low side angle with the wrist in frame. Ask for a real person: "natural skin with pores, relaxed candid expression, unposed". Never ask for a celebrity, a specific real person or a recognisable face.
+
+### 7. What makes a frame look generated - design it out
+
+Waxy or plastic skin, over-smooth surfaces, everything centred and symmetrical, light from nowhere, rainbow or neon colour nobody briefed, objects floating or melting, two of the product, text in the image. The quality gate rejects these and scores light, composition and realism; a shot designed around them costs a regeneration.
 
 ## Workflow
 

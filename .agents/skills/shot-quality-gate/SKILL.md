@@ -1,6 +1,6 @@
 ---
 name: shot-quality-gate
-version: "0.1.0"
+version: "0.2.0"
 description: Inspect a generated advertisement frame with the local vision model and decide whether it may proceed to video generation - product identity against references, warped text or logos, anatomy errors, and whether the required content is present. Use after every generated frame and before any clip is made from it, or when the user asks to check, QA or verify generated shots.
 license: BUSL-1.1
 metadata:
@@ -34,15 +34,20 @@ eyes that did not write the prompt, on a different model from the one that did.
    - any text outside the product label - captions, slogans, numbers, lens specs, watermarks - or any garbled or duplicated lettering;
    - a person, hand or fingers in a shot that does not call for them; extra limbs, malformed hands, a distorted face;
    - the product cropped, floating, physically implausible, or a drink that should be clear in an odd colour.
-3. With several candidates for a shot, keep the passing one with the highest score.
-4. When every candidate is rejected, change the prompt according to the issue before regenerating - the same prompt mostly fails the same way:
+3. **Craft.** Beyond the reject list, the gate rates the frame as a commercial cinematographer would, 0-10 each:
+   - light: motivated, sculpted, one clear key; the product the best-lit thing in the frame
+   - composition: balanced, depth from foreground to background, calm space for the title in the upper third
+   - realism: reads as a photograph - real materials, accurate reflections, natural skin
+   Any axis below 6 (`SPOTFOUNDRY_CRAFT_FLOOR`) regenerates the frame even when nothing is wrong with it. CGI or AI-art looks are rejected outright: waxy or plastic skin, over-smooth surfaces, melted or warped geometry, impossible reflections, a glossy illustration finish, flat or muddy light, clutter.
+4. With several candidates for a shot, keep the passing one with the highest score.
+5. When every candidate is rejected, change the prompt according to the issue before regenerating - the same prompt mostly fails the same way:
    - product mismatch -> do not describe the product again: image 1 already carries its shape, colours, cap and lettering, and the fixed sentences already say its label must not change. Instead delete every word about the product's look (colour, cap, logo, label text) and every prop or effect around it, until the scene is the product, one surface and one light - shorter than before. Keep the framing and the must-show content
    - stray text -> remove whatever in the prompt reads like a caption, a number or a spec
    - unwanted hands or people -> reframe as a product-only composition
    - missing content -> move it to the front of the prompt
-5. At most two regenerations per shot. Then keep the best attempt and note the open issue for the delivery report.
-6. If the vision model cannot return a verdict, retry once with a larger token budget. If it still cannot, accept the frame **marked as unverified** and say so in the delivery report. The gate must never take the whole film down, and it must never claim a check it did not make.
-7. Record pass rate and regeneration count across the project; they are the evidence that the loop works.
+6. At most two regenerations per shot. Then keep the best attempt and note the open issue for the delivery report.
+7. If the vision model cannot return a verdict, retry once with a larger token budget. If it still cannot, accept the frame **marked as unverified** and say so in the delivery report. The gate must never take the whole film down, and it must never claim a check it did not make.
+8. Record pass rate, craft scores and regeneration count across the project; they are the evidence that the loop works.
 
 ## Limits
 

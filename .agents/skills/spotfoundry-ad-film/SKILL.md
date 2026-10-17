@@ -1,6 +1,6 @@
 ---
 name: spotfoundry-ad-film
-version: "0.1.0"
+version: "0.2.0"
 description: Produce a finished short advertising film (visuals, voiceover, music, typeset titles, compliance-checked copy) from one sentence of creative brief, locally on a DGX Spark, by running the Spotfoundry Harness. Use when the user asks for an ad, a product video, a 10/15/20-second commercial, "给某个产品做条广告", or wants to re-cut or re-voice an existing Spotfoundry project.
 license: BUSL-1.1
 metadata:
@@ -38,7 +38,7 @@ pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl
 3. Run, from the repository root:
 
    ```bash
-   node dist/cli.js harness "<the brief, verbatim>" [--id <project-id>] [--ratio 9:16|16:9|1:1] [--duration 10|15|20] [--product-image <photo>] [--proof "<facts>"]
+   node dist/cli.js harness "<the brief, verbatim>" [--id <project-id>] [--ratio 16:9|9:16|1:1] [--duration 10|15|20] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image <photo>] [--proof "<facts>"]
    ```
 
    When the user gives facts the brand can back (specs, figures, a source), pass them with `--proof`.
@@ -48,7 +48,7 @@ pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl
    generated hero still, so every shot shows the real shape and logo instead of the image model's
    guess. Only use a photo the user took or has rights to.
 
-   A 15-second film takes about 30 to 40 minutes on one DGX Spark (three 5-second clips at ~340 s each dominate). Run it in the background and report progress from the `▸` lines it prints, or point the user at the Studio (`node dist/cli.js studio`, port 3090) where the same run is visible.
+   The default film is 16:9, native 1080p, 60 fps. Leave `--ratio` out unless the user asked for vertical or square, and leave `--resolution` / `--fps` out unless they asked. Generation time on one DGX Spark is dominated by the three native-1080p clips (about 4 minutes each) and their interpolation (under a minute each); the delivery report records the measured total. Run it in the background and report progress from the `▸` lines it prints, or point the user at the Studio (`node dist/cli.js studio`, port 3090) where the same run is visible.
 4. Use `--plan-only` when the user wants the script and storyboard to approve before any GPU time is spent.
 5. When it finishes, read `projects/<id>/reports/delivery.md` and tell the user: where the film is (`projects/<id>/cut/final.mp4`), what each shot's gate said, total seconds, and every open item the report lists (a shot kept after failing the gate, for example). Do not describe the film as flawless if the report says otherwise.
 

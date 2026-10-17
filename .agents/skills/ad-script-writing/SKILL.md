@@ -1,6 +1,6 @@
 ---
 name: ad-script-writing
-version: "0.1.0"
+version: "0.2.0"
 description: Write the script for a short advertisement - hook, beats, voiceover, on-screen text and call to action, timed to the project duration. Use after the brief is confirmed, or when the user asks to rewrite, shorten, change the tone of, or localise an ad script or 广告脚本/口播/文案.
 license: BUSL-1.1
 metadata:
@@ -15,6 +15,40 @@ metadata:
 
 A short ad has room for one idea. The script's job is to land that idea in the first
 three seconds and spend the rest proving it.
+
+## The standard: copy from a top agency
+
+The bar is the copy of a top Chinese agency or a Hollywood-grade brand film: few words, each one chosen; a line with an image, a rhythm and a point of view that the viewer remembers after one hearing. It is neither template ad-speak nor casual chat. It is crafted language read by a broadcast announcer or a brand's spokesperson.
+
+### The process a top creative team follows - do it in this order
+
+1. **Insight.** One true observation about the audience and the moment the product lives in (what they feel, notice or want at that moment). Not a product feature. Write it for yourself in one sentence; it is the root of every line.
+2. **Single-minded proposition.** The one thing the film says - the brief's `message`, sharpened. Everything else is cut.
+3. **Concept.** How the film dramatises the proposition: an image, a contrast, a turn. The storyboard's visual concept and your lines must be the same idea.
+4. **Brand voice.** Decide the register the brand speaks in and keep it in every line: restrained and premium, warm and assured, bright and crisp, quietly confident. Never shouting, never pleading, never joking unless the brief asks.
+5. **Draft, then cut.** Write each line long, then cut until nothing can be removed without losing the image or the point. The best line is usually the shortest true one.
+6. **Read-through.** Read the three lines in sequence at an announcer's pace. They must build: the hook opens a question or an image, the middle line proves it, the last line lands and hands over to the end card. Fix any line that breaks the cadence.
+
+### What crafted ad copy sounds like
+
+- **Imagery over adjectives.** Name what the eye or the senses catch - the bead of cold on aluminium, the first breath of steam, the weight of a key under the finger - and let it carry the feeling. One precise image beats three adjectives.
+- **Rhythm and metre.** Chinese ad lines live on cadence: balanced clauses (两两相对), a short line after a long one, a final syllable that lands. Commas mark the breaths the announcer takes; the full stop marks where the thought lands. The voice model follows punctuation for its pauses.
+- **Economy.** 8-18 spoken characters per 5-second beat (*checked*). Every particle, every 的 earns its place.
+- **A turn.** The strongest lines contain a small surprise - a contrast (静与闹), a reversal, an unexpected verb - that makes them memorable.
+- **The brand name** sits once, on a stressed position, or not at all in the voiceover (the end card carries it).
+- **The register fits the category:** a drink is tasted and felt cold, a cream is felt on skin, a device is held and heard, a computer changes what someone can do.
+
+### Never
+
+- Stock ad-speak that marks copy as templated or machine-written (*checked*): 开启……新篇章 / 新旅程, 焕新, 赋能, 不止于, 满满的, 让……成为可能, 臻享, 尽享, 非凡体验, 品质生活, 美好生活, 全新升级, 极致体验, 匠心之作, 邂逅, 一站式, 颠覆, 重新定义, 引领潮流, 点亮生活, 治愈, 氛围感, 高级感, 仪式感, 灵感迸发, 无限可能, 梦想起航, 触手可及.
+- Strings of four-character set phrases (清爽解渴，畅享夏日，活力满满), mechanical parallel triplets, stacked rhetorical questions.
+- Casual chat, slang, filler words, internet memes - the film is a brand speaking, not a vlog.
+- Lines that describe the packaging ("黑色衬线，牛皮纸质感"); the picture shows the product, the words carry its meaning.
+- Exclamation marks and hype. Top commercials are confident and quiet.
+
+### Titles
+
+A title is a typographic moment, not a second voiceover: two to six characters that name the beat's one idea (冰感, 一口回甘, 安静的光). It never repeats the voiceover word for word; the closing line (`tagline`) belongs to the end card only.
 
 ## Workflow
 
@@ -54,7 +88,7 @@ three seconds and spend the rest proving it.
 - Never copy a line from this file or from an example into a script; write this product's own line.
 - The film ends on an end card with the brand and the single message, so the last beat should hand over to it rather than repeat it. When the request quotes a closing line (`brief.tagline`, "字幕：“…”"), that line is the end card, character for character; the beats build towards it and none of them repeats it.
 - Read the client's own request as well as `brief.json`: the brief is the studio's summary, and the scenes and lines the client asked for (a developer pressing Enter, a screen lighting up) are not yours to drop.
-- Voiceover sounds like a person talking, not a slogan list. Read it aloud once.
+- Voiceover reads as crafted ad copy at an announcer's pace - an image, a cadence, a point - not a list of slogans and not casual chat. Read the three lines aloud in sequence before handing them on.
 - Voiceover is Chinese only; a stray English word ("唤醒 mornings") is a defect and is rejected. Only the brand text may be non-Chinese.
 - Titles name this product's own moment. "开罐" was written for a drip-bag coffee once, copied from an example about a can; a title that mentions a container the product does not have (罐/瓶) is rejected.
 - The voiceover talks about the experience, never about the packaging: "黑色衬线，牛皮纸质感" describes the label's typography and was accepted once by every check - it reads as a product spec, not an ad. Leave the look of the product to the storyboard.

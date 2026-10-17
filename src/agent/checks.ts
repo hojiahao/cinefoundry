@@ -137,7 +137,7 @@ export function checkScript(script: Script, brief: Brief): string[] {
     if (!beat.vo?.trim()) problems.push(`${label}: "vo" is empty`)
     else {
       const cliche = AI_CLICHES.exec(`${beat.vo} ${beat.text ?? ''}`)?.[0]
-      if (cliche) problems.push(`${label}: "${cliche}" is stock ad-speak that sounds machine-written; say the concrete thing a viewer sees, tastes or feels, the way a person would say it out loud`)
+      if (cliche) problems.push(`${label}: "${cliche}" is stock ad-speak that marks the copy as templated; write the crafted line a top agency would - one precise image of what the viewer sees, tastes or feels, in the brand's own voice`)
       if (!CJK.test(beat.vo)) problems.push(`${label}: voiceover must be in Chinese`)
       else if (/[A-Za-z]{3,}/.test(beat.vo.replace(brief.brandText, ''))) problems.push(`${label}: voiceover mixes an English word into Chinese (${/[A-Za-z]{3,}/.exec(beat.vo)?.[0]}); write it in Chinese`)
       if (spokenLength(beat.vo) < VO_MIN_CHARS) problems.push(`${label}: voiceover has only ${spokenLength(beat.vo)} characters; write ${VO_MIN_CHARS}-${VO_MAX_CHARS} so the beat is not mostly silence`)

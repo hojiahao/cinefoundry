@@ -1,6 +1,6 @@
 ---
 name: spark-local-media-generation
-version: "0.1.0"
+version: "0.2.0"
 description: Generate a product hero still, storyboard frames anchored to it, and video clips on the local DGX Spark with the spotfoundry CLI (ComfyUI running Qwen-Image, Qwen-Image-Edit and Wan2.2 14B) instead of a cloud API. Use when product shots, storyboard frames or shot clips must be produced, when material is confidential or unreleased, or when choosing between local and cloud generation.
 license: BUSL-1.1
 metadata:
@@ -31,7 +31,7 @@ so product identity is decided where a retry costs seconds, not minutes.
 3. Generate every storyboard frame **from the hero still**. A reference switches the request to the edit model and keeps the product the same product:
 
    ```bash
-   spotfoundry image --project <id> --shot 1 --size 1080x1920 \
+   spotfoundry image --project <id> --shot 1 --size 1920x1088 \
      --prompt "<image_prompt>. Image 1 is the product: keep its shape, colours and label exactly as in image 1. No captions, no subtitles, no lettering except the product label. <style>" \
      --ref projects/<id>/refs/product.png
    ```
@@ -40,20 +40,24 @@ so product identity is decided where a retry costs seconds, not minutes.
 4. Only gated frames move on. Generate each clip from its approved frame:
 
    ```bash
-   spotfoundry video --project <id> --shot 1 --model wan22-14b --duration 5 --ratio 9:16 --resolution 720p \
+   spotfoundry video --project <id> --shot 1 --model ltx25-fast-nvfp4 --duration 5 --ratio 16:9 --resolution 1080p \
      --prompt "<video_prompt>" --first-frame projects/<id>/frames/shot_001.png --keep-loaded
    ```
 
    Drop `--keep-loaded` on the last clip so the video model is released.
 5. Every command prints measured `seconds` and records the asset with `execution: local-dgx-spark`. Keep these numbers for the delivery report.
+6. Clips are saved near-lossless (H.264 crf 12 through ComfyUI's `format.codec.encoding.crf`; the old top-level `codec` input was ignored and wrote 0.6 Mbps). Never re-encode an intermediate at a lower quality - every generation of compression shows in the final grade.
 
 ## What the models do, measured on this machine
 
 | Step | Model | Cost |
 |---|---|---|
-| Frame, no reference, 1080x1920 | Qwen-Image + 8-step LoRA | 22.7 s warm, 45.8 s cold |
+| Frame, no reference, 1920x1088 | Qwen-Image + 8-step LoRA (generated natively at about 1.76 MP, upscaled) | 22.7 s warm, 45.8 s cold |
 | Frame from the hero still | Qwen-Image-Edit-2509 + 8-step LoRA | about 77 s |
-| 5 s clip, 720p, from a first frame | Wan2.2 I2V A14B fp8 + 4-step LoRAs (default) | 353 s |
+| 5 s clip, native 1080p, from a first frame | **LTX-2.5 Fast 22B NVFP4 (default)**, sampled at half size and doubled by its latent upscaler | 247 s (measured 2026-10-17, 1088x1920, 121 frames) |
+| 5 s clip, 720p, from a first frame | LTX-2.5 Fast NVFP4 | 90-160 s |
+| 120 fps master from a 24 fps clip | RIFE 4.26 (ComfyUI FrameInterpolate, x5) | 49 s per 1080p clip |
+| 5 s clip, 720p, from a first frame | Wan2.2 I2V A14B fp8 + 4-step LoRAs | 353 s |
 | 5 s clip, 720p | Wan2.2 TI2V-5B (also text-to-video) | 365 s |
 
 Sizes above the native budget (1328x1328 pixels in total) are generated natively and upscaled.

@@ -1,3 +1,4 @@
+import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Brief, Script, Storyboard } from './checks.js'
@@ -35,9 +36,15 @@ export async function writeDeliveryReport(dir: string, brief: Brief, script: Scr
   const stageSeconds = (stage: string) => rows.filter((row) => row.stage === stage && typeof row.seconds === 'number').reduce((sum, row) => sum + (row.seconds as number), 0)
   const memory = rows.filter((row) => row.agent === 'scheduler' && typeof row.availableBeforeGb === 'number').map((row) => `| ${row.phase} | ${row.availableBeforeGb} GB | ${row.availableAfterFreeGb} GB |`).join('\n')
   const audio = rows.filter((row) => row.agent === 'voiceover' || row.agent === 'music')
+  const resolution = brief.resolution ?? DEFAULT_RESOLUTION
+  const fps = brief.fps ?? DEFAULT_FPS
+  const [width, height] = deliverySize(resolution, brief.ratio)
+  const interpolated = rows.filter((row) => row.agent === 'interpolate')
   const report = `# 交付报告 · ${brief.title}
 
 - 成片：\`${finalCut.slice(dir.length + 1)}\` · ${brief.ratio} · ${brief.durationSeconds} 秒正片 + 3 秒定版
+- 交付规格：${width}×${height} · ${fps} fps · ${isUpscaled(resolution) ? `${resolution}，由原生 1080p 生成后放大` : `原生 ${resolution}`}${interpolated.length ? ` · 画面由 24 fps 经 RIFE 4.26 插帧（${interpolated.length} 段，共 ${interpolated.reduce((sum, row) => sum + ((row.seconds as number) || 0), 0).toFixed(1)} s）` : ''} · H.264 High · 音频响度 -16 LUFS
+- AI 生成标识：显式（片头 3 秒与定版右上角“内容由 AI 生成”）+ 隐式（文件元数据 AIGC 字段）
 - 创意原话记录于 \`state.json\`；需求单 \`brief.json\`；脚本 \`script/script.json\`；分镜 \`storyboard/storyboard.json\`
 - 品类 ${brief.category} · 拍摄行业 ${brief.industry ?? '未记录'} · 品牌字「${brief.brandText}」 · 受众 ${brief.audience} · 核心信息「${brief.message}」${brief.tagline ? ` · 定版字幕（用户原话）「${brief.tagline}」` : ''}${brief.proof ? `
 - 卖点依据（用户提供）：${brief.proof}` : ''}

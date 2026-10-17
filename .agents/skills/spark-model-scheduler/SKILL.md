@@ -1,6 +1,6 @@
 ---
 name: spark-model-scheduler
-version: "0.1.0"
+version: "0.2.0"
 description: Plan and check unified-memory use on a single DGX Spark (GB10, one memory pool shared by CPU and GPU) before starting or switching inference services - LLM, vision model, ComfyUI image or video generation. Use before bringing the stack up, before a video generation stage, when a model load fails or the machine starts swapping, or when the user asks whether a model "fits" next to the others.
 license: BUSL-1.1
 metadata:
@@ -62,11 +62,24 @@ budget first, then start things.
 | ComfyUI, Qwen-Image-Edit-2509 | 32 GB | same size as Qwen-Image; a different family, so release one before loading the other |
 | ComfyUI, Wan2.2 I2V A14B fp8 | 30 GB | two 14.3 GB experts loaded in turn + 6.7 GB text encoder + activations |
 | ComfyUI, Wan2.2 TI2V-5B | 20 GB | 10 GB model + 6.7 GB text encoder + activations |
+| ComfyUI, LTX-2.5 Fast 22B NVFP4, native 1080p | about 45 GB | measured 2026-10-17: lowest free memory 8.4 GB with both LLMs resident; 1088x1920, 121 frames, about 4 min per 5 s clip |
+| ComfyUI, RIFE 4.26 interpolation (x5 to 120 fps) | about 20 GB | 601 float frames at 1088x1920 (about 15 GB) plus the encoder; run after the video model is freed |
+| Qwen3-TTS voice container | about 8 GB | runs in its own container; free ComfyUI first (a film died here with CUDA out of memory before this was enforced) |
 | ComfyUI, ACE-Step music | 9 GB | 7.7 GB checkpoint |
+| Nemotron 3.5 Super VL 120B-A12B NVFP4 (planned) | 75 GB weights, about 91 GB with KV cache | vLLM recipe minimum for one Spark; cannot stay resident next to Step3-VL and diffusion - must sleep (level 2) outside the text stages. Measure before relying on it |
 | OS, Spotfoundry, reserve | 15 GB | |
 
 vLLM's `--gpu-memory-utilization` is a fraction of the whole pool and is claimed at
 startup, so start LLM services first and let ComfyUI allocate on demand.
+
+Phase plan the harness follows (sleep level 2 discards a service's weights and reloads them from NVMe on wake):
+
+| Phase | Awake | Asleep |
+|---|---|---|
+| text (brief, script, compliance, storyboard) | planner, reviewer | - |
+| hero still and frames | vision gate | planner |
+| clips and interpolation | - | planner, vision gate |
+| cut (voice, music, assembly) | woken in the background | - |
 
 Step-3.7-Flash (198B) needs ~116 GB even at IQ4_XS: it cannot share the machine with
 diffusion. Use it through the StepFun API, or run it alone in a dedicated planning phase.
