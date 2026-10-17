@@ -40,7 +40,7 @@ A vague brief produces a generic film. Fix the few decisions everything else dep
 {"id": "...", "title": "short Chinese title", "product": "what is being advertised", "category": "general|food|health_food|cosmetics|medical",
  "audience": "...", "message": "the one thing the viewer should remember, in Chinese", "ratio": "16:9", "durationSeconds": 30,
  "tone": "tone and visual style, in English", "brandText": "the lettering printed on the product, copied exactly",
- "industry": "computing|electronics|drink|skincare|food|general",
+ "industry": "computing|electronics|automotive|fragrance|drink|skincare|food|general",
  "tagline": "the closing line the request quotes, character for character; omitted if none",
  "appearance": "the product's look copied word for word from the request; omitted if it says nothing",
  "proof": "facts the client can substantiate", "resolution": "1080p", "fps": 60}
@@ -50,7 +50,7 @@ This is a shape: every value comes from this request.
 
 - `message` is in Chinese (*checked*): it is the line the viewer remembers and the end card's fallback. `title`, `product`, `audience`, `message` and `tone` may not be empty (*checked*).
 - `brandText` (*checked*: at most 4 Chinese characters or 12 Latin letters) is the only lettering that will ever appear inside a generated frame - on the product label, via the hero still - so copy it exactly as printed, never an abbreviation or a model name that is not on the product. Prefer common characters: the image model draws a rare character as a common look-alike.
-- `industry` (*checked*) decides how the product is lit, graded and sold, not its legal category: a computer, workstation, server or GPU is `computing`; earbuds, a phone or a camera is `electronics`. When it is missing the pipeline reads it from the product's name.
+- `industry` (*checked*) decides how the product is lit, graded and sold, not its legal category: a computer, workstation, server or GPU is `computing`; earbuds, a phone or a camera is `electronics`; a car is `automotive`; a perfume is `fragrance` (never `drink`, though it comes in a bottle). When it is missing the pipeline reads it from the product's name.
 - `tagline`: when the request quotes a closing line (字幕：“…”, 口号, 广告语, slogan), the pipeline takes it from the request itself, character for character, and the end card shows it instead of `message`. A line you wrote that is not in the request is dropped.
 - `proof`: only claims the user can back up - specs, figures, a source. Anything else is a wish, and the script must not state it as fact. On the command line it is `--proof`.
 

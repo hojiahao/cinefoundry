@@ -37,7 +37,9 @@ budget first, then start things.
 
    ```bash
    grep -E '^(MemFree|MemAvailable|Cached):' /proc/meminfo
-   sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
+   # The engine does this itself at every phase boundary (enterPhase -> releaseFileCache, no root needed).
+   # By hand, for a process outside the engine:
+   python3 -c "import os,sys; [os.posix_fadvise(os.open(os.path.join(d,f),os.O_RDONLY),0,0,os.POSIX_FADV_DONTNEED) for d,_,fs in os.walk(sys.argv[1]) for f in fs]" ~/models
    ```
 
    Plan against `MemFree` after the eviction, not against `MemAvailable` before it.
@@ -49,7 +51,7 @@ budget first, then start things.
 
    Exit code 1 means the plan does not fit with the reserve (default 10 GB). Reduce
    `--gpu-memory-utilization` / `--max-model-len` on the vLLM services, or stage the work.
-3. Keep one diffusion family resident at a time. With the image, edit and video models all left in ComfyUI next to the two LLMs, the GPU driver started failing allocations (`NV_ERR_NO_MEMORY` in the kernel log) and a 25-minute job died on a request timeout. Release at every phase boundary: hero still -> frames -> clips -> interpolation -> voice -> music. The harness frees ComfyUI and records available memory at each boundary (`enterPhase`); the page-cache eviction above is the operator's step.
+3. Keep one diffusion family resident at a time. With the image, edit and video models all left in ComfyUI next to the two LLMs, the GPU driver started failing allocations (`NV_ERR_NO_MEMORY` in the kernel log) and a 25-minute job died on a request timeout. Release at every phase boundary: hero still -> frames -> clips -> interpolation -> voice -> music. The harness frees ComfyUI and records available memory at each boundary (`enterPhase`); and releases the model files' page cache at the same boundary (*checked*: `releaseFileCache` drops every file over 1 MiB under the model root with `posix_fadvise`, no root needed; `CINEFOUNDRY_RELEASE_CACHE=0` turns it off).
 4. Stage work by phase when it does not fit at once. The Cinefoundry pipeline is naturally
    phased: text planning -> images -> video -> composition. Diffusion memory is only
    needed in the middle two phases, and the vision model only for breakdown and QA.

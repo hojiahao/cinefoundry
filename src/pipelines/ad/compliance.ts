@@ -92,7 +92,8 @@ Rewrite the same beats so the compliance issue stays fixed AND every check passe
   if (unrevised.length) ctx.log(`  open item: the reviewer flagged beat ${unrevised.join(', ')} but no compliant rewrite came back; check those lines before release`)
   // "Not approved" without naming a beat used to pass silently: keep it as an open item for the delivery report.
   if (reviewRun && !reviewRun.value.approve && flagged.length === 0 && !revised.length) ctx.log(`  open item: the reviewer did not approve the copy but named no beat (${(reviewRun.value.issues ?? []).join(' ').slice(0, 160)}); review the copy before release`)
-  const copy = script.beats.map((beat) => `${beat.vo}\n${beat.zh}\n${beat.text}`).join('\n')
+  // The end card is copy too: the client's closing line, or the message it falls back to, is scanned with the beats.
+  const copy = [...script.beats.map((beat) => `${beat.vo}\n${beat.zh}\n${beat.text}`), brief.tagline ?? brief.message].join('\n')
   const findings = scanCopy(copy, brief.category)
   await writeFile(join(ctx.dir!, 'script', 'script.json'), JSON.stringify(script, null, 2))
   await writeFile(join(ctx.dir!, 'script', 'copy.txt'), copy)

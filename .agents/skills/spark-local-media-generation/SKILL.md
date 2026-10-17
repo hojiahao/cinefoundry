@@ -25,7 +25,9 @@ Hero still first, frames second, clips last, interpolation after. Each step is a
 
    ```bash
    grep -E '^(MemFree|MemAvailable|Cached):' /proc/meminfo
-   sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
+   # The engine does this itself at every phase boundary (enterPhase -> releaseFileCache, no root needed).
+   # By hand, for a process outside the engine:
+   python3 -c "import os,sys; [os.posix_fadvise(os.open(os.path.join(d,f),os.O_RDONLY),0,0,os.POSIX_FADV_DONTNEED) for d,_,fs in os.walk(sys.argv[1]) for f in fs]" ~/models
    ```
 
    Do it after `cinefoundry mem free` and before the video phase above all: LTX-2.5 at native 1080p is the largest allocation of the film.
@@ -86,6 +88,6 @@ Native 1080p is the generation ceiling: `2k`, `4k` and `6k` deliveries are gener
 
 - `ComfyUI rejected the workflow` or a missing model file: run `cinefoundry doctor`. It compares every workflow template with the running ComfyUI and lists unknown nodes and missing weights.
 - Connection refused: ComfyUI is not up. See `deploy/spark/`.
-- CUDA out of memory, allocation failures in the GPU driver log, or heavy swapping: more than one diffusion family is resident, or the page cache is holding the memory CUDA needs. `cinefoundry mem free`, drop the page cache, then follow `spark-model-scheduler`.
+- CUDA out of memory, allocation failures in the GPU driver log, or heavy swapping: more than one diffusion family is resident, or the page cache is holding the memory CUDA needs. `cinefoundry mem free` (the engine also drops the model files' page cache at every phase boundary), then follow `spark-model-scheduler`.
 
 Model files and graphs behind each route: `references/workflows.md`.

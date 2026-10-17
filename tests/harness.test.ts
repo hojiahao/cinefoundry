@@ -52,6 +52,8 @@ beforeAll(async () => {
       if (!request.url?.endsWith('/chat/completions')) { response.writeHead(404).end(); return }
       const body = JSON.parse(Buffer.concat(chunks).toString())
       const system: string = body.messages[0].content
+      // Route by the agent's role line ("You are the <role> of Cinefoundry"), never by words a skill's text may contain.
+      const role = /^You are the (.+?) of Cinefoundry/.exec(system)?.[1] ?? ''
       const user = body.messages[1].content
       prompts.push(typeof user === 'string' ? user : JSON.stringify(user))
       const hasImage = Array.isArray(user)
@@ -66,10 +68,10 @@ beforeAll(async () => {
         const rejectNow = !shot1Rejected && JSON.stringify(user).includes(SHOT_1_MUST_SHOW)
         if (rejectNow) shot1Rejected = true
         reply = rejectNow ? { pass: false, score: 40, issues: ['a hand appears although the shot does not call for one'] } : { pass: true, score: 92, issues: [] }
-      } else if (system.includes('intake producer')) { seen.push('brief'); reply = replies.brief }
-      else if (system.includes('You are the creative director')) { seen.push('creative'); reply = TREATMENT }
-      else if (system.includes('compliance reviewer')) { seen.push('review'); reply = replies.review }
-      else if (system.includes('copywriter')) { seen.push('script'); reply = ++scriptCalls === 1 ? replies.badScript : replies.script }
+      } else if (role.startsWith('intake producer')) { seen.push('brief'); reply = replies.brief }
+      else if (role.startsWith('creative director')) { seen.push('creative'); reply = TREATMENT }
+      else if (role.startsWith('compliance reviewer')) { seen.push('review'); reply = replies.review }
+      else if (role.startsWith('copywriter')) { seen.push('script'); reply = ++scriptCalls === 1 ? replies.badScript : replies.script }
       else if (String(user).includes('quality gate rejected')) { seen.push('repair'); reply = { fixes: [{ issue: 'hands', change: 'product-only' }], delete: ['Shot 1: the product on crushed ice'], scene: String(/Current scene description: (.*)/.exec(String(user))?.[1]).replace(/^[^,]*/, 'Product-only macro of the product on crushed ice') } }
       else {
         seen.push('storyboard')
