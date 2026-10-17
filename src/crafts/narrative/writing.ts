@@ -2,7 +2,8 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chatJson } from '../../agent/llm.js'
 import { failIfHardProblems } from '../repair.js'
-import { scanCopy } from '../../lib/compliance.js'
+import { scanBrandWords, scanCopy } from '../../lib/compliance.js'
+import { brandBibleProblems, brandForCopy, brandForStory, brandPresenters } from '../brand.js'
 import { EN_ABSOLUTES } from '../../agent/checks.js'
 import { checkBible, checkScreenplay, checkShots, maxZhChars } from './checks.js'
 import { produced, type NarrativeContext } from './context.js'
@@ -10,10 +11,17 @@ import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
 
 const json = (value: unknown) => JSON.stringify(value, null, 2)
 
+/** The screenplay checks of this run: under a brand kit its forbidden words are restricted wording. */
+const screenplayWant = (ctx: NarrativeContext) => ({ seconds: ctx.episodeSeconds, ratio: ctx.ratio, ...(ctx.brand ? { forbidden: { brand: ctx.brand.kit.name, words: ctx.brand.kit.forbidden.words } } : {}) })
+
 /** Development: the showrunner (or the creator-content writer) writes the bible - logline, world, look, cast, episode plan. */
 export async function developmentStage(ctx: NarrativeContext): Promise<string> {
   const episodes = ctx.options.episodes ?? 1
   ctx.log(`▸ development  ${ctx.writer.role} · nemotron`)
+  // Under a brand kit: its product, voice and wording frame the story, and its recurring presenters are in the cast.
+  if (ctx.brand) ctx.brand.presenters = await brandPresenters(ctx.brand)
+  const brandNote = ctx.brand ? `\n\n${brandForStory(ctx.brand, ctx.brand.product, ctx.brand.presenters)}\n` : ''
+  const bibleProblems = (value: SeriesBible & { clientNames?: string[] }) => [...checkBible(value, { episodes, request: ctx.request }), ...(ctx.brand ? brandBibleProblems(value, ctx.brand.presenters) : [])]
   const run = await chatJson<SeriesBible & { id?: string; title?: string }>(
     ctx.planner,
     {
@@ -25,17 +33,17 @@ export async function developmentStage(ctx: NarrativeContext): Promise<string> {
 The client's request, in their own words:
 ${ctx.request}
 
-Format: ${episodes} episode(s) of ${ctx.episodeSeconds} seconds, ${ctx.ratio}. Every shot is 5 seconds; characters speak English on screen (lip-synced), with Chinese subtitles.
+Format: ${episodes} episode(s) of ${ctx.episodeSeconds} seconds, ${ctx.ratio}. Every shot is 5 seconds; characters speak English on screen (lip-synced), with Chinese subtitles.${brandNote}
 Characters the client names keep exactly those names: "name" is the English (pinyin) form, then the client's own Chinese, e.g. "Lin Xia / 林夏". List the names the client wrote in "clientNames".
 Return JSON only:
 {"id": "lowercase-dashed-project-id", "title": "short Chinese title", "clientNames": ["names exactly as the request writes them"], "logline": "中文", "genre": "English", "world": "English, words only", "look": "English, words only: light, palette, texture",
  "characters": [{"id": "mia", "name": "Mia / 米娅", "role": "lead", "age": 28, "gender": "female", "look": "English", "wardrobe": "English", "arc": "中文", "voice": "English"}],
  "episodes": [{"episode": 1, "title": "中文", "synopsis": "中文", "hook": "中文", "cliffhanger": "中文"}]}`,
     },
-    (value) => checkBible(value, { episodes, request: ctx.request }),
+    bibleProblems,
     5,
   )
-  failIfHardProblems('development', checkBible(run.value, { episodes, request: ctx.request }), run.attempts)
+  failIfHardProblems('development', bibleProblems(run.value), run.attempts)
   let draft = run.value
   // The premise is reviewed once, here, by an independent reviewer - as a studio clears a project before writing it -
   // and sent back to the showrunner with the findings, at most twice. Episode reviews then judge execution only.
@@ -45,7 +53,7 @@ Return JSON only:
     const redo = await chatJson<SeriesBible & { id?: string; title?: string; clientNames?: string[] }>(ctx.planner, {
       system: await ctx.agentPrompt(ctx.writer.role, [ctx.writer.skill, 'content-compliance']), thinking: false, maxTokens: 5000, temperature: 0.6,
       user: `Your series bible:\n${json(draft)}\n\nThe compliance reviewer did not clear it:\n${premise.issues.map((i) => `- ${i}`).join('\n')}\nKeep the client's story and names; change only what the findings name. Return the corrected bible as JSON only, same shape.`,
-    }, (value) => checkBible(value, { episodes, request: ctx.request }), 4)
+    }, bibleProblems, 4)
     draft = redo.value
     premise = await reviewPremise(ctx, draft)
   }
@@ -54,6 +62,7 @@ Return JSON only:
   const id = ctx.options.id ?? (modelId && /^[a-z0-9][a-z0-9-]{0,40}$/.test(modelId) ? modelId : `${ctx.format}-${Date.now().toString(36)}`)
   const dir = await ctx.openProject({ id, title: title ?? bible.logline.slice(0, 20), ratio: ctx.ratio, durationSeconds: ctx.episodeSeconds })
   ctx.bible = bible
+  if (ctx.brand) await ctx.record('development', 'brand-kit', undefined, { brand: ctx.brand.id, version: ctx.brand.version, product: ctx.brand.product.id, presenters: ctx.brand.presenters.map((p) => p.id) })
   await writeFile(join(dir, 'story', 'bible.json'), json(bible))
   await ctx.record('development', ctx.writer.role, ctx.planner, { seconds: run.seconds, attempts: run.attempts, characters: bible.characters.map((c) => c.id), episodes: bible.episodes.length })
   return `${bible.characters.length} characters · ${bible.episodes.length} episodes`
@@ -98,16 +107,16 @@ export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
         temperature: 0.7,
         user: `Series bible:\n${json(bible)}\n\nWrite episode ${episode}: "${plan.title}" - ${plan.synopsis}
 It opens on the hook (${plan.hook}) and ends on the cliffhanger (${plan.cliffhanger}).${previous ? `\nThe previous episode ended: ${previous.scenes.at(-1)?.action ?? ''}` : ''}
-Running time ${ctx.episodeSeconds} seconds: ${Math.floor(ctx.episodeSeconds / 5)} shots of 5 seconds, each shot speaks at most one line.
+Running time ${ctx.episodeSeconds} seconds: ${Math.floor(ctx.episodeSeconds / 5)} shots of 5 seconds, each shot speaks at most one line.${ctx.brand ? `\n${brandForCopy(ctx.brand.kit)}` : ''}
 Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene": 1, "heading": "INT. PLACE - TIME", "characters": ["id"], "action": "English", "lines": [{"speaker": "id", "en": "English", "zh": "中文字幕", "delivery": "English"}]}]}`,
       },
-      (value) => checkScreenplay(value, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio }),
+      (value) => checkScreenplay(value, bible, screenplayWant(ctx)),
       6,
     )
     // Subtitles are the subtitle editor's craft, not a reason to throw the screenplay away: punctuation is normalised by
     // rule, and only the lines still too long go to a subtitle editor to tighten.
     const play = await fitSubtitles(ctx, { ...run.value, episode })
-    failIfHardProblems(`screenplay ${episode}`, checkScreenplay(play, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio }), run.attempts)
+    failIfHardProblems(`screenplay ${episode}`, checkScreenplay(play, bible, screenplayWant(ctx)), run.attempts)
     ctx.plays.push(play)
     await writeFile(join(ctx.dir!, 'story', `ep${String(episode).padStart(2, '0')}.screenplay.json`), json(play))
     await ctx.record('screenplay', 'screenwriter', ctx.planner, { episode, seconds: run.seconds, attempts: run.attempts, scenes: play.scenes.length, lines: play.scenes.reduce((n, s) => n + s.lines.length, 0) })
@@ -174,6 +183,9 @@ export async function contentComplianceStage(ctx: NarrativeContext): Promise<str
       // The same restricted-wording scan the ads get, on the Chinese subtitles, and absolute claims in English.
       const scan = scanCopy(lines.map(({ l }) => l.zh).join('\n'), 'general').filter((f) => f.severity === 'block').map((f) => `restricted wording "${f.text}" (${f.rule})`)
       for (const { s, n, l } of lines) { const hit = EN_ABSOLUTES.exec(l.en)?.[0]; if (hit) scan.push(`scene ${s.scene} line ${n + 1}: absolute claim "${hit}"`) }
+      // The kit's forbidden words, in either language, must be rewritten like the law's.
+      if (ctx.brand) for (const { s, n, l } of lines) for (const f of scanBrandWords(`${l.en}\n${l.zh}`, ctx.brand.kit.forbidden.words, ctx.brand.kit.name)) scan.push(`scene ${s.scene} line ${n + 1}: the brand kit forbids "${f.text}"`)
+      const brandNote = ctx.brand ? `This film is made for ${ctx.brand.kit.name}. Its substantiated claims are the only proof a line about the product may rest on: ${ctx.brand.kit.claims.map((c) => `${c.claim} (${c.source})`).join('; ') || 'none - no product claims'}. Topics the brand keeps out: ${ctx.brand.kit.forbidden.topics.join(', ') || 'none'}.\n` : ''
       const run = await chatJson<ContentReview>(
         ctx.editor,
         {
@@ -181,7 +193,7 @@ export async function contentComplianceStage(ctx: NarrativeContext): Promise<str
           user: `Series logline: ${bible.logline} (${bible.genre}). Characters: ${bible.characters.map((c) => `${c.id}, ${c.age}, ${c.role}`).join('; ')}.
 Episode ${play.episode} (scene.line numbered from 1):
 ${play.scenes.map((s) => `Scene ${s.scene} ${s.heading}: ${s.action}\n${s.lines.map((l, n) => `  ${s.scene}.${n + 1} ${l.speaker}: ${l.en} / ${l.zh}`).join('\n')}`).join('\n')}
-${scan.length ? `The deterministic scan found: ${scan.join('; ')}. Each of these must be rewritten.\n` : ''}The series premise has already been cleared; judge how this episode executes it - its lines, actions and on-screen behaviour.\n${ALLOWED}\nJudge only what is written above. Every issue quotes the exact words it is about, in quotation marks.
+${scan.length ? `The deterministic scan found: ${scan.join('; ')}. Each of these must be rewritten.\n` : ''}${brandNote}The series premise has already been cleared; judge how this episode executes it - its lines, actions and on-screen behaviour.\n${ALLOWED}\nJudge only what is written above. Every issue quotes the exact words it is about, in quotation marks.
 Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted words\\" - why"], "revised": [{"scene": N, "line": M, "en": "...", "zh": "..."}]}`,
         },
         (r) => checkReviewEvidence(r, source),
@@ -193,7 +205,7 @@ Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted 
       if (review.approve) break
       if (!review.revised?.length) break
       const next: Screenplay = { ...play, scenes: play.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const r = review.revised!.find((x) => x.scene === s.scene && x.line === n + 1); return r ? { ...l, en: r.en ?? l.en, zh: r.zh ?? l.zh } : l }) })) }
-      const problems = checkScreenplay(next, bible, { seconds: ctx.episodeSeconds, ratio: ctx.ratio })
+      const problems = checkScreenplay(next, bible, screenplayWant(ctx))
       if (problems.length) { ctx.log(`  reviewer rewrites fail the screenplay checks (${problems[0]}); not taken`); break }
       play = next
     }

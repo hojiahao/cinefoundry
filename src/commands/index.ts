@@ -22,6 +22,8 @@ import type { NarrativeContext, NarrativeOptions } from '../crafts/narrative/con
 import { endpoints, type ModelEndpoint } from '../agent/llm.js'
 import { runAblation, writeBenchmarks } from '../agent/evals.js'
 import { startStudio } from '../studio/server.js'
+import { brandFinish, loadBrand } from '../crafts/brand.js'
+import { brandCommand } from './brand.js'
 
 export type Command = (args: ParsedArgs) => Promise<number>
 
@@ -211,8 +213,13 @@ async function cut(args: ParsedArgs): Promise<number> {
   }
   const record: Recorder = async (stage, agent, _endpoint, detail) =>
     appendFile(join(dir, 'reports', 'run.jsonl'), `${JSON.stringify({ ts: new Date().toISOString(), runId: state.runId, stage, agent, execution: 'local-dgx-spark', ...detail })}\n`)
+  const brief = await read<Brief>('brief.json')
+  // A film made under a kit is re-cut under the kit as it is now; a changed kit is said, not silently applied.
+  const brand = brief.brand ? await loadBrand(brief.brand.id) : undefined
+  if (brand && brand.version !== brief.brand!.version) console.error(`note: the ${brand.id} kit changed since this film was made (${brief.brand!.version} -> ${brand.version}); re-cutting with the current kit`)
+  if (brand) await record('cut', 'brand-kit', undefined, { brand: brand.id, version: brand.version })
   const output = await finishFilm({
-    dir, brief: await read<Brief>('brief.json'), script: await read<Script>('script/script.json'), storyboard: await read<Storyboard>('storyboard/storyboard.json'),
+    dir, brief, ...(brand ? { brand: await brandFinish(brand) } : {}), script: await read<Script>('script/script.json'), storyboard: await read<Storyboard>('storyboard/storyboard.json'),
     heroPath: join(dir, hero.path), endStill: flag(args, 'end-still') ? resolve(flag(args, 'end-still')!) : undefined, comfy: new ComfyClient(), audio: flag(args, 'audio'), silent: flag(args, 'silent') === 'true', record, log: (line) => console.error(line),
   })
   await addAsset(id, { id: 'final-cut', kind: 'video', stage: 'cut', path: 'cut/final.mp4', execution: 'local-dgx-spark', model: 'ffmpeg' })
@@ -258,7 +265,7 @@ async function studio(args: ParsedArgs): Promise<number> {
 /** Brief in, finished film out: Cinefoundry Harness runs every stage with its agents and skills. */
 async function harnessCommand(args: ParsedArgs): Promise<number> {
   const brief = args.positionals.join(' ').trim()
-  if (!brief) throw new UsageError('usage: cinefoundry harness "<brief>" [--id id] [--ratio 16:9|9:16|1:1] [--duration 15] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
+  if (!brief) throw new UsageError('usage: cinefoundry harness "<brief>" [--id id] [--brand brand-id] [--product product-id] [--ratio 16:9|9:16|1:1] [--duration 15] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image photo] [--proof "facts the client can substantiate"] [--plan-only] [--without-skills]')
   const result = await runHarness({
     brief,
     id: flag(args, 'id'),
@@ -273,6 +280,8 @@ async function harnessCommand(args: ParsedArgs): Promise<number> {
     silent: flag(args, 'silent') === 'true',
     productImage: flag(args, 'product-image'),
     proof: flag(args, 'proof'),
+    brand: flag(args, 'brand'),
+    product: flag(args, 'product'),
     candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
     bestOf: flag(args, 'best-of') === 'true',
     frameScheduling: flag(args, 'frame-scheduling') as never,
@@ -297,13 +306,15 @@ function narrativeOptions(args: ParsedArgs, usage: string): NarrativeOptions {
     videoModel: flag(args, 'video-model') as never,
     candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
     castDir: flag(args, 'cast'),
+    brand: flag(args, 'brand'),
+    product: flag(args, 'product'),
     planOnly: flag(args, 'plan-only') === 'true',
     withoutSkills: flag(args, 'without-skills') === 'true',
   }
 }
 
-const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id id] [--cast projects/<id>/cast] [--plan-only]'
-const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 60] [--ratio 9:16] [--fps 30] [--id id] [--cast projects/<id>/cast] [--plan-only]'
+const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id id] [--cast projects/<id>/cast] [--brand brand-id] [--product product-id] [--plan-only]'
+const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 60] [--ratio 9:16] [--fps 30] [--id id] [--cast projects/<id>/cast] [--brand brand-id] [--product product-id] [--plan-only]'
 
 /** `cinefoundry short|drama`: the format's pipeline from the registry, run with the options the narrative formats share. */
 function narrativeCommand(format: Extract<Format, 'short' | 'drama'>, usage: string): Command {
@@ -324,4 +335,4 @@ async function evalCommand(args: ParsedArgs): Promise<number> {
   return 0
 }
 
-export const COMMANDS: Record<string, Command> = { ad: harnessCommand, short: narrativeCommand('short', SHORT_USAGE), drama: narrativeCommand('drama', DRAMA_USAGE), harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }
+export const COMMANDS: Record<string, Command> = { brand: brandCommand, ad: harnessCommand, short: narrativeCommand('short', SHORT_USAGE), drama: narrativeCommand('drama', DRAMA_USAGE), harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }

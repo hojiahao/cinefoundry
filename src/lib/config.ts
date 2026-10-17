@@ -47,6 +47,7 @@ export const SETTINGS = [
   { name: 'CINEFOUNDRY_AGENTS_MD', group: 'Paths', default: 'AGENTS.md', meaning: 'File whose `## Rules` section is injected into every agent.' },
   { name: 'CINEFOUNDRY_WORKFLOWS', group: 'Paths', default: '<package>/workflows', fallback: () => join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', 'workflows'), meaning: 'Folder of the ComfyUI workflow templates. Read once at start-up.' },
   { name: 'CINEFOUNDRY_KEYS_FILE', group: 'Paths', default: 'runtime-data/keys.env', meaning: 'KEY=value file the CLI loads at start-up for variables not already set (API keys stay out of the repository).' },
+  { name: 'CINEFOUNDRY_BRANDS', group: 'Paths', default: 'brands', meaning: 'Root of the brand kits (brands/<brand-id>/brand.json); kept out of the repository.' },
   { name: 'CINEFOUNDRY_VOICE_LIBRARY', group: 'Paths', default: 'deploy/voices/library.json', meaning: 'The casting library of designed voices.' },
   { name: 'CINEFOUNDRY_STEP_AUDIO_DIR', group: 'Paths', default: 'runtime-data/step-audio', meaning: 'Work folder shared with the audio containers: voice references, lines, effects and job files live under it.' },
   { name: 'SPARK_MODEL_DIR', group: 'Paths', default: '~/models', fallback: () => join(homedir(), 'models'), meaning: 'Model root; the audio model folders default under it and memory release walks it.' },

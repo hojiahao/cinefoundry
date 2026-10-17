@@ -36,6 +36,7 @@ Cinefoundry is configured by environment variables only. This table is generated
 | `CINEFOUNDRY_AGENTS_MD` | `AGENTS.md` | File whose `## Rules` section is injected into every agent. |
 | `CINEFOUNDRY_WORKFLOWS` | `<package>/workflows` | Folder of the ComfyUI workflow templates. Read once at start-up. |
 | `CINEFOUNDRY_KEYS_FILE` | `runtime-data/keys.env` | KEY=value file the CLI loads at start-up for variables not already set (API keys stay out of the repository). |
+| `CINEFOUNDRY_BRANDS` | `brands` | Root of the brand kits (brands/<brand-id>/brand.json); kept out of the repository. |
 | `CINEFOUNDRY_VOICE_LIBRARY` | `deploy/voices/library.json` | The casting library of designed voices. |
 | `CINEFOUNDRY_STEP_AUDIO_DIR` | `runtime-data/step-audio` | Work folder shared with the audio containers: voice references, lines, effects and job files live under it. |
 | `SPARK_MODEL_DIR` | `~/models` | Model root; the audio model folders default under it and memory release walks it. |

@@ -4,7 +4,7 @@
 
 影工坊（Cinefoundry）制作三种片型：广告片、创作者短视频和微短剧。每种片型都按该行业专业团队的流程来做：每个岗位是一个
 Skill（`.agents/skills/<name>/SKILL.md`），每个制作环节是流水线中的一个阶段（`src/pipelines`），岗位之间的每次交接都是一道
-由代码执行的质检门。本文说明三者如何一一对应：行业流程、岗位与 25 个 Skill、每条流水线的阶段、质检门和交付规格。行业依据见
+由代码执行的质检门。本文说明三者如何一一对应：行业流程、岗位与 26 个 Skill、每条流水线的阶段、质检门和交付规格。行业依据见
 [`research/film-shortvideo-drama-standards.md`](research/film-shortvideo-drama-standards.md)。
 
 ## 一、行业流程
@@ -63,10 +63,10 @@ Skill（`.agents/skills/<name>/SKILL.md`），每个制作环节是流水线中�
 
 ## 二、岗位与 Skill
 
-25 个 Skill，一个岗位一个，分六类（每个 `SKILL.md` 的 `metadata.category` 字段）。“执行位置”一栏说明岗位在哪里工作：
+26 个 Skill，一个岗位一个，分六类（每个 `SKILL.md` 的 `metadata.category` 字段）。“执行位置”一栏说明岗位在哪里工作：
 加载该 Skill 的智能体所在的流水线阶段，或由引擎按 Skill 规则用代码执行的步骤（代码强制执行的规则在 Skill 中标为 *checked*）。
 
-### 制片（production，7 个）
+### 制片（production，8 个）
 
 | Skill | 岗位 | 执行位置 |
 |---|---|---|
@@ -74,6 +74,7 @@ Skill（`.agents/skills/<name>/SKILL.md`），每个制作环节是流水线中�
 | `cinefoundry-short-video` | 短视频制片人 | 入口：运行 `cinefoundry short` |
 | `cinefoundry-micro-drama` | 剧集制片人 | 入口：运行 `cinefoundry drama` |
 | `ad-brief-intake` | 客户策划 | 广告阶段 `brief` |
+| `brand-kit` | 品牌管理 | `cinefoundry brand init|check|show`；各片型的 `--brand`：启动前检查，然后作用于需求、阐述、校验、合规、生图、成片与包装 |
 | `ad-compliance-review` | 广告法务 | 广告阶段 `compliance`，以及 `versions` 中剪辑版的文案 |
 | `content-compliance` | 内容审核 | 短视频与微短剧阶段 `development`（题材）和 `compliance` |
 | `spark-model-scheduler` | 技术统筹 | 引擎的阶段切换：语言模型休眠，同一时间只加载一类扩散模型 |

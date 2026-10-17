@@ -6,6 +6,7 @@ import { chatJson } from '../../agent/llm.js'
 import { scriptUser } from '../../agent/prompts.js'
 import { treatmentForCopy } from '../../crafts/treatment.js'
 import { failIfHardProblems } from '../../crafts/repair.js'
+import { brandForCopy } from '../../crafts/brand.js'
 import { judgeWith, need, type AdContext } from './context.js'
 
 /** Script: the copywriter writes the beats from the brief and the treatment; every draft is checked and judged. */
@@ -22,7 +23,7 @@ export async function scriptStage(ctx: AdContext): Promise<string> {
       thinking: false,
       maxTokens: 3000,
       temperature: 0.8,
-      user: `${scriptUser(brief, ctx.request)}\n\n${treatmentForCopy(treatment)}`,
+      user: `${scriptUser(brief, ctx.request)}\n\n${treatmentForCopy(treatment)}${ctx.brand ? `\n\n${brandForCopy(ctx.brand.kit)}` : ''}`,
     },
     async (script) => {
       const problems = checkScript(script, brief)

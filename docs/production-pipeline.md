@@ -5,7 +5,7 @@
 Cinefoundry makes three formats: ad films, creator shorts and micro-dramas. Each one follows the workflow a professional
 crew uses for that format. Every crew role is a skill (`.agents/skills/<name>/SKILL.md`), every production step is a
 pipeline stage (`src/pipelines`), and every hand-off between roles is a gate that code enforces. This document sets
-out how the three are matched: the industry workflow, the roles and the 25 skills, the stages of each pipeline, the
+out how the three are matched: the industry workflow, the roles and the 26 skills, the stages of each pipeline, the
 gates and the delivery specifications. The industry sources are collected in
 [`research/film-shortvideo-drama-standards.md`](research/film-shortvideo-drama-standards.md).
 
@@ -70,11 +70,11 @@ force 2026-09-01).
 
 ## 2. Roles and skills
 
-25 skills, one per role, in six categories (the `metadata.category` field of each `SKILL.md`). The *Runs in* column
+26 skills, one per role, in six categories (the `metadata.category` field of each `SKILL.md`). The *Runs in* column
 says where the role works: a pipeline stage whose agent loads the skill, or a step the engine carries out in code
 following the skill's rules (rules the code enforces are marked *checked* in the skill).
 
-### Production (7)
+### Production (8)
 
 | Skill | Role | Runs in |
 |---|---|---|
@@ -82,6 +82,7 @@ following the skill's rules (rules the code enforces are marked *checked* in the
 | `cinefoundry-short-video` | Short-video producer | Entry point: runs `cinefoundry short` |
 | `cinefoundry-micro-drama` | Series producer | Entry point: runs `cinefoundry drama` |
 | `ad-brief-intake` | Account planner | Ad stage `brief` |
+| `brand-kit` | Brand manager, brand guardian | `cinefoundry brand init|check|show`; `--brand` on every format: preflight check, then brief, treatment, checks, compliance, frames, finishing and packaging |
 | `ad-compliance-review` | Advertising legal | Ad stage `compliance` and the cutdown copy in `versions` |
 | `content-compliance` | Content review | Short and drama stages `development` (premise) and `compliance` |
 | `spark-model-scheduler` | Technical producer | Engine phase boundaries: language models rested, one diffusion family loaded at a time |

@@ -41,8 +41,10 @@ pgrep -af "cli.js (ad|short|drama|harness)"; curl -sf 127.0.0.1:8001/v1/models >
 4. Run from the repository root:
 
    ```bash
-   node dist/cli.js drama '<the idea, verbatim>' [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id <series-id>] [--cast projects/<earlier-id>/cast]
+   node dist/cli.js drama '<the idea, verbatim>' [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id <series-id>] [--cast projects/<earlier-id>/cast] [--brand <brand-id> [--product <product-id>]]
    ```
+
+   A brand-funded series passes `--brand` with the brand's kit (skill `brand-kit`): its recurring presenter is cast from the kit's record, and its wording, fonts, grade, logo and legal lines apply; a kit that fails its check stops the run before it starts (*checked*).
 
    Defaults: 9:16, native 1080p, 24 fps (a higher rate reads as soap opera), 120-second episodes (two minutes, the length of a domestic premium micro-drama episode). Use `--plan-only` to stop after the bible, screenplays and shot lists so the user approves the story before any GPU time.
 5. Run it in the background and report progress from the `▸` lines.

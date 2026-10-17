@@ -2,7 +2,9 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chatJson } from '../../agent/llm.js'
 import { exec } from '../../lib/exec.js'
+import { scanBrandWords } from '../../lib/compliance.js'
 import type { NarrativeContext } from './context.js'
+import { brandPackaging } from '../brand.js'
 
 export interface Packaging {
   /** Three title variants for the platform's A/B test (YouTube's Test & Compare takes three). */
@@ -42,13 +44,14 @@ export async function packagingStage(ctx: NarrativeContext): Promise<string> {
       thinking: false, maxTokens: 1500, temperature: 0.6,
       user: `Video: ${ctx.bible!.logline}
 Screenplay: ${play.scenes.map((s) => `${s.heading}: ${s.action} ${s.lines.map((l) => l.zh).join(' ')}`).join(' | ')}
-Shots: ${shots.map((s) => `${s.shot}. ${s.image_prompt.slice(0, 90)}`).join(' | ')}
+Shots: ${shots.map((s) => `${s.shot}. ${s.image_prompt.slice(0, 90)}`).join(' | ')}${ctx.brand ? `\nMade for ${ctx.brand.kit.name}; its own hashtags (${ctx.brand.kit.platforms.hashtags.join(' ')}) are added by the studio - write the film's. Never use the kit's forbidden words: ${ctx.brand.kit.forbidden.words.join(', ') || 'none'}.` : ''}
 Return JSON only: {"titles": ["...", "...", "..."], "cover": {"shot": 1, "text": "..."}, "description": "...", "hashtags": ["#..."]}`,
     },
-    (value) => checkPackaging(value, shots.length),
+    (value) => [...checkPackaging(value, shots.length), ...(ctx.brand ? scanBrandWords([...(value.titles ?? []), value.description ?? '', value.cover?.text ?? '', ...(value.hashtags ?? [])].join('\n'), ctx.brand.kit.forbidden.words, ctx.brand.kit.name).map((f) => `"${f.text}": ${f.reason}`) : [])],
     4,
   )
-  const pack = run.value
+  // The brand's hashtags lead and its handles are attached by code: the editor never retypes them.
+  const pack: Packaging & { handles?: Record<string, string> } = ctx.brand ? { ...run.value, ...brandPackaging(ctx.brand.kit, run.value.hashtags) } : run.value
   await writeFile(join(ctx.dir!, 'reports', 'packaging.json'), JSON.stringify(pack, null, 2))
   // The cover is the chosen shot's approved first frame, at full quality: what the feed shows before anyone presses play.
   const frame = ctx.frames.get(`${play.episode}:${pack.cover.shot}`)

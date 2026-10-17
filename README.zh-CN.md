@@ -11,7 +11,7 @@
   <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A5%2022-5fa04e">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.8-3178c6">
   <img alt="Platform" src="https://img.shields.io/badge/platform-NVIDIA%20DGX%20Spark%20(GB10%20%C2%B7%20aarch64)-76b900">
-  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-25-d9b26a">
+  <img alt="Agent Skills" src="https://img.shields.io/badge/Agent%20Skills-26-d9b26a">
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
 
 | | 传统制作 | 通用 AI 视频工具 | 影工坊 |
 |---|---|---|---|
-| **谁来做** | 一组专业人员，按周计 | 一个人逐段写提示词 | 25 个岗位智能体，各按本岗位的行业规范工作 |
+| **谁来做** | 一组专业人员，按周计 | 一个人逐段写提示词 | 26 个岗位智能体，各按本岗位的行业规范工作 |
 | **一致性** | 真实产品、真实演员 | 产品和人脸在镜头之间变样 | 每个产品一张过审的定妆图，每个角色一张锁定的定妆照，每一帧都以它为参考生成 |
 | **质量把关** | 制片、剪辑、质检公司 | 谁看谁把关 | 每一帧过视觉质检，每一句台词过 Whisper 校音，每一个字过独立审稿，都在进入下一个更贵的环节之前 |
 | **画面文字** | 后期排版 | 模型直接画，常出乱码 | 模型从不画字；标题和字幕用真字体排版，排版前逐字检查字体覆盖 |
@@ -58,7 +58,7 @@
 - **工艺共享。** 编剧、视觉、声音与后期工艺（`src/crafts`）在片型之间共用：广告的导演阐述、叙事类剧本、选角、按身份质检的生图、口型同步对白、四轨混音与双语字幕。
 - **阶段之间有质检门。** 没过合规的文案和台词到不了生成环节；没过视觉质检的画面在花视频时间之前就重拍；Whisper 听错的台词重录。
 - **一个内存池统一调度。** CPU 与 GPU 共用 121.7 GB 统一内存。两个语言模型常驻；扩散模型按阶段加载，在每个阶段切换时释放，同一时间只留一族。
-- **Skill 是开放格式。** 25 个 Skill 都通过文件和 JSON 驱动 `cinefoundry` 命令行，Claude Code、Codex、DeepSeek Harness 等任何支持 Agent Skills 的客户端都能直接驱动这个工作室。
+- **Skill 是开放格式。** 26 个 Skill 都通过文件和 JSON 驱动 `cinefoundry` 命令行，Claude Code、Codex、DeepSeek Harness 等任何支持 Agent Skills 的客户端都能直接驱动这个工作室。
 
 ## 快速开始
 
@@ -122,7 +122,7 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 
 ## Agent Skills
 
-25 个 Skill，一个 Skill 对应真实制作中的一个岗位，按六类组织。三类片型共用视觉、声音与后期班底，编剧与合规按片型分工。
+26 个 Skill，一个 Skill 对应真实制作中的一个岗位，按六类组织。三类片型共用视觉、声音与后期班底，编剧与合规按片型分工。
 
 **制片统筹**
 
@@ -132,6 +132,7 @@ echo "全网第一的香水，100%纯天然" | node dist/cli.js copy-check - --c
 | [`cinefoundry-short-video`](.agents/skills/cinefoundry-short-video/SKILL.md) | 短视频制片人 | 短视频入口：选题到成片与平台包装 |
 | [`cinefoundry-micro-drama`](.agents/skills/cinefoundry-micro-drama/SKILL.md) | 短剧监制 | 微短剧入口：剧集圣经、选角定妆到逐集成片 |
 | [`ad-brief-intake`](.agents/skills/ad-brief-intake/SKILL.md) | 客户经理 / 策划 | 解读简报，只问阻塞项，其余自行决定并说明 |
+| [`brand-kit`](.agents/skills/brand-kit/SKILL.md) | 品牌管理 | 可复用的品牌套件：字样、标识、色板、字体、声线、调性、可证明的声称、法律声明，应用到品牌名下的每一部片 |
 | [`ad-compliance-review`](.agents/skills/ad-compliance-review/SKILL.md) | 广告法务 | 《广告法》用词扫描与独立审稿，`block` 级必须改写 |
 | [`content-compliance`](.agents/skills/content-compliance/SKILL.md) | 内容审核 | 微短剧管理规定、内容红线、AI 标识、平台申报、肖像与声音权利 |
 | [`spark-model-scheduler`](.agents/skills/spark-model-scheduler/SKILL.md) | 技术统筹 | 统一内存先量后排，按阶段加载与释放模型 |
