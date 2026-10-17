@@ -89,6 +89,8 @@ export interface FilmOptions {
   metadata?: Record<string, string>
   /** Integrated loudness target in LUFS for the soundtrack (web -16, broadcast -24); true peak is held at -1.5 dBTP. */
   loudness?: number
+  /** A brand logo composited over the graded picture from `start` to the end, so its colours are never graded. */
+  logo?: { image: string; x: number; y: number; width: number; height: number; start: number }
 }
 
 const overlapAt = (overlaps: number | number[], join: number) => (Array.isArray(overlaps) ? overlaps[join] ?? 0 : overlaps)
@@ -144,9 +146,16 @@ export async function assembleFilm(clips: string[], output: string, options: Fil
   const grade = [options.grade ?? GRADES.neutral, `fade=t=in:st=0:d=0.35,fade=t=out:st=${(total - 0.5).toFixed(3)}:d=0.5`].join(',')
   chain += `;${last}${grade}[graded]`
   let videoLabel = '[graded]'
+  // The logo input comes after the clips and the soundtrack, so the soundtrack keeps its input index.
+  const logoInput = clips.length + (options.audio ? 1 : 0)
+  if (options.logo) {
+    const { x, y, width: w, height: h, start } = options.logo
+    chain += `;[${logoInput}:v]scale=${w}:${h}:flags=lanczos,format=rgba,fade=t=in:st=${start.toFixed(3)}:d=0.4:alpha=1[logo];[graded][logo]overlay=${x}:${y}:enable='gte(t,${start.toFixed(3)})'[branded]`
+    videoLabel = '[branded]'
+  }
   if (options.ass) {
     const escaped = options.ass.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'")
-    chain += `;[graded]ass='${escaped}'[titled]`
+    chain += `;${videoLabel}ass='${escaped}'[titled]`
     videoLabel = '[titled]'
   }
   // Tag the frames themselves: the encoder's -color_* options alone left primaries and transfer untagged (delivery QC).
@@ -158,6 +167,7 @@ export async function assembleFilm(clips: string[], output: string, options: Fil
     const loud = options.loudness ?? -16
     chain += `;[${clips.length}:a]afade=t=in:st=0:d=0.3,afade=t=out:st=${(total - 0.8).toFixed(3)}:d=0.8,loudnorm=I=${loud}:TP=-1.5:LRA=11,aresample=48000[sound]`
   }
+  if (options.logo) args.push('-loop', '1', '-t', total.toFixed(3), '-i', options.logo.image)
   args.push('-filter_complex', chain, '-map', videoLabel)
   if (options.audio) args.push('-map', '[sound]', '-t', total.toFixed(3), '-c:a', 'aac', '-b:a', '320k', '-ar', '48000')
   for (const [key, value] of Object.entries(options.metadata ?? {})) args.push('-metadata', `${key}=${value}`)

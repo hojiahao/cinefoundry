@@ -38,13 +38,14 @@ pgrep -af "cli.js (ad|short|drama|harness)"; curl -sf 127.0.0.1:8001/v1/models >
 3. Run, from the repository root:
 
    ```bash
-   node dist/cli.js ad '<the brief, verbatim>' [--id <project-id>] [--duration 30] [--ratio 16:9|9:16|1:1] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image <photo>] [--proof "<facts>"]
+   node dist/cli.js ad '<the brief, verbatim>' [--id <project-id>] [--duration 30] [--ratio 16:9|9:16|1:1] [--resolution 1080p|2k|4k|6k] [--fps 60|24|30|120] [--product-image <photo>] [--proof "<facts>"] [--brand <brand-id> [--product <product-id>]]
    ```
 
    `node dist/cli.js harness` is the same command and still works.
 
    - `--duration` defaults to 30 (the master); any multiple of 5 from 5 to 30 is accepted, one 5-second clip per beat. A duration stated in the brief ("15 秒") wins over the default.
    - When the user gives facts the brand can back (specs, figures, a source), pass them with `--proof`. They are the only claims the copy may make; without them the copy carries no figures, specs or comparisons.
+   - When the film is for a brand with a kit in `brands/` (skill `brand-kit`), pass `--brand <brand-id>` instead of `--proof`: the kit's product, lettering, photos, claims, palette, fonts, grade, announcer, legal lines and logo apply, and the run is refused if the kit fails `cinefoundry brand check` (*checked*).
    - If the user gives a photo of the real product, pass it as `--product-image`. It replaces the generated hero still, so every shot shows the real shape and logo instead of the image model's guess. Only use a photo the user took or has rights to.
    - The default film is 16:9, native 1080p, 60 fps. Leave `--ratio` out unless the user asked for vertical or square (a brief saying 竖版 or naming a vertical platform is read as 9:16 anyway), and leave `--resolution` / `--fps` out unless they asked.
 

@@ -6,9 +6,10 @@ import { existsSync } from 'node:fs'
 import { assembleFilm, clipStart, filmLength, fontCovers, GRADES, stillToClip } from '../lib/ffmpeg.js'
 import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
 import { memoryStatus, modelRoots, releaseFileCache } from '../lib/memory.js'
-import { buildAss, type TitleCue } from '../lib/titles.js'
+import { buildAss, endCardLayout, type TitleCue } from '../lib/titles.js'
 import { industryOf, type Brief, type Script, type Storyboard } from './checks.js'
 import type { Treatment } from '../crafts/treatment.js'
+import type { BrandFinish } from '../crafts/brand.js'
 import { castableVoices, voiceReference } from '../lib/voices.js'
 import { writeDeliveryReport } from './delivery.js'
 
@@ -60,6 +61,8 @@ export interface FinishInput {
   log: (line: string) => void
   /** The creative director's treatment: the cast voice and the score direction. */
   treatment?: Treatment
+  /** The brand kit's fonts, grade, legal lines and end-card logo (`--brand`). */
+  brand?: BrandFinish
 }
 
 /** One shot of an edit: the clip file and the seconds it occupies, taken from the clip's head. */
@@ -88,6 +91,8 @@ export interface CutInput {
   record: Recorder
   log: (line: string) => void
   treatment?: Treatment
+  /** The brand kit's fonts, grade, legal lines and end-card logo (`--brand`). */
+  brand?: BrandFinish
   /** The run-log stage of this cut, and fields every record of it carries (e.g. the version). */
   stage: string
   recordTags?: Record<string, unknown>
@@ -150,7 +155,7 @@ export async function finishMaster(input: FinishInput): Promise<CutResult> {
     dir, brief, script: input.script, shots: shotClipPaths(dir, storyboard, brief.fps ?? DEFAULT_FPS).map((clip) => ({ clip, seconds: 5 })), endCard,
     output: join(dir, 'cut', 'final.mp4'), ass: join(dir, 'cut', 'titles.ass'), voicePrefix: 'vo',
     music: input.audio ? { kind: 'file', path: input.audio, offset: 0 } : { kind: 'generate' }, silent: input.silent,
-    comfy: input.comfy, record: input.record, log: input.log, treatment: input.treatment, stage: 'cut', produceId: brief.id,
+    comfy: input.comfy, record: input.record, log: input.log, treatment: input.treatment, brand: input.brand, stage: 'cut', produceId: brief.id,
   })
 }
 
@@ -185,13 +190,28 @@ export async function cutFilm(input: CutInput): Promise<CutResult> {
   // The hero still already carries the brand on its label, so the end card adds only the message,
   // or the client's own closing line when the request quoted one.
   const closing = brief.tagline?.trim() || brief.message
-  cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', closing })
+  // A brand's end card: its legal lines at the foot, the closing line above them, its logo above that with clear space.
+  const brand = input.brand
+  const layout = brand ? endCardLayout(width, height, brand.legal.length, brand.logo) : undefined
+  cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', closing, ...(layout && brand!.legal.length ? { marginV: layout.closingMarginV } : {}) })
+  for (const [index, line] of (brand?.legal ?? []).entries()) {
+    const marginV = layout!.legalMarginV + (brand!.legal.length - 1 - index) * Math.round(layout!.legalSize * 1.3)
+    cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, legal: line, marginV })
+  }
   // The explicit AI label: on the opening seconds and on the end card.
   cues.push({ start: 0, end: AI_LABEL_OPENING_SECONDS, title: '', subtitle: '', label: AI_LABEL })
   cues.push({ start: endStart, end: endStart + END_CARD_SECONDS, title: '', subtitle: '', label: AI_LABEL })
-  const onScreen = cues.map((cue) => `${cue.title ?? ''}${cue.subtitle ?? ''}`).join('') + closing + AI_LABEL
-  const coverage = await fontCovers(TITLE_FONT, onScreen)
-  if (!coverage.ok) throw new Error(`The title font ${TITLE_FONT} has no glyph for: ${coverage.missing.join(' ')}. Refusing to render boxes on screen.`)
+  const titleFont = brand?.titleFont ?? TITLE_FONT
+  const subtitleFont = brand?.subtitleFont ?? TITLE_FONT
+  // Each font is checked against the text set in it: titles and the closing line in the title font, the rest in the subtitle font.
+  const coverage = [
+    { font: titleFont, text: cues.map((cue) => cue.title ?? '').join('') + closing },
+    { font: subtitleFont, text: cues.map((cue) => `${cue.subtitle ?? ''}${cue.subtitleEn ?? ''}${cue.legal ?? ''}`).join('') + AI_LABEL },
+  ]
+  for (const { font, text } of coverage) {
+    const covered = await fontCovers(font, text)
+    if (!covered.ok) throw new Error(`The font ${font} has no glyph for: ${covered.missing.join(' ')}. Refusing to render boxes on screen.`)
+  }
 
   // Sound: offline voiceover per beat over an instrumental bed that ducks under the voice.
   let soundtrack: string | undefined
@@ -245,12 +265,13 @@ export async function cutFilm(input: CutInput): Promise<CutResult> {
     await mixSoundtrack({ voices, music: music.path, musicOffset: music.offset, totalSeconds: total, output: soundtrack })
   }
 
-  await writeFile(input.ass, buildAss(cues, width, height, TITLE_FONT))
+  await writeFile(input.ass, buildAss(cues, width, height, titleFont, subtitleFont))
   const industry = brief.industry ?? industryOf(`${brief.product} ${brief.title}`)
   // Implicit label (GB 45438-2025 style AIGC metadata) next to the explicit one burned into the picture.
   const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Cinefoundry', ProduceID: input.produceId, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
   await assembleFilm(clipPaths, input.output, {
-    width, height, fps, durations, crossfadeSeconds: overlaps, ass: input.ass, audio: soundtrack, grade: GRADES[industry] ?? GRADES.neutral, loudness: AD_LOUDNESS_LUFS,
+    width, height, fps, durations, crossfadeSeconds: overlaps, ass: input.ass, audio: soundtrack, grade: brand?.grade ?? GRADES[industry] ?? GRADES.neutral, loudness: AD_LOUDNESS_LUFS,
+    ...(layout?.logo ? { logo: { image: brand!.logo!.path, ...layout.logo, start: endStart } } : {}),
     metadata: { AIGC: aigc, comment: `${AI_LABEL} · Cinefoundry · ${input.produceId}`, title: brief.title },
   })
   if (isUpscaled(resolution)) await record(stage, 'conform', undefined, { ...tags, resolution, width, height, upscaled: true, note: 'generated at native 1080p, upscaled to the delivery size' })

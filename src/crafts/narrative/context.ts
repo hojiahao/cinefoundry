@@ -5,6 +5,7 @@ import type { EngineOptions } from '../../engine/run.js'
 import type { VideoModel } from '../../lib/media.js'
 import type { CastMember } from './casting.js'
 import type { NarrativeShot, Screenplay, SeriesBible } from './types.js'
+import type { BrandProduct, LoadedBrand } from '../brand.js'
 
 export interface NarrativeOptions extends EngineOptions {
   id?: string
@@ -25,6 +26,12 @@ export interface NarrativeOptions extends EngineOptions {
   castDir?: string
   /** Stop after the shot breakdown, before any GPU time. */
   planOnly?: boolean
+  /** The brand kit (brands/<id>/) the film is made under; checked in preflight, refused when the check fails. */
+  brand?: string
+  /** The kit's product the film features, by id; by default the one the request names, else the kit's first. */
+  product?: string
+  /** Set by preflight: the checked kit, so the run uses exactly what was checked. */
+  brandKit?: LoadedBrand
 }
 
 /** The working state of a narrative film. Keys of `frames`, `clips` and `lines` are "episode:shot" / "episode:scene:line". */
@@ -55,6 +62,8 @@ export interface NarrativeContext extends EngineContext {
   /** Episode number -> finished file. */
   outputs: Map<number, string>
   qaRegenerations: number
+  /** The brand kit and the product the film features, when it is made under one. */
+  brand?: LoadedBrand & { product: BrandProduct; presenters: CastMember[] }
 }
 
 export const key = (...parts: number[]) => parts.join(':')

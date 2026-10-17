@@ -9,6 +9,7 @@ import { endpoints } from '../../agent/llm.js'
 import { jevConfig } from '../../agent/jev.js'
 import { TITLE_FONT } from '../../agent/finish.js'
 import { writeDeliveryReport } from '../../agent/delivery.js'
+import { brandProduct, kitFile, preflightBrand } from '../../crafts/brand.js'
 import type { PipelineDef } from '../../engine/pipeline.js'
 import type { AdContext, AdOptions, AdResult } from './context.js'
 import { intakeStage } from './intake.js'
@@ -37,14 +38,29 @@ export async function preflight(options: AdOptions): Promise<void> {
   if (options.videoModel && !VIDEO_MODEL_IDS.includes(options.videoModel)) problems.push(`--video-model ${options.videoModel}: use ${VIDEO_MODEL_IDS.join(', ')}`)
   if (options.videoModel === 'seedance' && !cloudVideoConfig()) problems.push('--video-model seedance needs ARK_API_KEY')
   if (options.frameScheduling && !['queue', 'serial'].includes(options.frameScheduling)) problems.push(`--frame-scheduling ${options.frameScheduling}: use queue or serial`)
+  if (options.brand) {
+    // The kit is checked whole before anything runs: a film made under a broken kit is off-brand by construction.
+    const { brand, problems: kitProblems } = await preflightBrand(options.brand)
+    problems.push(...kitProblems)
+    if (options.proof) problems.push('--proof is not taken with --brand: the kit\'s substantiated claims are the only proof (claims in brand.json)')
+    if (brand) {
+      try {
+        // The kit's photo of the product is the hero still, unless the user supplied another photo of it.
+        const product = brandProduct(brand, options.brief, options.product)
+        options.productImage ??= kitFile(brand, product.photos[0]!)
+        options.brandKit = brand
+      } catch (error) { problems.push((error as Error).message) }
+    }
+  } else if (options.product) problems.push('--product names a product of a brand kit: use it with --brand')
   if (options.productImage) await access(options.productImage).catch(() => problems.push(`Product image not found: ${options.productImage}`))
   if (options.audio) await access(options.audio).catch(() => problems.push(`Music file not found: ${options.audio}`))
   // The announcer reads English: without an English announcer that passed voice QC there is nobody to cast, and the
   // fallback engine would read English copy in a Mandarin voice. Refuse before any model time is spent.
-  if (!options.silent && !options.planOnly && castableVoices({ language: 'English', use: 'announcer' }).length === 0) {
+  if (!options.brand && !options.silent && !options.planOnly && castableVoices({ language: 'English', use: 'announcer' }).length === 0) {
     problems.push('no English announcer in the casting library has passed voice QC on this machine: run scripts/voice-design.py and scripts/voice-qc.py (deploy/voices/library.json), or pass --silent')
   }
-  if (!options.planOnly) {
+  // A kit's fonts are checked with the kit; without one, the studio's title font must be installed.
+  if (!options.planOnly && !options.brand) {
     const fonts = await exec('fc-list', [':', 'family']).then((r) => r.stdout).catch(() => '')
     if (fonts && !fonts.includes(TITLE_FONT)) problems.push(`title font "${TITLE_FONT}" is not installed (fc-list)`)
   }
@@ -76,8 +92,9 @@ export const adPipeline: PipelineDef<AdOptions, AdContext, AdResult> = {
     { id: 'qc', label: '技术质检', when: media, run: adQcStage },
   ],
   init: async (options, engine) => {
+    if (options.brand && !options.brandKit) throw new Error(`internal: --brand ${options.brand} was not checked in preflight`)
     const { planner, reviewer, editor } = endpoints()
-    return Object.assign(engine, { options, planner, reviewer, editor, jev: jevConfig(), jevReview: [], rejectedAttempts: {}, qaRegenerations: 0, frames: new Map<number, string>(), versions: [] }) as AdContext
+    return Object.assign(engine, { options, planner, reviewer, editor, jev: jevConfig(), jevReview: [], rejectedAttempts: {}, qaRegenerations: 0, frames: new Map<number, string>(), versions: [], ...(options.brandKit ? { brand: options.brandKit } : {}) }) as AdContext
   },
   finish: async (ctx) => {
     const result: AdResult = { projectId: ctx.projectId!, dir: ctx.dir!, finalCut: ctx.finalCut, versions: Object.fromEntries(ctx.versions.map((v) => [v.spec.id, v.cut.path])), ...(ctx.qc ? { qc: ctx.qc } : {}), rejectedAttempts: ctx.rejectedAttempts, qaRegenerations: ctx.qaRegenerations, wallSeconds: 0 }

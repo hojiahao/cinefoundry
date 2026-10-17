@@ -9,6 +9,7 @@ import { DEFAULT_FPS } from '../../lib/formats.js'
 import { probeDuration } from '../../lib/ffmpeg.js'
 import { addAsset } from '../../lib/project.js'
 import { reviewCopy } from './compliance.js'
+import { brandFinish, brandForCopy, type BrandKit } from '../../crafts/brand.js'
 import { need, type AdContext } from './context.js'
 
 /** The versioning editor's attempts at a plan whose edit and copy pass every check. */
@@ -26,7 +27,7 @@ async function gateScores(dir: string, runId: string): Promise<Map<number, numbe
 }
 
 /** The editor's brief for one cutdown. */
-export function versionUser(spec: VersionSpec, brief: Brief, script: Script, storyboard: Storyboard, scores: Map<number, number>, fps: number, treatment?: Parameters<typeof treatmentForCopy>[0]): string {
+export function versionUser(spec: VersionSpec, brief: Brief, script: Script, storyboard: Storyboard, scores: Map<number, number>, fps: number, treatment?: Parameters<typeof treatmentForCopy>[0], kit?: BrandKit): string {
   const total = shotSecondsFor(spec)
   const example = spec.shots === 1 ? `[{"shot": 4, "seconds": ${total}, "why": "hero: the one image that carries the proposition"}]` : `[{"shot": 2, "seconds": 4.0, "why": "hook"}, {"shot": 4, "seconds": 4.0, "why": "proof"}, {"shot": 6, "seconds": 4.5, "why": "product hero"}]`
   return `Cut the ${spec.seconds}-second version of this ${brief.durationSeconds}-second ad from the master's shots.
@@ -34,7 +35,7 @@ export function versionUser(spec: VersionSpec, brief: Brief, script: Script, sto
 Product: ${brief.product} · brand on the product: ${brief.brandText} · audience: ${brief.audience} · tone: ${brief.tone}
 The one message: ${brief.message}${brief.proof ? `\nProof points the brand can substantiate (the copy may claim these and nothing stronger): ${brief.proof}` : ''}
 The end card closes every version (${END_CARD_SECONDS} s, dissolved in over ${END_DISSOLVE_SECONDS} s) with: ${brief.tagline?.trim() || brief.message}
-${treatment ? `\n${treatmentForCopy(treatment)}\n` : ''}
+${treatment ? `\n${treatmentForCopy(treatment)}\n` : ''}${kit ? `\n${brandForCopy(kit)}\n` : ''}
 The master, shot by shot (each clip is ${CLIP_SECONDS} s; a shot is used from its first frame, so only its tail can be trimmed):
 ${storyboard.shots.map((shot, index) => { const beat = script.beats[index]; return `Shot ${shot.shot}: ${shot.framing}, ${shot.camera}. Shows: ${shot.must_show}.${scores.has(shot.shot) ? ` Gate score ${scores.get(shot.shot)}.` : ''}${beat ? ` Master line: "${beat.vo}" / ${beat.zh} / title ${beat.text} (job: ${beat.job})` : ''}` }).join('\n')}
 
@@ -70,6 +71,7 @@ export async function versionsStage(ctx: AdContext): Promise<string> {
     return `no cutdowns of a ${brief.durationSeconds} s master`
   }
   const clips = shotClipPaths(dir, storyboard, fps)
+  const brand = ctx.brand ? await brandFinish(ctx.brand) : undefined
   const scores = await gateScores(dir, ctx.runId)
   const made: string[] = []
   for (const spec of specs) {
@@ -85,7 +87,7 @@ export async function versionsStage(ctx: AdContext): Promise<string> {
         thinking: false,
         maxTokens: 3000,
         temperature: 0.6,
-        user: versionUser(spec, brief, script, storyboard, scores, fps, ctx.treatment),
+        user: versionUser(spec, brief, script, storyboard, scores, fps, ctx.treatment, ctx.brand?.kit),
       },
       (plan) => checkVersion(plan, spec, storyboard, brief, fps),
       PLAN_ATTEMPTS,
@@ -110,7 +112,7 @@ export async function versionsStage(ctx: AdContext): Promise<string> {
     const cut: CutResult = await cutFilm({
       dir, brief, script: plan.script, shots: plan.shots.map((shot) => ({ clip: clips[storyboard.shots.findIndex((s) => s.shot === shot.shot)]!, seconds: shot.seconds })),
       endCard: endCardPath(dir), output: join(dir, 'cut', `final_${spec.id}.mp4`), ass: join(dir, 'cut', `titles_${spec.id}.ass`), voicePrefix: `v${spec.id}_vo`,
-      music, silent: ctx.options.silent || !master.music, comfy: need(ctx.comfy, 'comfy'), record: ctx.record, log: ctx.log, treatment: ctx.treatment,
+      music, silent: ctx.options.silent || !master.music, comfy: need(ctx.comfy, 'comfy'), record: ctx.record, log: ctx.log, treatment: ctx.treatment, ...(brand ? { brand } : {}),
       stage: 'versions', recordTags: { version: spec.id }, produceId: `${brief.id}-${spec.id}`,
     })
     const measured = await probeDuration(cut.path)

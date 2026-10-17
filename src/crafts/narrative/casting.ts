@@ -256,14 +256,22 @@ const image = (path: string, verdict: CastingVerdict, model: string): CastImage 
   path, score: verdict.score, pass: verdict.pass, model, ...(verdict.issues.length ? { issues: verdict.issues.slice(0, 5) } : {}), ...(verdict.casting ? { casting: verdict.casting } : {}),
 })
 
-/** Reuse: the project's own cast/<id>/ first, then `--cast <dir>` (copied in so the project stays self-contained). */
+/** Where a character's cast record may come from, after the project's own: `--cast <dir>`, then the brand kit's cast/. */
+export function castSources(options: Pick<NarrativeContext['options'], 'castDir'>, brand?: { dir: string }): string[] {
+  return [...(options.castDir ? [resolve(options.castDir)] : []), ...(brand ? [join(brand.dir, 'cast')] : [])]
+}
+
+/**
+ * Reuse: the project's own cast/<id>/ first, then `--cast <dir>`, then the brand kit's recurring presenters and mascots
+ * (copied in so the project stays self-contained).
+ */
 async function reuse(ctx: NarrativeContext, character: Character): Promise<CastMember | undefined> {
   const own = join(ctx.dir!, 'cast', character.id)
   const found = await loadCastMember(own, character)
   if ('record' in found) return found
-  if (ctx.options.castDir) {
-    const source = resolve(ctx.options.castDir, character.id)
-    if (source !== own) {
+  for (const root of castSources(ctx.options, ctx.brand)) {
+    const source = join(root, character.id)
+    if (source !== own && existsSync(source)) {
       const other = await loadCastMember(source, character)
       if ('record' in other) {
         await cp(source, own, { recursive: true })
