@@ -1,3 +1,4 @@
+import { env } from '../../lib/config.js'
 import { modelRoots, releaseFileCache } from '../../lib/memory.js'
 import type { WritersRoom } from '../../lib/writers-room.js'
 import { ComfyClient } from '../../comfy/client.js'
@@ -82,8 +83,8 @@ export const produced = (ctx: NarrativeContext) => (ctx.bible?.episodes ?? []).s
 /** This run's writers' room: the author works while the planner and the vision reviewer sleep. */
 export function writersRoom(ctx: NarrativeContext): WritersRoom {
   return {
-    author: ctx.author,
-    others: [ctx.planner, ctx.reviewer],
+    author: { endpoint: ctx.author, container: env('CINEFOUNDRY_WRITER_CONTAINER') },
+    others: [{ endpoint: ctx.planner, container: env('CINEFOUNDRY_PLANNER_CONTAINER') }, { endpoint: ctx.reviewer, container: env('CINEFOUNDRY_VISION_CONTAINER') }],
     log: ctx.log,
     record: (detail) => ctx.record('run', 'writers-room', ctx.author, detail),
     // CUDA here allocates only truly free memory: the page cache of model files read earlier must go, not just ComfyUI.

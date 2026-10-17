@@ -81,7 +81,7 @@ budget first, then start things.
 | ComfyUI, RIFE 4.26 interpolation (x5 to 120 fps) | about 20 GB | 601 float frames at 1088x1920 (about 15 GB) plus the encoder; run after the video model is freed |
 | Qwen3-TTS voice container | about 8 GB | runs in its own container; free ComfyUI first (a film died here with CUDA out of memory before this was enforced) |
 | ComfyUI, ACE-Step music | 9 GB | 7.7 GB checkpoint |
-| Nemotron 3.5 Super VL 120B-A12B NVFP4 (writers' room) | 85 GB awake (65.7 GB weights and buffers, 15.4 GB KV cache) | measured 2026-10-17: cold start 12 min 32 s, restart 537 s, sleep 3.7 s. A level-2 wake with weight reload took 232 s and left it answering nonsense, so it is never reloaded: it works while every other model sleeps, is released for the rest of the run before the first picture, and the next run restarts it |
+| Nemotron 3.5 Super VL 120B-A12B NVFP4 (writers' room) | 85 GB awake (65.7 GB weights and buffers, 15.4 GB KV cache) | measured 2026-10-17: cold start 12 min 32 s, restart 537 s, sleep 3.7 s. A level-2 wake with weight reload took 232 s and left it answering nonsense, so it is never reloaded: the writers' room starts its container, the other models make way (slept with sleep mode, their containers stopped without it), and the room stops it again before the first picture and starts the others |
 | OS, Cinefoundry, reserve | 15 GB | |
 
 vLLM's `--gpu-memory-utilization` is a fraction of the whole pool and is claimed at
@@ -91,7 +91,7 @@ Phase plan the harness follows (sleep level 2 discards a service's weights and r
 
 | Phase | Awake | Asleep |
 |---|---|---|
-| writers' room, when `CINEFOUNDRY_WRITER_URL` is set (development, screenplay, script notes, compliance, shot list, casting briefs) | writer (Super) | planner, vision gate; ComfyUI freed |
+| writers' room, when `CINEFOUNDRY_WRITER_URL` is set (development, screenplay, script notes, compliance, shot list, casting briefs) | writer (Super) | planner, vision gate (slept, or their containers stopped); ComfyUI and the model page cache freed |
 | text (brief, script, compliance, storyboard) | planner, reviewer | - |
 | hero still and frames | vision gate | planner |
 | clips and interpolation | - | planner, vision gate |

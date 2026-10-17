@@ -138,6 +138,11 @@ export async function retireService(baseUrl: string): Promise<boolean> {
   return slept
 }
 
+/** Record a service as released for the rest of this run (its container was stopped): nothing may wake it. */
+export function markRetired(baseUrl: string): void {
+  state.set(baseUrl, 'retired')
+}
+
 /** Forget what we recorded about a service (after it was restarted from outside). */
 export function forgetService(baseUrl: string): void {
   state.delete(baseUrl)

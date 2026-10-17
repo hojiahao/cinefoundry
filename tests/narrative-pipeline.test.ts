@@ -19,6 +19,13 @@ import { startFakeComfy } from './fake-comfy.js'
  * ten-second episodes (two 5-second shots) and one frame per shot keep it fast.
  */
 
+/** Docker is never called for real: the writers' room's container stops and starts are recorded here. */
+const dockerCalls: string[][] = []
+vi.mock('../src/lib/exec.js', async (original) => {
+  const real = await original<typeof import('../src/lib/exec.js')>()
+  return { ...real, exec: (command: string, args: string[], ...rest: unknown[]) => (command === 'docker' ? (dockerCalls.push(args), Promise.resolve({ stdout: '', stderr: '' })) : (real.exec as (...a: unknown[]) => unknown)(command, args, ...rest)) }
+})
+
 vi.mock('../src/lib/containers.js', async (original) => ({
   ...(await original<typeof import('../src/lib/containers.js')>()),
   runContainer: (await import('./fake-audio.js')).fakeRunContainer,
@@ -322,6 +329,8 @@ describe("writers' room end to end", () => {
     expect(written.every((c) => c.writer)).toBe(true)
     expect(written.map((c) => c.role)).toEqual(expect.arrayContaining(['creator-content writer', 'screenwriter', 'script editor of a top streaming studio. You did not write this draft', 'director working with the director of photography and the script supervisor', 'character designer and casting director', 'sound designer and composer', 'packaging editor']))
     expect(calls.slice(firstPicture).some((c) => c.writer)).toBe(false)
-    expect(logs.join('\n')).toMatch(/writers' room: nemotron-3.5-super-vl released for production|writers' room: .* could not be put to sleep/)
+    // The planner and the vision reviewer (no sleep mode here) are stopped while the room works and started after it;
+    // the author's container is stopped when the room closes.
+    expect(dockerCalls).toEqual([['stop', 'cinefoundry-nemotron-1'], ['stop', 'cinefoundry-stepvl-1'], ['stop', 'cinefoundry-nemotron-super-1'], ['start', 'cinefoundry-nemotron-1'], ['start', 'cinefoundry-stepvl-1']])
   })
 })
