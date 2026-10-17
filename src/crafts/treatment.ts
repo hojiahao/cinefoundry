@@ -1,4 +1,4 @@
-import type { Brief } from '../checks.js'
+import type { Brief } from '../agent/checks.js'
 
 /**
  * The creative director's treatment: the one idea every later stage serves. Before it existed the copywriter and the

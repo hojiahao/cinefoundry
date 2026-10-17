@@ -46,7 +46,9 @@ async function project(args: ParsedArgs): Promise<number> {
   if (action === 'stage') {
     const stage = requireFlag(args, 'stage') as Stage
     const status = requireFlag(args, 'status') as StageStatus
-    if (!STAGES.includes(stage)) throw new UsageError(`--stage must be one of ${STAGES.join(', ')}`)
+    const known = Object.keys((await loadProject(requireFlag(args, 'id')).catch(() => undefined))?.stages ?? {})
+    const allowed = known.length ? known : [...STAGES]
+    if (!allowed.includes(stage)) throw new UsageError(`--stage must be one of ${allowed.join(', ')}`)
     if (!['pending', 'running', 'done', 'failed'].includes(status)) throw new UsageError('--status must be pending, running, done or failed')
     print((await setStage(requireFlag(args, 'id'), stage, status, flag(args, 'note'))).stages)
     return 0

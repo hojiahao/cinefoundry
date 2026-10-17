@@ -5,8 +5,10 @@ import { join, resolve } from 'node:path'
 
 export type StageStatus = 'pending' | 'running' | 'done' | 'failed'
 
+/** The ad film's stages, the default for projects made before formats existed. Every format declares its own list. */
 export const STAGES = ['brief', 'creative', 'script', 'compliance', 'storyboard', 'frames', 'qa', 'clips', 'cut'] as const
-export type Stage = (typeof STAGES)[number]
+/** A stage id. Each format (ad, short, drama...) has its own stage list; a project records the one it was made with. */
+export type Stage = string
 
 export interface Asset {
   id: string
@@ -24,6 +26,8 @@ export interface Asset {
 
 export interface ProjectState {
   id: string
+  /** Which production format made this project: ad, short, drama. Absent on projects made before formats existed (ad). */
+  format?: string
   /** The harness run that produced this state; every run.jsonl record carries it, so a report reads one run only. */
   runId?: string
   title: string
@@ -45,17 +49,18 @@ export function projectDir(id: string): string {
   return join(projectsRoot(), id)
 }
 
-export async function createProject(input: Pick<ProjectState, 'id' | 'title' | 'brief' | 'ratio' | 'durationSeconds'> & { runId?: string }): Promise<ProjectState> {
+export async function createProject(input: Pick<ProjectState, 'id' | 'title' | 'brief' | 'ratio' | 'durationSeconds'> & { runId?: string; format?: string; stages?: readonly string[]; folders?: readonly string[] }): Promise<ProjectState> {
+  const { stages = STAGES, folders = ['creative', 'script', 'storyboard', 'frames', 'clips', 'cut', 'reports'], ...fields } = input
   const now = new Date().toISOString()
   const state: ProjectState = {
-    ...input,
+    ...fields,
     createdAt: now,
     updatedAt: now,
-    stages: Object.fromEntries(STAGES.map((stage) => [stage, { status: 'pending' }])) as ProjectState['stages'],
+    stages: Object.fromEntries(stages.map((stage) => [stage, { status: 'pending' }])) as ProjectState['stages'],
     assets: [],
   }
-  state.stages.brief = { status: 'done', updatedAt: now }
-  for (const folder of ['creative', 'script', 'storyboard', 'frames', 'clips', 'cut', 'reports']) {
+  if (state.stages.brief) state.stages.brief = { status: 'done', updatedAt: now }
+  for (const folder of new Set([...folders, 'reports'])) {
     await mkdir(join(projectDir(input.id), folder), { recursive: true })
   }
   await saveProject(state)

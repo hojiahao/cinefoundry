@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import type { VoiceProfile } from '../agent/stages/creative.js'
+import type { VoiceProfile } from '../crafts/treatment.js'
 
 /** The announcer casting library (deploy/voices.json); each voice's reference clip lives in the step-audio voices folder. */
 interface Library { referenceText: string; voices: Array<VoiceProfile & { design: string }> }

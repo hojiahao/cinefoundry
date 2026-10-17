@@ -8,7 +8,7 @@ import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../li
 import { memoryStatus } from '../lib/memory.js'
 import { buildAss } from '../lib/titles.js'
 import { industryOf, type Brief, type Script, type Storyboard } from './checks.js'
-import type { Treatment } from './stages/creative.js'
+import type { Treatment } from '../crafts/treatment.js'
 import { castableVoices, voiceReference } from '../lib/voices.js'
 import { writeDeliveryReport } from './delivery.js'
 
