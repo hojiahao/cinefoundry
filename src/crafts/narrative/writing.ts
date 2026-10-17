@@ -1,4 +1,5 @@
 import { writeFile } from 'node:fs/promises'
+import { archiveProject, projectExists } from '../../lib/project.js'
 import { join } from 'node:path'
 import { chatJson } from '../../agent/llm.js'
 import { failIfHardProblems } from '../repair.js'
@@ -60,6 +61,9 @@ Return JSON only:
   if (!premise.approve) throw new Error(`the series premise did not pass compliance: ${premise.issues.join(' | ').slice(0, 300)}`)
   const { id: modelId, title, clientNames: _names, ...bible } = draft as SeriesBible & { id?: string; title?: string; clientNames?: string[] }
   const id = ctx.options.id ?? (modelId && /^[a-z0-9][a-z0-9-]{0,40}$/.test(modelId) ? modelId : `${ctx.format}-${Date.now().toString(36)}`)
+  // A project id is never silently reused (as in the ad pipeline): the previous run of this id is archived, so its cast,
+  // frames and records cannot leak into this one. A reused cast is passed explicitly with --cast.
+  if (projectExists(id)) ctx.log(`  previous run of ${id} archived to ${await archiveProject(id)}`)
   const dir = await ctx.openProject({ id, title: title ?? bible.logline.slice(0, 20), ratio: ctx.ratio, durationSeconds: ctx.episodeSeconds })
   ctx.bible = bible
   if (ctx.brand) await ctx.record('development', 'brand-kit', undefined, { brand: ctx.brand.id, version: ctx.brand.version, product: ctx.brand.product.id, presenters: ctx.brand.presenters.map((p) => p.id) })

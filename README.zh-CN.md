@@ -64,11 +64,10 @@
 
 ```bash
 git clone https://github.com/hojiahao/cinefoundry.git && cd cinefoundry
-npm install && npm run build && npm test
-
-HF_ENDPOINT=https://hf-mirror.com scripts/download-models.sh   # 下载权重，可断点续传
-scripts/spark-up.sh                                            # 启动 Nemotron、Step3-VL、ComfyUI 并自检
+scripts/install.sh            # 检查硬件、安装依赖、下载并逐个校验权重（sha256）、生成声线库、启动服务并自检
 ```
+
+`scripts/install.sh --check` 只检查缺什么、不做任何改动；全部选项见 [docs/install.md](docs/install.md)。
 
 每种片型一条命令：
 

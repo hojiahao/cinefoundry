@@ -7,3 +7,4 @@ deploy/spark/spark.env
 .dsh-home/
 *.log
 .claude/worktrees/
+.tools/

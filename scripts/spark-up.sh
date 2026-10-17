@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 [ "$(uname -m)" = "aarch64" ] || echo "warning: not aarch64; this stack targets DGX Spark." >&2
-[ -f deploy/spark/spark.env ] || cp deploy/spark/spark.env.example deploy/spark/spark.env
+[ -f deploy/spark/spark.env ] || sed "s|^SPARK_MODEL_DIR=.*|SPARK_MODEL_DIR=${SPARK_MODEL_DIR:-$HOME/models}|" deploy/spark/spark.env.example > deploy/spark/spark.env
 
 # One memory pool for CPU and GPU: refuse to start on a full machine rather than
 # letting a model load die halfway.
