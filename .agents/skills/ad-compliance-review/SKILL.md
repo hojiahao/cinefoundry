@@ -22,12 +22,12 @@ phrase caught late costs a full regeneration. Review text before media.
 2. Run the deterministic scan. It is local, fast, and reproducible:
 
    ```bash
-   spotfoundry copy-check projects/<id>/script/copy.txt --category cosmetics > projects/<id>/reports/compliance.json
+   cinefoundry copy-check projects/<id>/script/copy.txt --category cosmetics > projects/<id>/reports/compliance.json
    ```
 
    The category comes from the brief. Exit code 1 means at least one `block` finding.
 3. For each finding, read the matching section of `references/rules.md` before judging. The scan matches wording; whether a claim is substantiated depends on the brief's proof points.
-4. Review what a wording scan cannot see: implied superlatives and comparisons with competitors, body or health effects claimed for food and drink ("提神醒脑", "解暑降火"), efficacy claims on cosmetics, statistics without a stated source, and register borrowed from another category (skincare vocabulary on a soda). The reviewer must not be the agent that wrote the copy; in Spotfoundry Harness it is a separate agent with this skill and a different system prompt.
+4. Review what a wording scan cannot see: implied superlatives and comparisons with competitors, body or health effects claimed for food and drink ("提神醒脑", "解暑降火"), efficacy claims on cosmetics, statistics without a stated source, and register borrowed from another category (skincare vocabulary on a soda). The reviewer must not be the agent that wrote the copy; in Cinefoundry Harness it is a separate agent with this skill and a different system prompt.
 5. Rewrite every `block` finding - keep the selling point, drop the restricted form - and rescan until the exit code is 0. Resolve `review` findings with proof from the brief, or rewrite them too.
 6. **Every line you flag gets a replacement.** The harness applies your `revised` lines; a flagged beat with no replacement is asked for again, and a replacement that breaks the script checks (8-18 spoken characters, title length, no stock ad-speak) comes back to you with the failures. "脆爽一夏" was four characters, failed the length check, and "补脑增强免疫力" nearly reached the film. Write a full spoken line in the same rhythm.
 7. Health effects are blocked outright for foods and everyday goods (*checked* `health_effect`): 补脑, 健脑, 益智, 增强 / 提高免疫, 抗疲劳, 助眠, 安神, 改善睡眠, 缓解焦虑, 减肥, 瘦身, 燃脂, 刮油, 排毒, 养颜, 抗衰老, 护肝, 养胃, 不长胖. Replace the effect with the experience (the taste, the feel, the moment) or with a fact from `proof` ("主要香调雪松和薰衣草", "40 小时燃烧时长").

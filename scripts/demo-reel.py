@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the demo reel from the project's own artefacts: run records, frames, films, benchmark.
 
-    python3 scripts/demo-reel.py --out ~/spotfoundry-demo/spotfoundry-demo.mp4 [--voice zm_010] [--films-only]
+    python3 scripts/demo-reel.py --out ~/cinefoundry-demo/cinefoundry-demo.mp4 [--voice zm_010] [--films-only]
 
 Every number on screen is read from the repository (eval/results, projects/*/reports), never typed in.
 Cards are drawn with Pillow, narration is synthesised with the same offline TTS the films use, and
@@ -72,7 +72,7 @@ def header(draw: ImageDraw.ImageDraw, kicker: str, title: str) -> int:
     return 250
 
 
-def footer(draw: ImageDraw.ImageDraw, text: str = 'Spotfoundry 广告工坊 · 全部在一台 DGX Spark 上生成') -> None:
+def footer(draw: ImageDraw.ImageDraw, text: str = 'Cinefoundry 影工坊 · 全部在一台 DGX Spark 上生成') -> None:
     draw.text((120, H - 70), text, font=font(22), fill=DIM)
 
 
@@ -135,8 +135,8 @@ def log_lines(project: str) -> list[str]:
 
 def card_title(path: Path) -> None:
     image, draw = new_card()
-    draw.text((W / 2, 400), 'Spotfoundry', font=font(150, 'Bold'), fill=TEXT, anchor='mm')
-    draw.text((W / 2 + 470, 400), '广告工坊', font=font(70, 'Bold'), fill=GOLD, anchor='lm')
+    draw.text((W / 2, 400), 'Cinefoundry', font=font(150, 'Bold'), fill=TEXT, anchor='mm')
+    draw.text((W / 2 + 470, 400), '影工坊', font=font(70, 'Bold'), fill=GOLD, anchor='lm')
     draw.text((W / 2, 540), '把一句创意，做成一支成片', font=font(52), fill=TEXT, anchor='mm')
     draw.text((W / 2, 640), '一台 DGX Spark · 八个阶段 · 九个 Agent Skill · 先审后生成', font=font(32), fill=DIM, anchor='mm')
     draw.text((W / 2, 900), '贺家豪 · 第三届 NVIDIA DGX Spark 黑客松 · Agent Skills 开发挑战赛', font=font(26), fill=DIM, anchor='mm')
@@ -155,14 +155,14 @@ def card_pain(path: Path) -> None:
         draw.text((x + 40, y + 80), f'0{index + 1}', font=font(40, 'Bold'), fill=GOLD)
         draw.text((x + 40, y + 150), title, font=font(44, 'Bold'), fill=TEXT)
         paragraph(draw, (x + 40, y + 240), body, font(30), 450, fill=DIM)
-    draw.text((120, y + 660), 'Spotfoundry 的答案：整条流水线放在一台 DGX Spark 上，每一步先校验再生成，返工只发生在最便宜的阶段。', font=font(30), fill=TEXT)
+    draw.text((120, y + 660), 'Cinefoundry 的答案：整条流水线放在一台 DGX Spark 上，每一步先校验再生成，返工只发生在最便宜的阶段。', font=font(30), fill=TEXT)
     footer(draw)
     image.save(path)
 
 
 def card_studio(path: Path, screenshot: Path) -> None:
     image, draw = new_card()
-    y = header(draw, '一句话开拍', 'Studio：说出创意，其余交给 Spotfoundry Harness')
+    y = header(draw, '一句话开拍', 'Studio：说出创意，其余交给 Cinefoundry Harness')
     shot = Image.open(screenshot).convert('RGB').crop((360, 0, 1560, 240))
     shot = shot.resize((1680, 336), Image.LANCZOS)
     image.paste(shot, (120, y + 20))
@@ -295,10 +295,10 @@ def card_closing(path: Path) -> None:
     if arch.exists():
         picture = fit(Image.open(arch).convert('RGB'), (900, 820))
         image.paste(picture, (120, 130))
-    draw.text((1120, 300), 'Spotfoundry', font=font(96, 'Bold'), fill=TEXT)
-    draw.text((1120, 420), '广告工坊 · 把一句创意，做成一支成片', font=font(40), fill=GOLD)
+    draw.text((1120, 300), 'Cinefoundry', font=font(96, 'Bold'), fill=TEXT)
+    draw.text((1120, 420), '影工坊 · 把一句创意，做成一支成片', font=font(40), fill=GOLD)
     paragraph(draw, (1120, 520), 'NVIDIA Nemotron 3.5 Lightning · StepFun Step3-VL · Qwen-Image · Wan2.2 · ACE-Step · Step-Audio-EditX\n全部运行在一台 DGX Spark 上', font(26), 700, fill=DIM)
-    draw.text((1120, 720), 'github.com/hojiahao/spotfoundry', font=font(36, 'Bold'), fill=TEXT)
+    draw.text((1120, 720), 'github.com/hojiahao/cinefoundry', font=font(36, 'Bold'), fill=TEXT)
     draw.text((1120, 790), 'BUSL-1.1 · 贺家豪', font=font(26), fill=DIM)
     image.save(path)
 
@@ -321,17 +321,17 @@ def narrate(text: str, path: Path, voice: str) -> float:
 
 
 def narrate_step_audio(narration: dict, work: Path) -> dict:
-    """All narration lines in one Step-Audio-EditX batch, cloned from SPOTFOUNDRY_TTS_REF_WAV like the films' voiceover."""
+    """All narration lines in one Step-Audio-EditX batch, cloned from CINEFOUNDRY_TTS_REF_WAV like the films' voiceover."""
     base = ROOT / 'runtime-data/step-audio'
     job = base / 'jobs' / f'reel-{os.getpid()}'
     job.mkdir(parents=True, exist_ok=True)
     inside = lambda path: '/work/' + str(Path(path).resolve().relative_to(base.resolve()))
-    reference = Path(os.environ['SPOTFOUNDRY_TTS_REF_WAV']).resolve()
+    reference = Path(os.environ['CINEFOUNDRY_TTS_REF_WAV']).resolve()
     lines = [{'text': text, 'output': inside(job / f'vo_{key}.wav')} for key, text in narration.items()]
-    (job / 'jobs.json').write_text(json.dumps({'prompt_audio': inside(reference), 'prompt_text': os.environ['SPOTFOUNDRY_TTS_REF_TEXT'], 'style': os.environ.get('SPOTFOUNDRY_TTS_STYLE') or None, 'lines': lines}, ensure_ascii=False))
-    if os.environ.get('SPOTFOUNDRY_TTS_ENGINE') == 'qwen-tts':
+    (job / 'jobs.json').write_text(json.dumps({'prompt_audio': inside(reference), 'prompt_text': os.environ['CINEFOUNDRY_TTS_REF_TEXT'], 'style': os.environ.get('CINEFOUNDRY_TTS_STYLE') or None, 'lines': lines}, ensure_ascii=False))
+    if os.environ.get('CINEFOUNDRY_TTS_ENGINE') == 'qwen-tts':
         sh('docker', 'run', '--rm', '--device', 'nvidia.com/gpu=all', '--ipc=host', '-v', f'{ROOT}:/repo:ro', '-v', f"{os.environ.get('SPARK_MODEL_DIR', os.path.expanduser('~/models'))}/tts:/models:ro", '-v', f'{base}:/work',
-           'spotfoundry/qwen-tts:local', '/repo/scripts/qwen-clone.py', '--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(job / 'jobs.json'))
+           'cinefoundry/qwen-tts:local', '/repo/scripts/qwen-clone.py', '--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(job / 'jobs.json'))
     else:
         sh('bash', str(ROOT / 'scripts/step-audio.sh'), 'batch', inside(job / 'jobs.json'))
     chain = 'highpass=f=70,acompressor=threshold=-22dB:ratio=3:attack=5:release=90:makeup=4,equalizer=f=180:t=q:w=1.2:g=2,equalizer=f=3200:t=q:w=1.4:g=3,alimiter=limit=0.9'
@@ -360,7 +360,7 @@ def segment_agent_video(video: Path, narration: Path, seconds: float, out: Path)
     """A screen recording of the agent session (any length), sped up to fill the segment."""
     speed = max(1.0, duration(video) / (seconds - 0.5))
     fontfile = str(FONT_DIR / 'NotoSansCJK-Regular.ttc')
-    label = 'DeepSeek Harness（本地 Nemotron）通过 spotfoundry-ad-film Skill 调用 Spotfoundry · 实录压缩播放'
+    label = 'DeepSeek Harness（本地 Nemotron）通过 cinefoundry-ad-film Skill 调用 Cinefoundry · 实录压缩播放'
     vf = (f"[0:v]setpts=PTS/{speed:.4f},scale={W}:{H - 120}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:40:color=0x0e0f13,fps=24,"
           f"drawtext=fontfile='{fontfile}':text='{label}':fontsize=30:fontcolor=0xd9b26a:x=(w-tw)/2:y=h-60,"
           f"fade=t=in:st=0:d=0.6,fade=t=out:st={seconds - 0.6:.2f}:d=0.6,format=yuv420p[v];[1:a]adelay=600|600,apad[a]")
@@ -378,7 +378,7 @@ def segment_agent(rec: Path, narration: Path, seconds: float, out: Path, work: P
         handle.write(f"file '{frames[-1]}'\n")
     fontfile = str(FONT_DIR / 'NotoSansCJK-Regular.ttc')
     vf = (f"[0:v]scale={W}:{H - 120}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:40:color=0x0e0f13,fps=24,"
-          f"drawtext=fontfile='{fontfile}':text='DeepSeek Harness（本地 Nemotron）通过 spotfoundry-ad-film Skill 调用 Spotfoundry · 实录压缩播放':fontsize=30:fontcolor=0xd9b26a:x=(w-tw)/2:y=h-60,"
+          f"drawtext=fontfile='{fontfile}':text='DeepSeek Harness（本地 Nemotron）通过 cinefoundry-ad-film Skill 调用 Cinefoundry · 实录压缩播放':fontsize=30:fontcolor=0xd9b26a:x=(w-tw)/2:y=h-60,"
           f"fade=t=in:st=0:d=0.6,fade=t=out:st={seconds - 0.6:.2f}:d=0.6,format=yuv420p[v];[1:a]adelay=600|600,apad[a]")
     sh('ffmpeg', '-y', '-f', 'concat', '-safe', '0', '-i', str(listing), '-i', str(narration), '-t', f'{seconds:.2f}',
        '-filter_complex', vf, '-map', '[v]', '-map', '[a]', *ENCODE, str(out))
@@ -426,9 +426,9 @@ def segment_film(film: Path, out: Path, caption: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--out', default=str(Path.home() / 'spotfoundry-demo/spotfoundry-demo.mp4'))
-    parser.add_argument('--voice', default=os.environ.get('SPOTFOUNDRY_TTS_VOICE', 'zm_010'))
-    parser.add_argument('--studio', default=str(Path.home() / 'spotfoundry-demo/shots/studio-brief.png'))
+    parser.add_argument('--out', default=str(Path.home() / 'cinefoundry-demo/cinefoundry-demo.mp4'))
+    parser.add_argument('--voice', default=os.environ.get('CINEFOUNDRY_TTS_VOICE', 'zm_010'))
+    parser.add_argument('--studio', default=str(Path.home() / 'cinefoundry-demo/shots/studio-brief.png'))
     parser.add_argument('--films', nargs='*', default=None, help='film files with captions as path=caption; default: the four showcase films')
     args = parser.parse_args()
     out = Path(args.out); work = out.parent / 'work'; shutil.rmtree(work, ignore_errors=True); work.mkdir(parents=True)
@@ -443,22 +443,22 @@ def main() -> int:
 
     ablation = latest_ablation(); soda = run_summary('show-soda')
     narration = {
-        'title': 'Spotfoundry，广告工坊。把一句创意，做成一支成片。',
+        'title': 'Cinefoundry，影工坊。把一句创意，做成一支成片。',
         'pain': '做一条短视频广告，要过策划、文案、分镜、生成、剪辑。现有工具把这些放在云端：未发布新品的素材不能上传；一个镜头重生成五次是常态，按次计费劝退；生成结果没人把关，一句全网第一、一个变形的标志，到成片才发现。',
-        'studio': 'Spotfoundry 跑在一台 DGX Spark 上。一句创意，有两种方式交给它：在网页工作台里直接开拍，或者让任何支持 Agent Skills 的智能体通过 Skill 来调用。背后都是同一个 Spotfoundry Harness：八个阶段，每个阶段一个加载了 Skill 的子智能体，代码管顺序和验收，模型管判断。',
+        'studio': 'Cinefoundry 跑在一台 DGX Spark 上。一句创意，有两种方式交给它：在网页工作台里直接开拍，或者让任何支持 Agent Skills 的智能体通过 Skill 来调用。背后都是同一个 Cinefoundry Harness：八个阶段，每个阶段一个加载了 Skill 的子智能体，代码管顺序和验收，模型管判断。',
         'live': '第一种方式：网页工作台。输入创意，点开拍。智能体依次写需求、写脚本、审合规、画分镜，定妆图过了质检，每个镜头的首帧逐一生成、逐一复核，三段视频在本机生成，最后自动剪成片。整个过程约三十五分钟，这里压缩成了四十秒。',
         'review': '文案先过广告法用词扫描，再过一个没写这份稿的审稿智能体，还有 Jev 的语义判读。有问题的文案到不了生成环节。这是咖啡那支的第一稿，提神、清醒这类功效声称被退回，第二稿只写香气和口感，才放行。',
         'qa': '产品先出一张过质检的定妆图，之后每一帧都从它生成，所以整支片子里是同一只罐。每一帧由 StepFun 的视觉模型对照定妆图复核：镜头一的候选因为罐子没立起来被拒，改提示词重生成后通过。返工拦在二十秒的生图阶段，而不是六分钟的生视频阶段。',
-        'agent': '第二种方式：在 DeepSeek Harness 里，大脑是本机的 NVIDIA Nemotron。用一句话提需求，它按描述加载 Spotfoundry 的入口 Skill，检查模型服务、启动 Harness、汇报进度，最后读交付报告，把成片位置、每个镜头的质检结果和遗留问题如实告诉你。',
+        'agent': '第二种方式：在 DeepSeek Harness 里，大脑是本机的 NVIDIA Nemotron。用一句话提需求，它按描述加载 Cinefoundry 的入口 Skill，检查模型服务、启动 Harness、汇报进度，最后读交付报告，把成片位置、每个镜头的质检结果和遗留问题如实告诉你。',
         'evidence': f"一支十五秒成片在这台机器上约 {soda['wall'] / 60:.0f} 分钟，全程本地。同一个模型、同一批创意，不带 Skill 时分镜一次合格 {ablation['withoutSkills']['storyboardCleanFirstTry'].replace('/', ' 比 ')}，带 Skill 后 {ablation['withSkills']['storyboardCleanFirstTry'].replace('/', ' 比 ')}；每条规则都对应一次真实的翻车。",
-        'closing': 'Spotfoundry，广告工坊。代码在 GitHub 公开，欢迎在你的 DGX Spark 上开拍。',
+        'closing': 'Cinefoundry，影工坊。代码在 GitHub 公开，欢迎在你的 DGX Spark 上开拍。',
     }
     cards = work / 'cards'; cards.mkdir()
     card_title(cards / 'title.png'); card_pain(cards / 'pain.png'); card_studio(cards / 'studio.png', Path(args.studio))
     card_review(cards / 'review.png'); card_qa(cards / 'qa.png'); card_evidence(cards / 'evidence.png'); card_closing(cards / 'closing.png')
 
     voices = {}
-    if os.environ.get('SPOTFOUNDRY_TTS_ENGINE') in ('step-audio', 'qwen-tts'):
+    if os.environ.get('CINEFOUNDRY_TTS_ENGINE') in ('step-audio', 'qwen-tts'):
         voices = narrate_step_audio(narration, work)
     else:
         for key, text in narration.items():
@@ -472,10 +472,10 @@ def main() -> int:
     add('title', lambda p: segment_card(cards / 'title.png', voices['title'][0], hold('title', 6), p))
     add('pain', lambda p: segment_card(cards / 'pain.png', voices['pain'][0], hold('pain', 8), p))
     add('studio', lambda p: segment_card(cards / 'studio.png', voices['studio'][0], hold('studio', 8), p))
-    rec = Path.home() / 'spotfoundry-demo/studio-rec'
+    rec = Path.home() / 'cinefoundry-demo/studio-rec'
     if (rec / 'run-composed').is_dir() and 'live' in voices:
         add('live', lambda p: segment_recording(rec, voices['live'][0], max(40.0, voices['live'][1] + 2), p, work))
-    agent_rec = Path.home() / 'spotfoundry-demo/agent-rec'
+    agent_rec = Path.home() / 'cinefoundry-demo/agent-rec'
     if (agent_rec / 'recording.mp4').exists() and 'agent' in voices:
         add('agent', lambda p: segment_agent_video(agent_rec / 'recording.mp4', voices['agent'][0], max(42.0, voices['agent'][1] + 2), p))
     elif (agent_rec / 'frames').is_dir() and any((agent_rec / 'frames').glob('*.png')) and 'agent' in voices:

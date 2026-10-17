@@ -52,7 +52,7 @@ done
 [ -x runtime-data/tts-venv/bin/python ] || { python3 -m venv runtime-data/tts-venv && runtime-data/tts-venv/bin/pip install -q "kokoro>=0.8" "misaki[zh]" soundfile; }
 
 # Broadcast narrator voices (optional): Qwen3-TTS VoiceDesign designs a voice from a written description,
-# Base clones it line by line. Run in the spotfoundry/qwen-tts container (deploy/spark/qwen-tts).
+# Base clones it line by line. Run in the cinefoundry/qwen-tts container (deploy/spark/qwen-tts).
 for repo in Qwen3-TTS-12Hz-1.7B-VoiceDesign Qwen3-TTS-12Hz-1.7B-Base; do
   [ -s "$MODELS/tts/$repo/model.safetensors" ] || retry hf download "Qwen/$repo" --local-dir "$MODELS/tts/$repo" >/dev/null && echo "done Qwen/$repo"
 done

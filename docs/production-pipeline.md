@@ -1,6 +1,6 @@
-# 顶级广告片的制作流程、岗位与 Spotfoundry 的 Skill 对照（2026-10-17）
+# 顶级广告片的制作流程、岗位与 Cinefoundry 的 Skill 对照（2026-10-17）
 
-Spotfoundry 的每个 Skill 对应真实广告制作中的一个岗位：Skill 写清楚这个岗位做什么、不许做什么、怎样算合格。本文先列出国际与国内一线广告的标准流程和岗位，再对照现有 10 个 Skill，给出增减方案。
+Cinefoundry 的每个 Skill 对应真实广告制作中的一个岗位：Skill 写清楚这个岗位做什么、不许做什么、怎样算合格。本文先列出国际与国内一线广告的标准流程和岗位，再对照现有 10 个 Skill，给出增减方案。
 
 ## 一、顶级广告片的标准流程
 
@@ -36,7 +36,7 @@ Spotfoundry 的每个 Skill 对应真实广告制作中的一个岗位：Skill �
 
 | 岗位 | 环节 | 现有 Skill | 覆盖情况 |
 |---|---|---|---|
-| 制片人 / 监制（Producer） | 全程统筹 | `spotfoundry-ad-film`（入口）+ Harness | 覆盖 |
+| 制片人 / 监制（Producer） | 全程统筹 | `cinefoundry-ad-film`（入口）+ Harness | 覆盖 |
 | 客户经理 / 策划（Account / Planner） | 1 | `ad-brief-intake` | 覆盖 |
 | 策略与创意总监（Strategist / CD） | 2、5 | 无，零散写在脚本和分镜里 | **缺失**：没有独立的洞察、创意概念和导演阐述环节，脚本和画面可能不是同一个想法 |
 | 文案（Copywriter） | 3 | `ad-script-writing` | 覆盖 |
@@ -67,7 +67,7 @@ Spotfoundry 的每个 Skill 对应真实广告制作中的一个岗位：Skill �
 
 | # | Skill | 岗位 | 阶段 | 执行方式 | 变化 |
 |---|---|---|---|---|---|
-| 1 | `spotfoundry-ad-film` | 制片人 / 监制 | 入口 | 外部 Agent 调用 Harness | 保留 |
+| 1 | `cinefoundry-ad-film` | 制片人 / 监制 | 入口 | 外部 Agent 调用 Harness | 保留 |
 | 2 | `ad-brief-intake` | 客户经理 / 策划 | 需求 | 需求智能体 | 保留 |
 | 3 | **`creative-direction`** | 策略与创意总监 | 创意 | 新增**创意智能体**：洞察、单一主张、创意概念、导演阐述（视觉概念、光线逻辑、色彩、节奏、声音方向）。文案、分镜、声音都从它出发 | **新增** |
 | 4 | `ad-script-writing` | 文案 | 脚本 | 文案智能体 | 保留 |

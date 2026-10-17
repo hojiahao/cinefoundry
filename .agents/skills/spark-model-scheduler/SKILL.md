@@ -23,7 +23,7 @@ budget first, then start things.
 1. Measure before acting:
 
    ```bash
-   spotfoundry mem status
+   cinefoundry mem status
    ```
 
    It reports total and available unified memory, per-container memory, and ComfyUI's
@@ -34,22 +34,22 @@ budget first, then start things.
 2. Check the plan against the budget:
 
    ```bash
-   spotfoundry mem plan --need nemotron=30 --need stepvl=20 --need comfyui=45
+   cinefoundry mem plan --need nemotron=30 --need stepvl=20 --need comfyui=45
    ```
 
    Exit code 1 means the plan does not fit with the reserve (default 10 GB). Reduce
    `--gpu-memory-utilization` / `--max-model-len` on the vLLM services, or stage the work.
 3. Keep one diffusion family resident at a time. With the image, edit and video models all left in ComfyUI next to the two LLMs, the GPU driver started failing allocations (`NV_ERR_NO_MEMORY` in the kernel log) and a 25-minute job died on a request timeout. Release at every phase boundary: hero still -> frames -> clips -> music.
-4. Stage work by phase when it does not fit at once. The Spotfoundry pipeline is naturally
+4. Stage work by phase when it does not fit at once. The Cinefoundry pipeline is naturally
    phased: text planning -> images -> video -> composition. Diffusion memory is only
    needed in the middle two phases, and the vision model only for breakdown and QA.
 5. Release diffusion memory at each boundary:
 
    ```bash
-   spotfoundry mem free
+   cinefoundry mem free
    ```
 6. Do not run a second GPU workload (an eval, another film) next to a film job; they share one pool and one GPU.
-7. Record `spotfoundry mem status` before and after each phase into `eval/` - these numbers are
+7. Record `cinefoundry mem status` before and after each phase into `eval/` - these numbers are
    the platform evidence for the submission. Report measured values only.
 
 ## Reference budget (measure and replace)
@@ -67,7 +67,7 @@ budget first, then start things.
 | Qwen3-TTS voice container | about 8 GB | runs in its own container; free ComfyUI first (a film died here with CUDA out of memory before this was enforced) |
 | ComfyUI, ACE-Step music | 9 GB | 7.7 GB checkpoint |
 | Nemotron 3.5 Super VL 120B-A12B NVFP4 (planned) | 75 GB weights, about 91 GB with KV cache | vLLM recipe minimum for one Spark; cannot stay resident next to Step3-VL and diffusion - must sleep (level 2) outside the text stages. Measure before relying on it |
-| OS, Spotfoundry, reserve | 15 GB | |
+| OS, Cinefoundry, reserve | 15 GB | |
 
 vLLM's `--gpu-memory-utilization` is a fraction of the whole pool and is claimed at
 startup, so start LLM services first and let ComfyUI allocate on demand.

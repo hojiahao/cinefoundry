@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spotfoundry 制作甘特图</title>
+<title>Cinefoundry 制作甘特图</title>
 <style>
 .viz-root {
   color-scheme: light;
@@ -130,7 +130,7 @@ th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
 <div class="viz-root">
   <header>
     <div>
-      <h1>Spotfoundry：一条广告片的制作甘特图</h1>
+      <h1>Cinefoundry：一条广告片的制作甘特图</h1>
       <p class="sub">数据来自 <code>projects/*/reports/run.jsonl</code>，只统计每个项目的第一次完整运行，没有任何估算。串行运行的每根条是两条日志事件之间的墙钟时间；并行队列运行按记录的出图开始时间和质检耗时，把各镜头分行画出（summer-cool-soda-queue 早于这两个字段，按队列的派发规则从时间戳还原）。</p>
     </div>
     <button id="theme" type="button" aria-label="切换明暗主题">◐ 主题</button>
@@ -493,7 +493,7 @@ const COMPARE = Boolean(D.compare);
 if (COMPARE) {
   for (const id of ["overviewCard", "detailCard"]) document.getElementById(id).hidden = true;
   document.getElementById("compareCard").hidden = false;
-  document.querySelector("h1").textContent = "Spotfoundry：新旧版本生成一支广告片的甘特图对比";
+  document.querySelector("h1").textContent = "Cinefoundry：新旧版本生成一支广告片的甘特图对比";
 }
 document.getElementById("sort").addEventListener("change", e => { sortKey = e.target.value; renderOverview(); renderOverviewTable(); });
 const vc = document.getElementById("viewChart"), vt = document.getElementById("viewTable");

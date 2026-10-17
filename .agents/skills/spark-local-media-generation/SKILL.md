@@ -1,7 +1,7 @@
 ---
 name: spark-local-media-generation
 version: "0.2.0"
-description: Generate a product hero still, storyboard frames anchored to it, and native-1080p video clips on the local DGX Spark with the spotfoundry CLI (ComfyUI running Qwen-Image, Qwen-Image-Edit, LTX-2.5 Fast NVFP4 or Wan2.2, and RIFE interpolation) instead of a cloud API. Use when product shots, storyboard frames or shot clips must be produced, when material is confidential or unreleased, or when choosing between local and cloud generation.
+description: Generate a product hero still, storyboard frames anchored to it, and native-1080p video clips on the local DGX Spark with the cinefoundry CLI (ComfyUI running Qwen-Image, Qwen-Image-Edit, LTX-2.5 Fast NVFP4 or Wan2.2, and RIFE interpolation) instead of a cloud API. Use when product shots, storyboard frames or shot clips must be produced, when material is confidential or unreleased, or when choosing between local and cloud generation.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
@@ -19,19 +19,19 @@ so product identity is decided where a retry costs seconds, not minutes.
 
 ## Workflow
 
-1. Check memory with `spark-model-scheduler` before each phase. Only one diffusion family should be resident at a time; run `spotfoundry mem free` when switching between them.
+1. Check memory with `spark-model-scheduler` before each phase. Only one diffusion family should be resident at a time; run `cinefoundry mem free` when switching between them.
 2. Generate the **product hero still** from the storyboard's `product` description on a plain backdrop, and gate it:
 
    ```bash
-   spotfoundry image --out projects/<id>/refs/product.png --size 1328x1328 --prompt "Studio product photograph of <product> ..."
-   spotfoundry qa --frame projects/<id>/refs/product.png --expect "one container, upright, label reads \"<brand>\" clearly"
+   cinefoundry image --out projects/<id>/refs/product.png --size 1328x1328 --prompt "Studio product photograph of <product> ..."
+   cinefoundry qa --frame projects/<id>/refs/product.png --expect "one container, upright, label reads \"<brand>\" clearly"
    ```
 
    If the user supplied real product photos, use those instead and skip this step.
 3. Generate every storyboard frame **from the hero still**. A reference switches the request to the edit model and keeps the product the same product:
 
    ```bash
-   spotfoundry image --project <id> --shot 1 --size 1920x1088 \
+   cinefoundry image --project <id> --shot 1 --size 1920x1088 \
      --prompt "<image_prompt>. Image 1 is the product: keep its shape, colours and label exactly as in image 1. No captions, no subtitles, no lettering except the product label. <style>" \
      --ref projects/<id>/refs/product.png
    ```
@@ -40,7 +40,7 @@ so product identity is decided where a retry costs seconds, not minutes.
 4. Only gated frames move on. Generate each clip from its approved frame:
 
    ```bash
-   spotfoundry video --project <id> --shot 1 --model ltx25-fast-nvfp4 --duration 5 --ratio 16:9 --resolution 1080p \
+   cinefoundry video --project <id> --shot 1 --model ltx25-fast-nvfp4 --duration 5 --ratio 16:9 --resolution 1080p \
      --prompt "<video_prompt>" --first-frame projects/<id>/frames/shot_001.png --keep-loaded
    ```
 
@@ -71,8 +71,8 @@ Sizes above the native budget (1328x1328 pixels in total) are generated natively
 
 ## When something fails
 
-- `ComfyUI rejected the workflow` or a missing model file: run `spotfoundry doctor`. It compares every workflow template with the running ComfyUI and lists unknown nodes and missing weights.
+- `ComfyUI rejected the workflow` or a missing model file: run `cinefoundry doctor`. It compares every workflow template with the running ComfyUI and lists unknown nodes and missing weights.
 - Connection refused: ComfyUI is not up. See `deploy/spark/`.
-- Allocation failures in the GPU driver log, or heavy swapping: more than one diffusion family is resident. Run `spotfoundry mem free`, then follow `spark-model-scheduler`.
+- Allocation failures in the GPU driver log, or heavy swapping: more than one diffusion family is resident. Run `cinefoundry mem free`, then follow `spark-model-scheduler`.
 
 Model files and graphs behind each route: `references/workflows.md`.

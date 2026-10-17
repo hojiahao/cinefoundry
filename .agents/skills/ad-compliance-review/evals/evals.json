@@ -4,7 +4,7 @@
     "question": "检查这段口播能不能用：“全网第一的气泡水，100%天然，喝了永不发胖。”品类是食品。",
     "expected_skill": "ad-compliance-review",
     "expected_script": null,
-    "ground_truth": "The agent runs `spotfoundry copy-check` with --category food rather than judging from memory, reports three block findings (全网第一 as an absolute term, 100% and 永不 as guarantees) citing 广告法 第九条 and the misleading-content articles, rewrites each while keeping the selling point, rescans until exit code 0, and states that this is a wording screen and not legal advice."
+    "ground_truth": "The agent runs `cinefoundry copy-check` with --category food rather than judging from memory, reports three block findings (全网第一 as an absolute term, 100% and 永不 as guarantees) citing 广告法 第九条 and the misleading-content articles, rewrites each while keeping the selling point, rescans until exit code 0, and states that this is a wording screen and not legal advice."
   },
   {
     "id": "ad-compliance-review-eval-002-cosmetics-efficacy",

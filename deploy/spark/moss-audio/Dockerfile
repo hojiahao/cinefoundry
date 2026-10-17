@@ -2,8 +2,8 @@
 # Built on the Qwen3-TTS image, whose torch already has aarch64 CUDA kernels for GB10; pip must not replace it.
 #
 #   git clone --depth 1 https://github.com/OpenMOSS/MOSS-TTS.git .tools/MOSS-TTS
-#   docker build -t spotfoundry/moss-audio:local -f deploy/spark/moss-audio/Dockerfile .tools/MOSS-TTS
-ARG BASE_IMAGE=spotfoundry/qwen-tts:local
+#   docker build -t cinefoundry/moss-audio:local -f deploy/spark/moss-audio/Dockerfile .tools/MOSS-TTS
+ARG BASE_IMAGE=cinefoundry/qwen-tts:local
 FROM ${BASE_IMAGE}
 ARG PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
 COPY moss_soundeffect_v2 /opt/moss_soundeffect_v2

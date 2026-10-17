@@ -6,7 +6,7 @@ import { cloudVideoConfig, generateCloudVideo } from './cloudvideo.js'
 import { exec } from './exec.js'
 import { concatCopy, extractLastFrame, scaleImage } from './ffmpeg.js'
 
-export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.SPOTFOUNDRY_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
+export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.CINEFOUNDRY_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
 export const VIDEO_FPS = 24
 
 export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'ltx25-fast' | 'ltx25-fast-nvfp4' | 'seedance'
@@ -91,7 +91,7 @@ export async function generateImage(
     width: nativeWidth,
     height: nativeHeight,
     seed: request.seed ?? seed(),
-    filename_prefix: `spotfoundry/${Date.now()}`,
+    filename_prefix: `cinefoundry/${Date.now()}`,
   }
   // The edit graph has three reference slots; with fewer references the last one repeats.
   for (let slot = 0; slot < 3 && references.length > 0; slot++) {
@@ -126,7 +126,7 @@ export async function generateVideo(
     dialogue?: { audio: string; offsetSeconds?: number } },
 ): Promise<MediaResult> {
   const started = Date.now()
-  const modelName = request.model ?? (process.env.SPOTFOUNDRY_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
+  const modelName = request.model ?? (process.env.CINEFOUNDRY_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
   if (modelName === 'seedance') {
     // Opt-in cloud route. The first frame leaves the machine, so callers record this asset as cloud.
     const config = cloudVideoConfig()
@@ -162,7 +162,7 @@ export async function generateVideo(
       negative: request.negative ?? VIDEO_NEGATIVE,
       fps: model.fps,
       seed: seed(),
-      filename_prefix: `spotfoundry/${Date.now()}_${index}`,
+      filename_prefix: `cinefoundry/${Date.now()}_${index}`,
     }
     if (startFrame) values.start_image = await comfy.uploadImage(await readFile(startFrame), `start_${Date.now()}_${index}.png`)
     if (request.dialogue) {
@@ -198,7 +198,7 @@ export async function generateVideo(
 }
 
 /** Frame interpolation model in ComfyUI's models/frame_interpolation (RIFE 4.26, MIT). */
-export const INTERPOLATION_MODEL = process.env.SPOTFOUNDRY_RIFE_MODEL ?? 'rife426.pth'
+export const INTERPOLATION_MODEL = process.env.CINEFOUNDRY_RIFE_MODEL ?? 'rife426.pth'
 
 /**
  * Raise a clip's frame rate with RIFE: 24 fps x5 = 120 fps, which the cut conforms to 60 by dropping every other
@@ -210,7 +210,7 @@ export async function interpolateVideo(comfy: ComfyClient, request: { input: str
   const fps = (request.sourceFps ?? VIDEO_FPS) * request.multiplier
   const uploaded = await comfy.uploadImage(await readFile(request.input), `interp_${Date.now()}_${request.input.split('/').pop()}`)
   const outputs = await comfy.run(renderWorkflow(await loadWorkflow('rife_interpolate'), {
-    video: uploaded, model: INTERPOLATION_MODEL, multiplier: request.multiplier, fps, filename_prefix: `spotfoundry/${Date.now()}_hfr`,
+    video: uploaded, model: INTERPOLATION_MODEL, multiplier: request.multiplier, fps, filename_prefix: `cinefoundry/${Date.now()}_hfr`,
   }))
   await mkdir(dirname(request.output), { recursive: true })
   await writeFile(request.output, await comfy.download(outputs[0]!))

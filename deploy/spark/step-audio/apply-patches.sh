@@ -8,7 +8,7 @@ if ! grep -q STEP_AUDIO_ATTENTION_BACKEND "$f"; then
 import sys
 p = sys.argv[1]; s = open(p).read()
 marker = '            llm_kwargs.update(kwargs)\n'
-patch = marker + '            # Spotfoundry: vLLM >= 0.11 ignores VLLM_ATTENTION_BACKEND; the model\'s alibi attention needs a backend other than FLASH_ATTN.\n            llm_kwargs.setdefault("attention_backend", os.environ.get("STEP_AUDIO_ATTENTION_BACKEND", "TRITON_ATTN"))\n'
+patch = marker + '            # Cinefoundry: vLLM >= 0.11 ignores VLLM_ATTENTION_BACKEND; the model\'s alibi attention needs a backend other than FLASH_ATTN.\n            llm_kwargs.setdefault("attention_backend", os.environ.get("STEP_AUDIO_ATTENTION_BACKEND", "TRITON_ATTN"))\n'
 assert marker in s
 s = s.replace(marker, patch, 1)
 if '\nimport os' not in s and not s.startswith('import os'): s = 'import os\n' + s

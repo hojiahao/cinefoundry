@@ -10,9 +10,9 @@ export interface VisionConfig {
 
 export function visionConfig(): VisionConfig {
   return {
-    baseUrl: (process.env.SPOTFOUNDRY_VISION_URL ?? 'http://127.0.0.1:8002/v1').replace(/\/+$/, ''),
-    model: process.env.SPOTFOUNDRY_VISION_MODEL ?? 'step3-vl-10b',
-    apiKey: process.env.SPOTFOUNDRY_VISION_KEY ?? 'local',
+    baseUrl: (process.env.CINEFOUNDRY_VISION_URL ?? 'http://127.0.0.1:8002/v1').replace(/\/+$/, ''),
+    model: process.env.CINEFOUNDRY_VISION_MODEL ?? 'step3-vl-10b',
+    apiKey: process.env.CINEFOUNDRY_VISION_KEY ?? 'local',
   }
 }
 

@@ -22,7 +22,7 @@ Finish like a top post house: the edit has rhythm, the grade makes three generat
 
 ## Workflow
 
-1. Confirm every storyboard shot has a clip: `spotfoundry project status --id <id>`. Above 24 fps each clip also has a RIFE-interpolated 120 fps master (`clips/shot_00N.hfr.mp4`), made at the end of the clips stage while the language models sleep; the cut uses it and conforms to the delivery rate by dropping frames evenly, so 60 fps lands exactly on the 24 fps motion.
+1. Confirm every storyboard shot has a clip: `cinefoundry project status --id <id>`. Above 24 fps each clip also has a RIFE-interpolated 120 fps master (`clips/shot_00N.hfr.mp4`), made at the end of the clips stage while the language models sleep; the cut uses it and conforms to the delivery rate by dropping frames evenly, so 60 fps lands exactly on the 24 fps motion.
 2. **Edit.** Shots cut hard - commercials cut on action, not on dissolves. The only dissolve is 0.5 s into the end card. With 5 s shots, shot k (from 0) starts at k x 5 s; a 15 s film is 15 + 3 (end card) - 0.5 = **17.5 s**.
 3. **End card.** The approved hero still with a slow push-in, the brand on its label (generated once, gated), and the closing line typeset under it: the client's `tagline` when the request quoted one, otherwise the single message. The brand on screen is never redrawn by a model.
 4. **Typography.**
@@ -44,7 +44,7 @@ Finish like a top post house: the edit has rhythm, the grade makes three generat
 9. Check the printed duration against step 2. A mismatch means a missing or extra clip, not rounding.
 10. Write `projects/<id>/reports/delivery.md`.
 
-`spotfoundry harness` performs steps 1-10. `spotfoundry cut --project <id>` re-runs the cut on an existing project with the format stored in its brief (`resolution`, `fps`).
+`cinefoundry harness` performs steps 1-10. `cinefoundry cut --project <id>` re-runs the cut on an existing project with the format stored in its brief (`resolution`, `fps`).
 
 ## delivery.md
 

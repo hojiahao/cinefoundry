@@ -40,7 +40,7 @@ export class ComfyClient {
     const queued = await fetch(`${this.baseUrl}/prompt`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt: workflow, client_id: 'spotfoundry' }),
+      body: JSON.stringify({ prompt: workflow, client_id: 'cinefoundry' }),
     })
     if (!queued.ok) throw new ComfyError(`ComfyUI rejected the workflow: ${(await queued.text()).slice(0, 2000)}`)
     const { prompt_id: promptId } = (await queued.json()) as { prompt_id: string }

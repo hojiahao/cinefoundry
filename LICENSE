@@ -3,7 +3,7 @@ Business Source License 1.1
 Parameters
 
 Licensor:             贺家豪 (Jiahao He, GitHub: hojiahao)
-Licensed Work:        Spotfoundry (广告工坊). The Licensed Work is (c) 2026 贺家豪 (Jiahao He).
+Licensed Work:        Cinefoundry (影工坊). The Licensed Work is (c) 2026 贺家豪 (Jiahao He).
 Additional Use Grant: You may make production use of the Licensed Work only for
                       non-commercial personal projects and non-commercial
                       academic research. Any other production use requires a
@@ -18,9 +18,9 @@ Change Date:          2030-10-17
 Change License:       Apache License, Version 2.0
 
 For information about commercial licensing, contact the Licensor through
-https://github.com/hojiahao/spotfoundry.
+https://github.com/hojiahao/cinefoundry.
 
-Prior versions: versions of Spotfoundry published up to and including commit
+Prior versions: versions of Cinefoundry published up to and including commit
 36bf724 (2026-10-13) were released under the MIT License, and copies of those
 versions remain available under the MIT License. This License applies to every
 version published after that commit.

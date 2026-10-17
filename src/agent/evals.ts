@@ -151,7 +151,7 @@ so a violation is a rule the retry loop would otherwise have to clean up.
 - Date: ${report.date.slice(0, 10)}
 - Model: \`${report.model}\` served locally by vLLM on one DGX Spark (GB10), thinking off
 - Briefs: ${report.briefs} advertising requests in \`eval/briefs.json\`, ${report.repeats} runs each
-- Raw data: \`${reportPath}\` · Reproduce: \`spotfoundry eval --repeats ${report.repeats} && spotfoundry eval --report-only\`
+- Raw data: \`${reportPath}\` · Reproduce: \`cinefoundry eval --repeats ${report.repeats} && cinefoundry eval --report-only\`
 
 ## Results
 

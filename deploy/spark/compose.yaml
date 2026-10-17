@@ -1,12 +1,12 @@
-# Local inference stack for Spotfoundry on one DGX Spark (GB10, aarch64, ~121 GB unified memory).
+# Local inference stack for Cinefoundry on one DGX Spark (GB10, aarch64, ~121 GB unified memory).
 #   docker compose -f deploy/spark/compose.yaml --env-file deploy/spark/spark.env up -d
 #
 # Memory plan (measure and adjust, see the spark-model-scheduler skill):
-#   nemotron ~30 GB | stepvl ~20 GB | comfyui ~45 GB peak, on demand | OS + Spotfoundry ~15 GB
+#   nemotron ~30 GB | stepvl ~20 GB | comfyui ~45 GB peak, on demand | OS + Cinefoundry ~15 GB
 # vLLM's --gpu-memory-utilization is a fraction of the WHOLE pool and is claimed at startup,
 # so the two LLM services stay at or below ~0.45 combined to leave room for diffusion.
 
-name: spotfoundry
+name: cinefoundry
 
 x-gpu: &gpu
   # DGX OS exposes the GPU through CDI (check: docker info | grep -i cdi). On hosts that
@@ -89,7 +89,7 @@ services:
       args:
         BASE_IMAGE: vllm/vllm-openai:${VLLM_TAG:-v0.27.1}
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
-    image: spotfoundry/comfyui:local
+    image: cinefoundry/comfyui:local
     # Cap host RAM so a runaway job gets this container OOM-killed instead of thrashing the whole
     # box (2026-10-10: swap filled, tailscaled hung, hard reboot). GPU allocations are not charged
     # to the cgroup and are invisible to the kernel OOM score, so also make this the first victim.

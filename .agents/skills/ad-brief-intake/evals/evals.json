@@ -4,7 +4,7 @@
     "question": "帮我给一款还没发布的无糖气泡水做一条抖音广告，我有三张产品图。",
     "expected_skill": "ad-brief-intake",
     "expected_script": null,
-    "ground_truth": "The agent asks only for the blocking unknowns it cannot infer (audience, single message) in one message and does not re-ask the product or platform. It decides ratio 9:16 and a 15 s duration itself and states the choice, picks compliance category `food`, runs `spotfoundry project init` with a lowercase dashed id, writes brief.md with the listed fields, lists the three reference images under refs/, and records delivery route `local only` because the product is unreleased."
+    "ground_truth": "The agent asks only for the blocking unknowns it cannot infer (audience, single message) in one message and does not re-ask the product or platform. It decides ratio 9:16 and a 15 s duration itself and states the choice, picks compliance category `food`, runs `cinefoundry project init` with a lowercase dashed id, writes brief.md with the listed fields, lists the three reference images under refs/, and records delivery route `local only` because the product is unreleased."
   },
   {
     "id": "ad-brief-intake-eval-002-duration-change",

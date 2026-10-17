@@ -20,13 +20,13 @@ const HERE = new URL('.', import.meta.url).pathname
 const cases = JSON.parse(await readFile(HERE + 'cases.json', 'utf8'))
 const rules = await loadRules()
 const { planner, reviewer } = endpoints()
-const CLI = `Spotfoundry CLI (run from the repository root as \`node dist/cli.js ...\` or \`spotfoundry ...\`):
-  spotfoundry harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--plan-only]
-  spotfoundry image --prompt <text> [--size 1328x1328] [--ref img ...] [--project id --shot n | --out file]
-  spotfoundry video --prompt <text> [--first-frame img] [--duration 5] [--ratio 9:16] [--resolution 720p] [--project id --shot n | --out file]
-  spotfoundry qa --frame <img> [--ref img ...] [--expect text] [--project id --shot n]
-  spotfoundry mem <status|plan|free> [--need name=GB ...]
-  spotfoundry shots <video> [--out dir] [--threshold 0.30]`
+const CLI = `Cinefoundry CLI (run from the repository root as \`node dist/cli.js ...\` or \`cinefoundry ...\`):
+  cinefoundry harness "<brief>" [--id id] [--ratio 9:16] [--duration 15] [--product-image photo] [--plan-only]
+  cinefoundry image --prompt <text> [--size 1328x1328] [--ref img ...] [--project id --shot n | --out file]
+  cinefoundry video --prompt <text> [--first-frame img] [--duration 5] [--ratio 9:16] [--resolution 720p] [--project id --shot n | --out file]
+  cinefoundry qa --frame <img> [--ref img ...] [--expect text] [--project id --shot n]
+  cinefoundry mem <status|plan|free> [--need name=GB ...]
+  cinefoundry shots <video> [--out dir] [--threshold 0.30]`
 
 const system = async (role, skill, withSkill) => agentSystem(role, rules, withSkill ? { name: skill, body: await loadSkill(skill) } : undefined)
 const ask = async (endpoint, sys, user, opts = {}) => {
@@ -224,7 +224,7 @@ Decide what to do before starting the next step. Return JSON only:
       const problems = []
       if (!c.kind) {
         if (v.action !== 'free_then_load') problems.push(`action "${v.action}": another diffusion family is resident, release it first`)
-        if (!/mem free|\/free/.test(v.command ?? '')) problems.push('first command is not spotfoundry mem free')
+        if (!/mem free|\/free/.test(v.command ?? '')) problems.push('first command is not cinefoundry mem free')
       } else if (c.kind === 'cgroup') {
         if (v.fits_now !== false || v.action === 'load') problems.push('trusted docker stats instead of available memory')
       } else if (v.action !== 'do_not_run_now') problems.push(`action "${v.action}" for ${c.kind}`)
@@ -232,9 +232,9 @@ Decide what to do before starting the next step. Return JSON only:
     },
   },
 
-  // spotfoundry-ad-film: how an outside agent should call the harness for a historical request.
+  // cinefoundry-ad-film: how an outside agent should call the harness for a historical request.
   film: {
-    skill: 'spotfoundry-ad-film', role: 'assistant that drives the Spotfoundry harness for a user', items: () => cases.film,
+    skill: 'cinefoundry-ad-film', role: 'assistant that drives the Cinefoundry harness for a user', items: () => cases.film,
     run: (c, sys) => ask(planner, sys, `${CLI}
 
 User: ${c.message}${c.photo ? `\n(Attached: a photo of the real product, saved at ${c.photo})` : ''}
@@ -243,7 +243,7 @@ Plan your tool calls. Return JSON only:
 {"preflight": ["shell commands to run before starting"], "command": "the shell command that makes the film", "run_in_background": true|false, "after": "what you read and report when it finishes"}`),
     score: (c, v) => {
       const problems = [], cmd = String(v.command ?? '')
-      if (!/(cli\.js|spotfoundry) harness/.test(cmd)) problems.push('does not call the harness')
+      if (!/(cli\.js|cinefoundry) harness/.test(cmd)) problems.push('does not call the harness')
       const core = c.message.replace(/\s*先给我看脚本和分镜，我确认了再生成视频。$/, '')
       if (!cmd.includes(core.slice(0, Math.min(24, core.length)))) problems.push('brief not passed verbatim')
       if (c.photo && !cmd.includes(`--product-image ${c.photo}`) && !cmd.includes(`--product-image "${c.photo}"`)) problems.push('product photo not passed as --product-image')
@@ -265,7 +265,7 @@ Plan your tool calls. Return JSON only:
     run: async (c, sys) => {
       const shots = JSON.parse(await readFile(`${c.shotsDir}/shots.json`, 'utf8'))
       c._shots = shots
-      return ask(reviewer, sys, `shots.json from \`spotfoundry shots\`:\n${JSON.stringify({ duration: shots.duration, shots: shots.shots.map(({ keyframe, ...s }) => s) })}
+      return ask(reviewer, sys, `shots.json from \`cinefoundry shots\`:\n${JSON.stringify({ duration: shots.duration, shots: shots.shots.map(({ keyframe, ...s }) => s) })}
 The images are the keyframes of shots 1-${shots.shots.length}, in order.
 Break this reference ad down into an editable shot list. Return JSON only:
 {"source": {"duration": 0, "shot_count": 0, "avg_shot_seconds": 0}, "shots": [{"index": 1, "start": 0, "end": 0, "framing": "...", "camera": "...", "subject": "...", "action": "...", "on_screen_text": "...", "lighting": "...", "role": "hook|product_reveal|benefit|social_proof|cta"}]}`,

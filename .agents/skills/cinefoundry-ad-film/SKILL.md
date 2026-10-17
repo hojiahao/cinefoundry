@@ -1,7 +1,7 @@
 ---
-name: spotfoundry-ad-film
+name: cinefoundry-ad-film
 version: "0.2.0"
-description: Produce a finished short advertising film (visuals, voiceover, music, typeset titles, compliance-checked copy) from one sentence of creative brief, locally on a DGX Spark, by running the Spotfoundry Harness. Use when the user asks for an ad, a product video, a 10/15/20-second commercial, "给某个产品做条广告", or wants to re-cut or re-voice an existing Spotfoundry project.
+description: Produce a finished short advertising film (visuals, voiceover, music, typeset titles, compliance-checked copy) from one sentence of creative brief, locally on a DGX Spark, by running the Cinefoundry Harness. Use when the user asks for an ad, a product video, a 10/15/20-second commercial, "给某个产品做条广告", or wants to re-cut or re-voice an existing Cinefoundry project.
 license: BUSL-1.1
 metadata:
   author: 贺家豪 (Jiahao He)
@@ -12,10 +12,10 @@ metadata:
     - harness
 ---
 
-# Spotfoundry ad film
+# Cinefoundry ad film
 
-This is the entry point for any agent - Claude Code, Codex, Gemini CLI, or Spotfoundry's own director -
-that wants a finished ad. It does not do the stages itself: it calls the Spotfoundry Harness, which runs
+This is the entry point for any agent - Claude Code, Codex, Gemini CLI, or Cinefoundry's own director -
+that wants a finished ad. It does not do the stages itself: it calls the Cinefoundry Harness, which runs
 brief, script, compliance, storyboard, frames, quality gate, clips and cut, each with its own stage
 skill, and checks every result before the next stage starts.
 
@@ -24,7 +24,7 @@ skill, and checks every result before the next stage starts.
 Run this one check first, before anything else:
 
 ```bash
-pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl -sf 127.0.0.1:8002/v1/models >/dev/null && curl -sf 127.0.0.1:8188/system_stats >/dev/null && echo "stack up"; spotfoundry mem status
+pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl -sf 127.0.0.1:8002/v1/models >/dev/null && curl -sf 127.0.0.1:8188/system_stats >/dev/null && echo "stack up"; cinefoundry mem status
 ```
 
 - Any `cli.js harness` line means another film is generating: stop and tell the user. One film at a time; two runs on one GPU make both slow and can fail a model load. The harness also refuses to start while another run holds its lock.
@@ -57,9 +57,9 @@ pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl
 The default voice engine is Kokoro. For a broadcast narrator, set before running:
 
 ```bash
-export SPOTFOUNDRY_TTS_ENGINE=qwen-tts \
-       SPOTFOUNDRY_TTS_REF_WAV=runtime-data/step-audio/voices/male-2.wav \
-       SPOTFOUNDRY_TTS_REF_TEXT="$(python3 -c "import json;print(json.load(open('runtime-data/step-audio/voices/voices.json'))['male-2']['text'])")"
+export CINEFOUNDRY_TTS_ENGINE=qwen-tts \
+       CINEFOUNDRY_TTS_REF_WAV=runtime-data/step-audio/voices/male-2.wav \
+       CINEFOUNDRY_TTS_REF_TEXT="$(python3 -c "import json;print(json.load(open('runtime-data/step-audio/voices/voices.json'))['male-2']['text'])")"
 ```
 
 The reference voices were designed from a written description (`scripts/voice-design.py`). Only use a
@@ -72,4 +72,4 @@ To re-voice or re-cut a finished project without regenerating pictures:
 
 - `product hero still never passed the gate`: the storyboard's product description contradicts the brief or carries text the image model paints onto the product. Read the gate's issues in `reports/run.jsonl`, fix the brief wording, run again.
 - A run that sits for many minutes on one frame: the reviewer is reasoning; each call is bounded, and an inconclusive verdict counts as a rejection.
-- Out-of-memory at a model load: another GPU job is running, or ComfyUI is holding cached weights; `spotfoundry mem free`, then retry.
+- Out-of-memory at a model load: another GPU job is running, or ComfyUI is holding cached weights; `cinefoundry mem free`, then retry.

@@ -10,7 +10,7 @@ so a violation is a rule the retry loop would otherwise have to clean up.
 - Date: 2026-09-23
 - Model: `nemotron-3.5-lightning` served locally by vLLM on one DGX Spark (GB10), thinking off
 - Briefs: 8 advertising requests in `eval/briefs.json`, 2 runs each
-- Raw data: `eval/results/ablation-v3.json` · Reproduce: `spotfoundry eval --repeats 2 && spotfoundry eval --report-only`
+- Raw data: `eval/results/ablation-v3.json` · Reproduce: `cinefoundry eval --repeats 2 && cinefoundry eval --report-only`
 
 ## Results
 

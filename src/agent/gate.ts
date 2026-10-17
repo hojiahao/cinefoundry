@@ -22,7 +22,7 @@ export interface QaVerdict {
 
 /** A frame below this on any craft axis is regenerated even when nothing is wrong with it. */
 // A value that is not a number would disable the floor silently (v < NaN is always false): fall back to 6.
-export const CRAFT_FLOOR = Number.isFinite(Number(process.env.SPOTFOUNDRY_CRAFT_FLOOR)) && process.env.SPOTFOUNDRY_CRAFT_FLOOR !== '' && process.env.SPOTFOUNDRY_CRAFT_FLOOR !== undefined ? Number(process.env.SPOTFOUNDRY_CRAFT_FLOOR) : 6
+export const CRAFT_FLOOR = Number.isFinite(Number(process.env.CINEFOUNDRY_CRAFT_FLOOR)) && process.env.CINEFOUNDRY_CRAFT_FLOOR !== '' && process.env.CINEFOUNDRY_CRAFT_FLOOR !== undefined ? Number(process.env.CINEFOUNDRY_CRAFT_FLOOR) : 6
 
 export interface GateFailure {
   /** budget: max_tokens ran out (finish_reason "length"); unparsable: it finished without JSON; malformed: JSON without pass/score; transport: HTTP or connection error. */

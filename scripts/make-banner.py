@@ -64,7 +64,7 @@ def main() -> None:
         latin = instancer.instantiateVariableFont(latin, {"wght": args.weight})
     fonts = [latin, load_cjk(args.cjk)]
 
-    rows = [line for line in pyfiglet.figlet_format("SPOTFOUNDRY", font="ansi_shadow", width=200).splitlines() if line.strip()]
+    rows = [line for line in pyfiglet.figlet_format("CINEFOUNDRY", font="ansi_shadow", width=200).splitlines() if line.strip()]
     width = max(len(row) for row in rows) * CELL_W + PAD_X * 2
     height = TOP + len(rows) * CELL_H + 96
 
@@ -91,12 +91,12 @@ def main() -> None:
 
     tagline_y, caption_y = height - 54, height - 24
     prompt = outline("$", PAD_X, tagline_y, 21, fonts)
-    tagline = outline("广告工坊 · 把一句创意，做成一支成片", PAD_X + 26, tagline_y, 21, fonts)
-    caption_text = "agentic ad-film studio · runs on one NVIDIA DGX Spark"
+    tagline = outline("影工坊 · 把一个想法，拍成一部成片", PAD_X + 26, tagline_y, 21, fonts)
+    caption_text = "agentic film studio · runs on one NVIDIA DGX Spark"
     caption = outline(caption_text, PAD_X, caption_y, 16, fonts)
     caption_width = len(caption_text) * latin["hmtx"]["a"][0] * 16 / latin["head"].unitsPerEm
 
-    print(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="Spotfoundry 广告工坊: agentic ad-film studio, runs on one NVIDIA DGX Spark">
+    print(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="Cinefoundry 影工坊: agentic film studio, runs on one NVIDIA DGX Spark">
   <defs>
     <linearGradient id="ink" gradientUnits="userSpaceOnUse" x1="{PAD_X}" y1="0" x2="{width - PAD_X}" y2="0">
       <stop offset="0" stop-color="#f6e2b0"/><stop offset="0.55" stop-color="#d9a441"/><stop offset="1" stop-color="#e0724f"/>
@@ -105,7 +105,7 @@ def main() -> None:
   <rect width="{width}" height="{height}" rx="14" fill="#0e0f13"/>
   <rect x="0.75" y="0.75" width="{width - 1.5}" height="{height - 1.5}" rx="13.5" fill="none" stroke="#272a35" stroke-width="1.5"/>
   <circle cx="30" cy="30" r="6.5" fill="#ef6f6f"/><circle cx="52" cy="30" r="6.5" fill="#e6c15a"/><circle cx="74" cy="30" r="6.5" fill="#6fcf97"/>
-  <path d="{outline("spotfoundry — dgx-spark", width / 2, 35, 14, fonts, "middle")}" fill="#5d6070"/>
+  <path d="{outline("cinefoundry — dgx-spark", width / 2, 35, 14, fonts, "middle")}" fill="#5d6070"/>
   <!-- double-line shadow: a wide dim stroke with a background-coloured stroke inside it -->
   <path d="{shadow}" fill="none" stroke="#7a5f2c" stroke-width="7" stroke-linejoin="miter"/>
   <path d="{shadow}" fill="none" stroke="#0e0f13" stroke-width="2.6" stroke-linejoin="miter"/>

@@ -22,13 +22,13 @@ viewing with the local vision model, so an unreleased or licensed reference neve
 1. Cut the video into shots and export one keyframe per shot:
 
    ```bash
-   spotfoundry shots reference.mp4 --out projects/<id>/breakdown --threshold 0.30
+   cinefoundry shots reference.mp4 --out projects/<id>/breakdown --threshold 0.30
    ```
 
    This writes `shots.json` (index, start, end, duration, keyframe path) and `shot_XXX.jpg`.
    Lower `--threshold` when soft dissolves are missed; raise it when flashes or fast
    motion cause false cuts. Shots shorter than `--min-shot` seconds merge into the previous one.
-2. Describe each keyframe with the local StepFun vision model (`spotfoundry qa` uses the same endpoint). Send
+2. Describe each keyframe with the local StepFun vision model (`cinefoundry qa` uses the same endpoint). Send
    keyframes in batches of at most 12, in order, and ask for the fields in the output
    format. Ask for what is visible; do not let the model guess brand names it cannot read.
 3. Derive pacing from `shots.json`, not from the model: average shot length, the longest

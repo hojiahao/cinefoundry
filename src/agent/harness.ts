@@ -69,7 +69,7 @@ const frameSize = (resolution: string, ratio: string) => videoSize(resolution, r
 const MAX_QA_REGENERATIONS = 2
 
 /**
- * Spotfoundry Harness: the runtime that hosts the director and its sub-agents. Eight stages in
+ * Cinefoundry Harness: the runtime that hosts the director and its sub-agents. Eight stages in
  * a fixed order, each handed to an agent that works under one skill. Code owns the order and
  * the acceptance checks; models own the judgement.
  */
@@ -100,10 +100,10 @@ export async function preflight(options: HarnessOptions): Promise<void> {
   if (options.frameScheduling && !['queue', 'serial'].includes(options.frameScheduling)) problems.push(`--frame-scheduling ${options.frameScheduling}: use queue or serial`)
   if (options.productImage) await access(options.productImage).catch(() => problems.push(`Product image not found: ${options.productImage}`))
   if (options.audio) await access(options.audio).catch(() => problems.push(`Music file not found: ${options.audio}`))
-  if (!options.silent && !options.planOnly && ['qwen-tts', 'step-audio'].includes(process.env.SPOTFOUNDRY_TTS_ENGINE ?? '')) {
-    const wav = process.env.SPOTFOUNDRY_TTS_REF_WAV
-    if (!wav || !process.env.SPOTFOUNDRY_TTS_REF_TEXT) problems.push('SPOTFOUNDRY_TTS_ENGINE needs SPOTFOUNDRY_TTS_REF_WAV and SPOTFOUNDRY_TTS_REF_TEXT')
-    else await access(wav).catch(() => problems.push(`SPOTFOUNDRY_TTS_REF_WAV not found: ${wav}`))
+  if (!options.silent && !options.planOnly && ['qwen-tts', 'step-audio'].includes(process.env.CINEFOUNDRY_TTS_ENGINE ?? '')) {
+    const wav = process.env.CINEFOUNDRY_TTS_REF_WAV
+    if (!wav || !process.env.CINEFOUNDRY_TTS_REF_TEXT) problems.push('CINEFOUNDRY_TTS_ENGINE needs CINEFOUNDRY_TTS_REF_WAV and CINEFOUNDRY_TTS_REF_TEXT')
+    else await access(wav).catch(() => problems.push(`CINEFOUNDRY_TTS_REF_WAV not found: ${wav}`))
   }
   if (!options.planOnly) {
     const fonts = await exec('fc-list', [':', 'family']).then((r) => r.stdout).catch(() => '')
@@ -115,7 +115,7 @@ export async function preflight(options: HarnessOptions): Promise<void> {
 /**
  * One GPU, one film at a time, enforced here rather than left to whoever starts the run: a second run
  * makes both slow and can fail a model load, and agents asked to check first with pgrep skipped it
- * (eval/skill-bench, spotfoundry-ad-film: 32 of 32 plans). A lock whose process is gone is stale and is taken over.
+ * (eval/skill-bench, cinefoundry-ad-film: 32 of 32 plans). A lock whose process is gone is stale and is taken over.
  */
 async function takeRunLock(brief: string): Promise<() => Promise<void>> {
   const lock = join(projectsRoot(), '.harness.lock')

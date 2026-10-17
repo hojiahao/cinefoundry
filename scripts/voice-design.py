@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Design fictional narrator voices with Qwen3-TTS VoiceDesign, inside the spotfoundry/qwen-tts container.
+"""Design fictional narrator voices with Qwen3-TTS VoiceDesign, inside the cinefoundry/qwen-tts container.
 
 Each voice is generated from a written description: it is nobody's recording. The resulting clip is
 the reference that the voice engine clones for every voiceover line, so a whole film keeps one voice.
@@ -14,7 +14,7 @@ import soundfile as sf
 import torch
 from qwen_tts import Qwen3TTSModel
 
-LIBRARY = os.environ.get('SPOTFOUNDRY_VOICE_LIBRARY', '/repo/deploy/voices.json')
+LIBRARY = os.environ.get('CINEFOUNDRY_VOICE_LIBRARY', '/repo/deploy/voices.json')
 
 
 def main() -> None:

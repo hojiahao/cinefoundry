@@ -38,7 +38,7 @@ let photoLetteringReply = '冷'
 
 beforeAll(async () => {
   // The casting library on this machine must not decide what the fake creative director may cast.
-  process.env.SPOTFOUNDRY_VOICE_LIBRARY = join(tmpdir(), 'no-voice-library.json')
+  process.env.CINEFOUNDRY_VOICE_LIBRARY = join(tmpdir(), 'no-voice-library.json')
   comfy = await startFakeComfy()
   llm = createServer((request, response) => {
     const chunks: Buffer[] = []
@@ -89,10 +89,10 @@ const TREATMENT = {
   sound: { voice: 'default', voiceDirection: 'unhurried and warm', music: 'sparse piano, slow, resolves softly', ambience: 'a quiet room at night' },
 }
 
-describe('Spotfoundry Harness', () => {
+describe('Cinefoundry Harness', () => {
   it('takes a brief to a finished film, rewriting a bad script and regenerating a rejected frame', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-harness-'))
-    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects, COMFYUI_URL: comfy.url, SPOTFOUNDRY_PLANNER_URL: llmUrl, SPOTFOUNDRY_VISION_URL: llmUrl })
+    const projects = mkdtempSync(join(tmpdir(), 'cinefoundry-harness-'))
+    Object.assign(process.env, { CINEFOUNDRY_PROJECTS: projects, COMFYUI_URL: comfy.url, CINEFOUNDRY_PLANNER_URL: llmUrl, CINEFOUNDRY_VISION_URL: llmUrl })
     delete process.env.STEPFUN_API_KEY
     const { runHarness } = await import('../src/agent/harness.js')
     const log: string[] = []
@@ -136,8 +136,8 @@ describe('Spotfoundry Harness', () => {
   })
 
   it('uses a supplied product photo as the hero still instead of generating one', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-photo-'))
-    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects })
+    const projects = mkdtempSync(join(tmpdir(), 'cinefoundry-photo-'))
+    Object.assign(process.env, { CINEFOUNDRY_PROJECTS: projects })
     const photo = join(projects, 'photo.jpg')
     execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gold:s=2000x1500', '-frames:v', '1', photo])
     const { runHarness } = await import('../src/agent/harness.js')
@@ -176,8 +176,8 @@ describe('Spotfoundry Harness', () => {
   })
 
   it('takes the brand lettering printed on the photo over the intake agent\'s', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-lettering-'))
-    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects })
+    const projects = mkdtempSync(join(tmpdir(), 'cinefoundry-lettering-'))
+    Object.assign(process.env, { CINEFOUNDRY_PROJECTS: projects })
     const photo = join(projects, 'photo.jpg')
     execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gold:s=800x600', '-frames:v', '1', photo])
     const { runHarness } = await import('../src/agent/harness.js')
@@ -192,8 +192,8 @@ describe('Spotfoundry Harness', () => {
   })
 
   it('carries on without the judge when it cannot be reached, instead of rewriting the copy', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-jev-'))
-    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects, TYPESAFE_API_KEY: 'test', TYPESAFE_ENDPOINT: `${llmUrl}/jev` })
+    const projects = mkdtempSync(join(tmpdir(), 'cinefoundry-jev-'))
+    Object.assign(process.env, { CINEFOUNDRY_PROJECTS: projects, TYPESAFE_API_KEY: 'test', TYPESAFE_ENDPOINT: `${llmUrl}/jev` })
     const { runHarness } = await import('../src/agent/harness.js')
     scriptCalls = 1
     try {
@@ -209,8 +209,8 @@ describe('Spotfoundry Harness', () => {
   })
 
   it('marks the stage that was running as failed when a run stops', async () => {
-    const projects = mkdtempSync(join(tmpdir(), 'spotfoundry-failed-'))
-    Object.assign(process.env, { SPOTFOUNDRY_PROJECTS: projects })
+    const projects = mkdtempSync(join(tmpdir(), 'cinefoundry-failed-'))
+    Object.assign(process.env, { CINEFOUNDRY_PROJECTS: projects })
     const { runHarness } = await import('../src/agent/harness.js')
     storyboardBroken = true
     try {

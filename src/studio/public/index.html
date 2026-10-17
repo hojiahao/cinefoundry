@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Spotfoundry Studio</title>
+<title>Cinefoundry Studio</title>
 <style>
   :root { --bg:#0e0f13; --panel:#171920; --line:#272a35; --text:#e9e7e1; --dim:#8d90a0; --gold:#d9b26a; --ok:#6fcf97; --run:#6aa9ff; --bad:#ef6f6f; }
   * { box-sizing:border-box }
@@ -47,7 +47,7 @@
 </head>
 <body>
 <header>
-  <h1>Spot<span>foundry</span></h1><div class="sub">广告工坊 · Spotfoundry Harness 工作台</div>
+  <h1>Spot<span>foundry</span></h1><div class="sub">影工坊 · Cinefoundry Harness 工作台</div>
   <div class="mem"><span id="memText">统一内存 …</span><div class="bar"><i id="memBar" style="width:0"></i></div></div>
 </header>
 <main>
@@ -85,7 +85,7 @@ function assetCard(project, asset) {
 
 function render(projects) {
   if (RECORD) projects = location.hash ? [] : projects.slice(0, 1)
-  if (projects.length === 0) return RECORD ? '' : '<div class="empty">还没有项目。让 Agent 执行 <code>spotfoundry project init</code> 开始。</div>'
+  if (projects.length === 0) return RECORD ? '' : '<div class="empty">还没有项目。让 Agent 执行 <code>cinefoundry project init</code> 开始。</div>'
   return projects.map((project) => {
     const stages = Object.entries(project.stages).map(([key, stage]) => `<span class="stage ${stage.status}" title="${esc(stage.note)}">${STAGE_NAMES[key] ?? key}</span>`).join('')
     const final = project.assets.find((asset) => asset.id === 'final-cut')

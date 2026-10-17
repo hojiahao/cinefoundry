@@ -2,9 +2,9 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Spotfoundry 广告工坊 · 系统架构",
+    "title": "Cinefoundry 影工坊 · 系统架构",
     "locale": "zh-CN",
-    "output": "spotfoundry-architecture.html",
+    "output": "cinefoundry-architecture.html",
     "quality_profile": "showcase",
     "legend": {
       "mode": "auto",
@@ -13,7 +13,7 @@
           "label": "用户"
         },
         "backend": {
-          "label": "Spotfoundry Harness"
+          "label": "Cinefoundry Harness"
         },
         "frontend": {
           "label": "技能与界面"
@@ -63,7 +63,7 @@
       "id": "director",
       "type": "backend",
       "label": "导演智能体",
-      "sublabel": "spotfoundry harness",
+      "sublabel": "cinefoundry harness",
       "pos": [
         240,
         170
@@ -118,7 +118,7 @@
     {
       "id": "cli",
       "type": "backend",
-      "label": "spotfoundry CLI",
+      "label": "cinefoundry CLI",
       "sublabel": "TypeScript",
       "pos": [
         240,
@@ -133,7 +133,7 @@
       "id": "comfyui",
       "type": "messagebus",
       "label": "ComfyUI",
-      "sublabel": "Qwen-Image · Wan2.2",
+      "sublabel": "Qwen-Image · LTX-2.5",
       "pos": [
         440,
         410

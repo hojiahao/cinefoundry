@@ -3,12 +3,12 @@
 rate (CER) against the script is reported. Used to pick the cleanest take when a voice is designed, and to send a
 voiceover line back for another take when the voice model dropped, added or mispronounced characters.
 
-Runs inside the spotfoundry/qwen-tts container (transformers' Whisper pipeline):
+Runs inside the cinefoundry/qwen-tts container (transformers' Whisper pipeline):
 
     python3 /repo/scripts/asr-score.py --model /asr/whisper-large-v3-turbo --jobs /work/jobs/x/asr.json
     # asr.json: [{"path": "/work/...wav", "text": "expected words"}, ...]; prints one JSON line with the results
 
-Punctuation, spaces and letter case are ignored. With pypinyin installed (the spotfoundry/moss-audio image) the
+Punctuation, spaces and letter case are ignored. With pypinyin installed (the cinefoundry/moss-audio image) the
 comparison is on toned syllables, so homophones Whisper writes differently (它/他, 的/地) are not counted as errors -
 what is checked is what the listener hears. Without it, characters are compared.
 """

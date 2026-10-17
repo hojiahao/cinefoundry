@@ -5,9 +5,9 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 BRIEF="$1"
-OUT="${2:-$HOME/spotfoundry-demo/studio-rec}"
+OUT="${2:-$HOME/cinefoundry-demo/studio-rec}"
 URL=http://127.0.0.1:3090/
-PROFILE="$HOME/spotfoundry-demo/ffprofile"
+PROFILE="$HOME/cinefoundry-demo/ffprofile"
 rm -rf "$OUT"; mkdir -p "$OUT/frames"
 n=0
 shot() { # url

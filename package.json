@@ -1,11 +1,11 @@
 {
-  "name": "spotfoundry",
+  "name": "cinefoundry",
   "version": "0.1.0",
-  "description": "Spotfoundry (广告工坊): an agentic ad-film studio that runs on a single NVIDIA DGX Spark.",
+  "description": "Cinefoundry (影工坊): an agentic ad-film studio that runs on a single NVIDIA DGX Spark.",
   "license": "BUSL-1.1",
   "type": "module",
   "engines": { "node": ">=22" },
-  "bin": { "spotfoundry": "dist/cli.js" },
+  "bin": { "cinefoundry": "dist/cli.js" },
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -14,7 +14,7 @@ import { writeDeliveryReport } from './delivery.js'
 
 /** Overlap into the end card. Between shots the film cuts hard: commercials cut on action and dissolve only to close. */
 export const END_DISSOLVE_SECONDS = 0.5
-/** Kept for hand-assembled projects (`spotfoundry cut` without a script), which still crossfade every join. */
+/** Kept for hand-assembled projects (`cinefoundry cut` without a script), which still crossfade every join. */
 export const CROSSFADE_SECONDS = 0.4
 /** Explicit label required for AI-generated video (人工智能生成合成内容标识办法, in force 2025-09-01). */
 export const AI_LABEL = '内容由 AI 生成'
@@ -54,7 +54,7 @@ export interface FinishInput {
   treatment?: Treatment
 }
 
-/** The cut stage: end card, typography, sound and the finishing pass. Used by the harness and by `spotfoundry cut`. */
+/** The cut stage: end card, typography, sound and the finishing pass. Used by the harness and by `cinefoundry cut`. */
 export async function finishFilm(input: FinishInput): Promise<string> {
   const { dir, brief, script, storyboard, comfy, record, log } = input
   const hero = { path: input.heroPath }
@@ -148,10 +148,10 @@ export async function finishFilm(input: FinishInput): Promise<string> {
   const finalCut = join(dir, 'cut', 'final.mp4')
   const industry = brief.industry ?? industryOf(`${brief.product} ${brief.title}`)
   // Implicit label (GB 45438-2025 style AIGC metadata) next to the explicit one burned into the picture.
-  const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Spotfoundry', ProduceID: brief.id, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
+  const aigc = JSON.stringify({ Label: '1', ContentProducer: 'Cinefoundry', ProduceID: brief.id, ReservedCode1: '', ContentPropagator: '', PropagateID: '', ReservedCode2: '' })
   await assembleFilm(clipPaths, finalCut, {
     width, height, fps, durations, crossfadeSeconds: overlaps, ass, audio: soundtrack, grade: GRADES[industry] ?? GRADES.neutral,
-    metadata: { AIGC: aigc, comment: `${AI_LABEL} · Spotfoundry · ${brief.id}`, title: brief.title },
+    metadata: { AIGC: aigc, comment: `${AI_LABEL} · Cinefoundry · ${brief.id}`, title: brief.title },
   })
   if (isUpscaled(resolution)) await record('cut', 'conform', undefined, { resolution, width, height, upscaled: true, note: 'generated at native 1080p, upscaled to the delivery size' })
   await writeDeliveryReport(dir, brief, script, storyboard, finalCut)

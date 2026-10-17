@@ -23,7 +23,7 @@ eyes that did not write the prompt, on a different model from the one that did.
 1. Gate every frame against the approved product hero still and the storyboard's `must_show`:
 
    ```bash
-   spotfoundry qa --project <id> --shot 1 --frame projects/<id>/frames/shot_001.png \
+   cinefoundry qa --project <id> --shot 1 --frame projects/<id>/frames/shot_001.png \
      --ref projects/<id>/refs/product.png --expect "the can upright in ice with its label readable"
    ```
 
@@ -38,7 +38,7 @@ eyes that did not write the prompt, on a different model from the one that did.
    - light: motivated, sculpted, one clear key; the product the best-lit thing in the frame
    - composition: balanced, depth from foreground to background, calm space for the title in the upper third
    - realism: reads as a photograph - real materials, accurate reflections, natural skin
-   Any axis below 6 (`SPOTFOUNDRY_CRAFT_FLOOR`) regenerates the frame even when nothing is wrong with it. CGI or AI-art looks are rejected outright: waxy or plastic skin, over-smooth surfaces, melted or warped geometry, impossible reflections, a glossy illustration finish, flat or muddy light, clutter.
+   Any axis below 6 (`CINEFOUNDRY_CRAFT_FLOOR`) regenerates the frame even when nothing is wrong with it. CGI or AI-art looks are rejected outright: waxy or plastic skin, over-smooth surfaces, melted or warped geometry, impossible reflections, a glossy illustration finish, flat or muddy light, clutter.
 4. With several candidates for a shot, keep the passing one with the highest score.
 5. When every candidate is rejected, change the prompt according to the issue before regenerating - the same prompt mostly fails the same way:
    - product mismatch -> do not describe the product again: image 1 already carries its shape, colours, cap and lettering, and the fixed sentences already say its label must not change. Instead delete every word about the product's look (colour, cap, logo, label text) and every prop or effect around it, until the scene is the product, one surface and one light - shorter than before. Keep the framing and the must-show content

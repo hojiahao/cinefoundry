@@ -5,8 +5,8 @@ import type { VoiceProfile } from '../agent/stages/creative.js'
 /** The announcer casting library (deploy/voices.json); each voice's reference clip lives in the step-audio voices folder. */
 interface Library { referenceText: string; voices: Array<VoiceProfile & { design: string }> }
 
-const libraryPath = () => resolve(process.env.SPOTFOUNDRY_VOICE_LIBRARY ?? 'deploy/voices.json')
-export const voicesDir = () => join(resolve(process.env.SPOTFOUNDRY_STEP_AUDIO_DIR ?? 'runtime-data/step-audio'), 'voices')
+const libraryPath = () => resolve(process.env.CINEFOUNDRY_VOICE_LIBRARY ?? 'deploy/voices.json')
+export const voicesDir = () => join(resolve(process.env.CINEFOUNDRY_STEP_AUDIO_DIR ?? 'runtime-data/step-audio'), 'voices')
 
 export function loadVoiceLibrary(): Library {
   return JSON.parse(readFileSync(libraryPath(), 'utf8')) as Library
