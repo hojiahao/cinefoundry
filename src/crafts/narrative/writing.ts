@@ -199,7 +199,7 @@ Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted 
     }
     ctx.plays[index] = play
     await writeFile(join(ctx.dir!, 'reports', `compliance.ep${episode}.json`), json(reviews))
-    await writeFile(join(ctx.dir!, 'story', `ep${episode}.screenplay.json`), json(play))
+    await writeFile(join(ctx.dir!, 'story', `ep${String(episode).padStart(2, '0')}.screenplay.json`), json(play))
     const last = reviews.at(-1)!
     if (!last.approve) throw new Error(`episode ${play.episode} did not pass compliance: ${last.issues.join(' | ').slice(0, 300)}`)
   }
