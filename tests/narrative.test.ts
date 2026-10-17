@@ -45,6 +45,14 @@ describe('narrative checks', () => {
     expect(problems).toContain('plan exactly 1 episode')
   })
 
+  it('names every character "English / 中文" and makes the id from the English name', () => {
+    const named = (name: string, id = 'lin-xia') => checkBible({ ...bible, characters: [{ ...bible.characters[0]!, id, name }] }, { episodes: 1 }).join(' ')
+    expect(named('Lin Xia / 林夏')).toBe('')
+    expect(named('Lin Xia / 林夏', 'xia')).toBe('')
+    expect(named('林夏 / 林夏')).toMatch(/"English \/ 中文"/)
+    expect(named('Lin Xia / 林夏', 'mia')).toMatch(/made from the English name/)
+  })
+
   it('writes a look as cast: the face, never a passing state', () => {
     const tired = { ...bible, characters: [{ ...bible.characters[0]!, look: 'shoulder-length dark hair, tired eyes' }] }
     expect(checkBible(tired, { episodes: 1 }).join(' ')).toMatch(/passing state/)

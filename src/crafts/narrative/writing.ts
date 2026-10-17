@@ -96,6 +96,22 @@ export async function fitSubtitles(ctx: NarrativeContext, play: Screenplay): Pro
   return fitted
 }
 
+const ACTION_IN_CHINESE = 'action must be in English (picture words)'
+
+/** The script supervisor writes every scene action that came back in Chinese as English picture words for the camera. */
+export async function englishActions(ctx: NarrativeContext, play: Screenplay): Promise<Screenplay> {
+  const chinese = (play.scenes ?? []).filter((s) => /[㐀-鿿]/.test(s.action ?? ''))
+  if (!chinese.length) return play
+  ctx.log(`  script supervisor: ${chinese.length} scene action(s) into English`)
+  const run = await chatJson<{ actions: Array<{ scene: number; action: string }> }>(ctx.planner, {
+    system: await ctx.agentPrompt('script supervisor', 'screenwriting'), thinking: false, maxTokens: 2500, temperature: 0.2,
+    user: `Write each scene action in English as picture words: what the camera sees and hears, present tense, no Chinese characters, no dialogue.\n${chinese.map((s) => `${s.scene} (${s.heading}): ${s.action}`).join('\n')}\nReturn JSON only: {"actions": [{"scene": 1, "action": "..."}]}`,
+  }, (r) => (Array.isArray(r.actions) ? [...r.actions.flatMap((a) => (!a.action?.trim() || /[㐀-鿿]/.test(a.action) ? [`scene ${a.scene}: English only`] : [])), ...chinese.filter((s) => !r.actions.some((a) => a.scene === s.scene)).map((s) => `return scene ${s.scene} too`)] : ['"actions" must be an array']), 4).catch(() => undefined)
+  await ctx.record('screenplay', 'script-supervisor', ctx.planner, { episode: play.episode, translated: chinese.length, done: Boolean(run && !run.unresolved.length) })
+  if (!run) return play
+  return { ...play, scenes: play.scenes.map((s) => { const a = run.value.actions.find((x) => x.scene === s.scene); return a && !/[㐀-鿿]/.test(a.action) ? { ...s, action: a.action } : s }) }
+}
+
 /** Screenplay: one per produced episode, written against the bible; every line fits one shot and carries its subtitle. */
 export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
@@ -113,11 +129,13 @@ export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
         user: `Series bible:\n${json(bible)}\n\nWrite episode ${episode}: "${plan.title}" - ${plan.synopsis}
 It opens on the hook (${plan.hook}) and ends on the cliffhanger (${plan.cliffhanger}).${previous ? `\nThe previous episode ended: ${previous.scenes.at(-1)?.action ?? ''}` : ''}
 Running time ${ctx.episodeSeconds} seconds: ${Math.floor(ctx.episodeSeconds / 5)} shots of 5 seconds, each shot speaks at most one line.${ctx.brand ? `\n${brandForCopy(ctx.brand.kit)}` : ''}
-Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene": 1, "heading": "INT. PLACE - TIME", "characters": ["id"], "action": "English", "lines": [{"speaker": "id", "en": "English", "zh": "中文字幕", "delivery": "English"}]}]}`,
+Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene": 1, "heading": "INT. PLACE - TIME", "characters": ["id"], "action": "English picture words, never Chinese", "lines": [{"speaker": "id", "en": "English", "zh": "中文字幕", "delivery": "English"}]}]}`,
       },
-      (value) => checkScreenplay(value, bible, screenplayWant(ctx)),
+      // A scene action in Chinese is the script supervisor's to translate, not a reason to throw the screenplay away.
+      (value) => checkScreenplay(value, bible, screenplayWant(ctx)).filter((p) => !p.endsWith(ACTION_IN_CHINESE)),
       6,
     )
+    run.value = await englishActions(ctx, run.value)
     // Subtitles are the subtitle editor's craft, not a reason to throw the screenplay away: punctuation is normalised by
     // rule, and only the lines still too long go to a subtitle editor to tighten.
     const play = await fitSubtitles(ctx, { ...run.value, episode })

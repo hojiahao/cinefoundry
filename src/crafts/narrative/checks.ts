@@ -15,6 +15,13 @@ const DIALOGUE_FRAMINGS = ['medium', 'close-up', 'over-the-shoulder', 'medium cl
 const words = (text: string) => text.trim().split(/\s+/).filter(Boolean).length
 const zhLength = (text: string) => [...text.replace(/\s/g, '')].length
 
+const slugName = (name: string) => name.toLowerCase().normalize('NFD').replace(/[^a-z\s-]/g, '').trim().split(/[\s-]+/).filter(Boolean).join('-')
+/** The id is the English name as a slug, or one of its words ("lin-xia" or "xia" for "Lin Xia"). */
+export function idMatchesName(id: string, english: string): boolean {
+  const slug = slugName(english)
+  return id === slug || slug.split('-').includes(id)
+}
+
 export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want: { episodes: number; maxCharacters?: number; request?: string }): string[] {
   const problems: string[] = []
   // A name the client wrote is theirs: "林夏" came back as "Mia / 米娅". Every name listed must be in the request, and
@@ -49,6 +56,13 @@ export function checkBible(bible: SeriesBible & { clientNames?: string[] }, want
     if (c.look && STATE.test(c.look)) problems.push(`${c.id}: look describes a passing state ("${STATE.exec(c.look)![0]}"); write the face as cast, and play the tiredness in a scene`)
     if (c.look && DIGIT.test(c.look)) problems.push(`${c.id}: look must be words only (write "in her late twenties", not "28")`)
     if (!c.name?.trim() || !c.arc?.trim()) problems.push(`${c.id}: name and arc are required`)
+    else {
+      // "English / 中文": the English (pinyin) name is what the cast is called on screen and the id is made from it;
+      // a bible once came back as "林夏 / 林夏" with the prompt's example id "mia".
+      const english = c.name.split('/')[0]!.trim()
+      if (!english || CJK.test(english) || !c.name.includes('/')) problems.push(`${c.id}: name is "English / 中文", e.g. "Lin Xia / 林夏" (got "${c.name}")`)
+      else if (!idMatchesName(c.id, english)) problems.push(`${c.id}: id is made from the English name "${english}" (e.g. "${slugName(english)}"), not an example id`)
+    }
   }
   const episodes = bible.episodes ?? []
   if (episodes.length !== want.episodes) problems.push(`plan exactly ${want.episodes} episode(s), got ${episodes.length}`)
