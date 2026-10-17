@@ -116,9 +116,12 @@ export async function generateMusic(comfy: ComfyClient, request: { tags: string;
 /**
  * Voice lines placed at their cue times over the music bed. The bed ducks under the voice
  * (sidechain compression) instead of sitting at one low level for the whole film.
+ * `musicOffset` starts the bed that many seconds in: a cutdown back-times the master's score so it ends on the same
+ * resolution as the master instead of being faded out mid-phrase.
  */
-export async function mixSoundtrack(request: { voices: Array<{ path: string; start: number }>; music?: string; totalSeconds: number; output: string }): Promise<void> {
+export async function mixSoundtrack(request: { voices: Array<{ path: string; start: number }>; music?: string; musicOffset?: number; totalSeconds: number; output: string }): Promise<void> {
   const { voices, music, totalSeconds, output } = request
+  const offset = Math.max(0, request.musicOffset ?? 0)
   if (voices.length === 0 && !music) throw new Error('Nothing to mix: no voice lines and no music.')
   const args = ['-hide_banner', '-loglevel', 'error', '-y', ...voices.flatMap((voice) => ['-i', voice.path])]
   const parts: string[] = []
@@ -133,7 +136,7 @@ export async function mixSoundtrack(request: { voices: Array<{ path: string; sta
   }
   if (music) {
     args.push('-i', music)
-    parts.push(`[${voices.length}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=duration=${totalSeconds},volume=0.55[bed]`)
+    parts.push(`[${voices.length}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=start=${offset.toFixed(3)}:duration=${totalSeconds},asetpts=PTS-STARTPTS,volume=0.55[bed]`)
     if (voiceLabel) {
       parts.push('[voice]asplit=2[voiceMix][voiceKey]')
       parts.push('[bed][voiceKey]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[ducked]')

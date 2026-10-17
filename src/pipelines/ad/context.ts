@@ -4,6 +4,9 @@ import type { QaVerdict } from '../../agent/gate.js'
 import type { jevConfig } from '../../agent/jev.js'
 import type { ModelEndpoint } from '../../agent/llm.js'
 import type { Treatment } from '../../crafts/treatment.js'
+import type { CutResult } from '../../agent/finish.js'
+import type { QcVerdict } from '../../crafts/qc.js'
+import type { VersionPlan, VersionSpec } from '../../crafts/versions.js'
 import type { VideoModel } from '../../lib/media.js'
 import type { EngineContext } from '../../engine/pipeline.js'
 import type { EngineOptions } from '../../engine/run.js'
@@ -41,9 +44,20 @@ export interface AdResult {
   projectId: string
   dir: string
   finalCut?: string
+  /** The cutdowns made from the master, by version id ("15s", "06s"). */
+  versions: Record<string, string>
+  /** The delivery QC verdict over every deliverable, when QC ran. */
+  qc?: QcVerdict
   rejectedAttempts: Record<string, number>
   qaRegenerations: number
   wallSeconds: number
+}
+
+/** A cutdown that was voiced and cut. */
+export interface VersionCut {
+  spec: VersionSpec
+  plan: VersionPlan
+  cut: CutResult
 }
 
 /** The ad film's working state: each stage reads what the earlier ones wrote. */
@@ -65,6 +79,10 @@ export interface AdContext extends EngineContext {
   hero?: { path: string; verdict: QaVerdict }
   frames: Map<number, string>
   finalCut?: string
+  /** The master's finishing result: timeline, voice windows, score; the cutdowns and QC read it. */
+  masterCut?: CutResult
+  versions: VersionCut[]
+  qc?: QcVerdict
   /** The language models waking under the cut; awaited before the run returns. */
   waking?: Promise<unknown>
 }

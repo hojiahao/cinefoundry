@@ -17,7 +17,7 @@ metadata:
 
 This is the entry point for any agent - Claude Code, Codex, Gemini CLI, or Cinefoundry's own director -
 that wants a finished ad. It does not do the stages itself: it calls the Cinefoundry Harness, which runs
-brief, script, compliance, storyboard, frames, quality gate, clips and cut, each with its own stage
+brief, script, compliance, storyboard, frames, quality gate, clips, cut, cutdowns and delivery QC, each with its own stage
 skill, and checks every result before the next stage starts.
 
 ## Before you start
@@ -51,7 +51,7 @@ pgrep -af "cli.js harness"; curl -sf 127.0.0.1:8001/v1/models >/dev/null && curl
 
    The default film is 16:9, native 1080p, 60 fps. Leave `--ratio` out unless the user asked for vertical or square, and leave `--resolution` / `--fps` out unless they asked. Generation time on one DGX Spark is dominated by the three native-1080p clips (about 4 minutes each) and their interpolation (under a minute each); the delivery report records the measured total. Run it in the background and report progress from the `▸` lines it prints, or point the user at the Studio (`node dist/cli.js studio`, port 3090) where the same run is visible.
 4. Use `--plan-only` when the user wants the script and storyboard to approve before any GPU time is spent.
-5. When it finishes, read `projects/<id>/reports/delivery.md` and tell the user: where the film is (`projects/<id>/cut/final.mp4`), what each shot's gate said, total seconds, and every open item the report lists (a shot kept after failing the gate, for example). Do not describe the film as flawless if the report says otherwise.
+5. When it finishes, read `projects/<id>/reports/delivery.md` and tell the user: where the film is (`projects/<id>/cut/final.mp4`, and the cutdowns `cut/final_15s.mp4` and `cut/final_06s.mp4` when the master is long enough), what each shot's gate said, the QC verdict per file (`reports/qc.json`), total seconds, and every open item the report lists (a shot kept after failing the gate, for example). Do not describe the film as flawless if the report says otherwise.
 
 ## Voice
 
