@@ -5,8 +5,9 @@ import { dropUnusedImages, loadWorkflow, renderWorkflow, type WorkflowGraph } fr
 import { cloudVideoConfig, generateCloudVideo } from './cloudvideo.js'
 import { exec } from './exec.js'
 import { concatCopy, extractLastFrame, scaleImage } from './ffmpeg.js'
+import { env } from './config.js'
 
-export const IMAGE_NATIVE_MAX_PIXELS = Number(process.env.CINEFOUNDRY_IMAGE_NATIVE_MAX_PIXELS ?? 1328 * 1328)
+export const IMAGE_NATIVE_MAX_PIXELS = Number(env('CINEFOUNDRY_IMAGE_NATIVE_MAX_PIXELS'))
 export const VIDEO_FPS = 24
 
 export type VideoModel = 'wan22-5b' | 'wan22-14b' | 'ltx25-fast' | 'ltx25-fast-nvfp4' | 'seedance'
@@ -178,7 +179,7 @@ export async function generateVideo(
     dialogue?: { audio: string; offsetSeconds?: number } },
 ): Promise<MediaResult> {
   const started = Date.now()
-  const modelName = request.model ?? (process.env.CINEFOUNDRY_VIDEO_MODEL as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
+  const modelName = request.model ?? (env('CINEFOUNDRY_VIDEO_MODEL') as VideoModel | undefined) ?? (request.firstFrame ? 'ltx25-fast' : 'wan22-5b')
   if (modelName === 'seedance') {
     // Opt-in cloud route. The first frame leaves the machine, so callers record this asset as cloud.
     const config = cloudVideoConfig()
@@ -250,7 +251,7 @@ export async function generateVideo(
 }
 
 /** Frame interpolation model in ComfyUI's models/frame_interpolation (RIFE 4.26, MIT). */
-export const INTERPOLATION_MODEL = process.env.CINEFOUNDRY_RIFE_MODEL ?? 'rife426.pth'
+export const INTERPOLATION_MODEL = env('CINEFOUNDRY_RIFE_MODEL')!
 
 /**
  * Raise a clip's frame rate with RIFE: 24 fps x5 = 120 fps, which the cut conforms to 60 by dropping every other

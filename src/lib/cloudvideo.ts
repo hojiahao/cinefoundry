@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
+import { env } from './config.js'
 
 /**
  * Optional cloud video route through a Volcengine Ark-compatible endpoint (Seedance family).
@@ -14,12 +15,12 @@ export interface CloudVideoConfig {
 }
 
 export function cloudVideoConfig(): CloudVideoConfig | undefined {
-  const apiKey = process.env.ARK_API_KEY
+  const apiKey = env('ARK_API_KEY')
   if (!apiKey) return undefined
   return {
     apiKey,
-    endpoint: (process.env.ARK_VIDEO_ENDPOINT ?? 'https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks').replace(/\/+$/, ''),
-    model: process.env.ARK_VIDEO_MODEL ?? 'doubao-seedance-2-0-fast-260128',
+    endpoint: env('ARK_VIDEO_ENDPOINT')!.replace(/\/+$/, ''),
+    model: env('ARK_VIDEO_MODEL')!,
   }
 }
 

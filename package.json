@@ -10,6 +10,7 @@
     "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "docs:config": "npm run build && node scripts/config-doc.mjs",
     "studio": "node dist/cli.js studio"
   },
   "devDependencies": {

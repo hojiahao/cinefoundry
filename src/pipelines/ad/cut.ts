@@ -16,7 +16,7 @@ export async function cutStage(ctx: AdContext): Promise<string> {
   // reload runs underneath it instead of after it.
   ctx.waking = Promise.all([planner, reviewer].map((target) => wakeService(target.baseUrl).then((woke) => ctx.record('run', 'scheduler', undefined, { phase: 'cut', woke: target.name, wokeSeconds: woke.wokeSeconds ?? 0 })).catch(() => undefined)))
   const master = await finishMaster({ dir, brief, script, storyboard, heroPath: need(ctx.hero, 'hero').path, comfy: need(ctx.comfy, 'comfy'), audio: ctx.options.audio, silent: ctx.options.silent, record: ctx.record, log: ctx.log, treatment: ctx.treatment })
-  await writeDeliveryReport(dir, brief, script, storyboard, master.path)
+  await writeDeliveryReport(dir, brief, storyboard, master.path)
   await addAsset(brief.id, { id: 'final-cut', kind: 'video', stage: 'cut', path: 'cut/final.mp4', execution: 'local-dgx-spark', model: 'ffmpeg' })
   ctx.masterCut = master
   ctx.finalCut = master.path

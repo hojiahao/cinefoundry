@@ -7,6 +7,7 @@ import { assembleFilm, clipStart, filmLength, fontCovers, GRADES, stillToClip } 
 import { DEFAULT_FPS, DEFAULT_RESOLUTION, deliverySize, isUpscaled } from '../lib/formats.js'
 import { memoryStatus, modelRoots, releaseFileCache } from '../lib/memory.js'
 import { buildAss, type TitleCue } from '../lib/titles.js'
+import { env } from '../lib/config.js'
 import { industryOf, type Brief, type Script, type Storyboard } from './checks.js'
 import type { Treatment } from '../crafts/treatment.js'
 import { castableVoices, voiceReference } from '../lib/voices.js'
@@ -41,7 +42,8 @@ export async function enterPhase(comfy: ComfyClient, phase: string, record: Reco
   await comfy.free()
   // Weights already loaded stay in the page cache, which CUDA on DGX Spark cannot allocate from: release them too.
   const cache = await releaseFileCache(modelRoots())
-  await new Promise((resolve) => setTimeout(resolve, 3000))
+  const settle = Number(env('CINEFOUNDRY_PHASE_SETTLE_MS'))
+  await new Promise((resolve) => setTimeout(resolve, Number.isFinite(settle) ? settle : 3000))
   await record('run', 'scheduler', undefined, { phase, availableBeforeGb: before.availableGb, availableAfterFreeGb: (await memoryStatus()).availableGb, freeBeforeCacheReleaseGb: cache.freeBeforeGb, freeAfterCacheReleaseGb: cache.freeAfterGb })
 }
 
@@ -136,7 +138,7 @@ export async function makeEndCard(dir: string, brief: Brief, still: string): Pro
 /** The cut stage: end card, typography, sound and the finishing pass. Used by `cinefoundry cut`. */
 export async function finishFilm(input: FinishInput): Promise<string> {
   const result = await finishMaster(input)
-  await writeDeliveryReport(input.dir, input.brief, input.script, input.storyboard, result.path)
+  await writeDeliveryReport(input.dir, input.brief, input.storyboard, result.path)
   return result.path
 }
 

@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { VoiceProfile } from '../crafts/treatment.js'
+import { env } from './config.js'
+import { audioWork } from './containers.js'
 
 export type VoiceLanguage = 'English' | 'Chinese'
 export type VoiceUse = 'announcer' | 'narrator' | 'presenter' | 'character'
@@ -23,9 +25,9 @@ export interface LibraryVoice {
 
 interface Library { referenceText: Record<VoiceLanguage, string>; pitchHz: Record<'female' | 'male', [number, number]>; voices: LibraryVoice[] }
 
-const libraryPath = () => resolve(process.env.CINEFOUNDRY_VOICE_LIBRARY ?? 'deploy/voices/library.json')
+const libraryPath = () => resolve(env('CINEFOUNDRY_VOICE_LIBRARY')!)
 /** Reference clips live in the audio work folder (the containers can read it): voices/<id>.wav. */
-export const voicesDir = () => join(resolve(process.env.CINEFOUNDRY_STEP_AUDIO_DIR ?? 'runtime-data/step-audio'), 'voices')
+export const voicesDir = () => join(audioWork(), 'voices')
 
 export function loadVoiceLibrary(): Library {
   return JSON.parse(readFileSync(libraryPath(), 'utf8')) as Library

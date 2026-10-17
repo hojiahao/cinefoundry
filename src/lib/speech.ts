@@ -1,28 +1,22 @@
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { join, relative, resolve } from 'node:path'
-import { exec } from './exec.js'
+import { env } from './config.js'
+import { audioWork, runContainer } from './containers.js'
+
+export { audioWork }
 
 /**
- * The audio containers: Qwen3-TTS (voice design and cloning), Whisper (pronunciation check) and MOSS-SoundEffect.
- * Each call loads its model once for a whole batch. Files are exchanged through the step-audio work folder, which is
- * the only host folder the containers can write to, so every path passed in must live under it.
+ * The audio models: Qwen3-TTS (voice design and cloning), Whisper (pronunciation check) and MOSS-SoundEffect, each run
+ * in its container (src/lib/containers.ts). Each call loads its model once for a whole batch. Files are exchanged
+ * through the step-audio work folder, the only host folder the containers can write to, so every path passed in must
+ * live under it.
  */
-export const audioWork = () => resolve(process.env.CINEFOUNDRY_STEP_AUDIO_DIR ?? 'runtime-data/step-audio')
-const modelRoot = () => process.env.SPARK_MODEL_DIR ?? join(homedir(), 'models')
 const inside = (path: string) => {
   const rel = relative(audioWork(), resolve(path))
   if (rel.startsWith('..')) throw new Error(`${path} must live under ${audioWork()} so the audio container can reach it`)
   return `/work/${rel}`
 }
 const outside = (path: string) => join(audioWork(), path.replace(/^\/work\//, ''))
-
-async function runContainer(image: string, mounts: string[], script: string, args: string[]): Promise<string> {
-  const { stdout } = await exec('docker', ['run', '--rm', '--device', 'nvidia.com/gpu=all', '--ipc=host', '-v', `${resolve('.')}:/repo:ro`, '-v', `${audioWork()}:/work`, ...mounts.flatMap((m) => ['-v', m]), image, `/repo/scripts/${script}`, ...args])
-  const last = stdout.trim().split('\n').reverse().find((line) => line.startsWith('{'))
-  if (!last) throw new Error(`${script} printed no result`)
-  return last
-}
 
 async function jobFile(name: string, jobs: unknown): Promise<string> {
   const dir = join(audioWork(), 'jobs', `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`)
@@ -32,21 +26,21 @@ async function jobFile(name: string, jobs: unknown): Promise<string> {
   return path
 }
 
-const ttsImage = () => process.env.CINEFOUNDRY_QWEN_TTS_IMAGE ?? 'cinefoundry/qwen-tts:local'
-const audioImage = () => process.env.CINEFOUNDRY_AUDIO_IMAGE ?? 'cinefoundry/moss-audio:local'
-const ttsModels = () => `${resolve(process.env.CINEFOUNDRY_TTS_MODEL_DIR ?? join(modelRoot(), 'tts'))}:/models:ro`
+const ttsImage = () => env('CINEFOUNDRY_QWEN_TTS_IMAGE')!
+const audioImage = () => env('CINEFOUNDRY_AUDIO_IMAGE')!
+const mount = (name: 'CINEFOUNDRY_TTS_MODEL_DIR' | 'CINEFOUNDRY_ASR_MODEL_DIR' | 'CINEFOUNDRY_SFX_MODEL_DIR', at: string) => `${resolve(env(name)!)}:${at}:ro`
 
 /** Voice design: `takes` candidate clips per voice, each saying `text`, from a written description. */
 export async function designVoices(jobs: Array<{ id: string; design: string; text: string; language: 'English' | 'Chinese'; outDir: string }>, takes = 3): Promise<Array<{ id: string; path: string; text: string; seconds: number }>> {
   const file = await jobFile('cast.json', jobs.map((j) => ({ id: j.id, design: j.design, text: j.text, language: j.language, out: inside(j.outDir) })))
-  const out = await runContainer(ttsImage(), [ttsModels()], 'voice-cast.py', ['--model', '/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign', '--jobs', inside(file), '--takes', String(takes)])
+  const out = await runContainer({ image: ttsImage(), mounts: [mount('CINEFOUNDRY_TTS_MODEL_DIR', '/models')], script: 'voice-cast.py', args: ['--model', '/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign', '--jobs', inside(file), '--takes', String(takes)] })
   return (JSON.parse(out) as { results: Array<{ id: string; path: string; text: string; seconds: number }> }).results.map((r) => ({ ...r, path: outside(r.path) }))
 }
 
 /** Lines cloned from one reference clip; a line's seed picks its take. */
 export async function cloneLines(reference: { wav: string; text: string }, lines: Array<{ text: string; output: string; seed?: number }>, language: 'English' | 'Chinese'): Promise<void> {
   const file = await jobFile('jobs.json', { prompt_audio: inside(reference.wav), prompt_text: reference.text, language, lines: lines.map((l) => ({ text: l.text, output: inside(l.output), seed: l.seed ?? 7 })) })
-  await runContainer(ttsImage(), [ttsModels()], 'qwen-clone.py', ['--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(file)])
+  await runContainer({ image: ttsImage(), mounts: [mount('CINEFOUNDRY_TTS_MODEL_DIR', '/models')], script: 'qwen-clone.py', args: ['--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(file)] })
 }
 
 /**
@@ -56,8 +50,7 @@ export async function cloneLines(reference: { wav: string; text: string }, lines
 export async function scoreSpeech(jobs: Array<{ path: string; text: string }>): Promise<Array<{ path: string; heard: string; cer: number }>> {
   if (!jobs.length) return []
   const file = await jobFile('asr.json', jobs.map((j) => ({ path: inside(j.path), text: j.text })))
-  const asr = `${resolve(process.env.CINEFOUNDRY_ASR_MODEL_DIR ?? join(modelRoot(), 'asr'))}:/asr:ro`
-  const out = await runContainer(audioImage(), [asr], 'asr-score.py', ['--model', '/asr/whisper-large-v3-turbo', '--jobs', inside(file)])
+  const out = await runContainer({ image: audioImage(), mounts: [mount('CINEFOUNDRY_ASR_MODEL_DIR', '/asr')], script: 'asr-score.py', args: ['--model', '/asr/whisper-large-v3-turbo', '--jobs', inside(file)] })
   return (JSON.parse(out) as { results: Array<{ path: string; heard: string; cer: number }> }).results.map((r) => ({ ...r, path: outside(r.path) }))
 }
 
@@ -65,8 +58,7 @@ export async function scoreSpeech(jobs: Array<{ path: string; text: string }>): 
 export async function generateSfx(jobs: Array<{ prompt: string; seconds: number; output: string; seed?: number }>): Promise<void> {
   if (!jobs.length) return
   const file = await jobFile('sfx.json', jobs.map((j) => ({ prompt: j.prompt, seconds: j.seconds, output: inside(j.output), seed: j.seed ?? 1 })))
-  const moss = `${resolve(process.env.CINEFOUNDRY_SFX_MODEL_DIR ?? join(modelRoot(), 'audio', 'MOSS-SoundEffect-v2.0'))}:/moss:ro`
-  await runContainer(audioImage(), [moss], 'sfx.py', ['--model', '/moss', '--jobs', inside(file)])
+  await runContainer({ image: audioImage(), mounts: [mount('CINEFOUNDRY_SFX_MODEL_DIR', '/moss')], script: 'sfx.py', args: ['--model', '/moss', '--jobs', inside(file)] })
 }
 
 /**

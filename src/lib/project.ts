@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { env } from './config.js'
 
 export type StageStatus = 'pending' | 'running' | 'done' | 'failed'
 
@@ -41,7 +42,7 @@ export interface ProjectState {
 }
 
 export function projectsRoot(): string {
-  return resolve(process.env.CINEFOUNDRY_PROJECTS ?? 'projects')
+  return resolve(env('CINEFOUNDRY_PROJECTS')!)
 }
 
 export function projectDir(id: string): string {

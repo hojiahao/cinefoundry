@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { runHarness } from '../agent/harness.js'
 import { memoryStatus } from '../lib/memory.js'
 import { loadProject, projectsRoot } from '../lib/project.js'
+import { env } from '../lib/config.js'
 
 const PUBLIC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), 'public')
 const TYPES: Record<string, string> = {
@@ -70,7 +71,7 @@ export async function startStudio(port: number, host: string): Promise<void> {
         // The studio binds to localhost; refuse cross-site form posts all the same.
         if (!(request.headers['content-type'] ?? '').includes('application/json')) return send(415, { error: 'send application/json' })
         // Optional shared secret so the studio can sit on a LAN / Tailscale address without letting anyone start GPU jobs.
-        const token = process.env.CINEFOUNDRY_STUDIO_TOKEN
+        const token = env('CINEFOUNDRY_STUDIO_TOKEN')
         if (token && request.headers['x-cinefoundry-token'] !== token) return send(401, { error: '服务端设置了 CINEFOUNDRY_STUDIO_TOKEN，请求需带 x-cinefoundry-token 头。' })
         if (job?.status === 'running') return send(409, { error: '已有一支片子在制作中，请等它完成。' })
         const body = await readJson(request)

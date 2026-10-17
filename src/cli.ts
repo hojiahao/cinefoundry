@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { COMMANDS } from './commands/index.js'
 import { parseArgs, UsageError } from './lib/args.js'
+import { env } from './lib/config.js'
 
 const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
 
@@ -29,7 +30,7 @@ const HELP = `Cinefoundry - an agentic film studio on a single NVIDIA DGX Spark
 `
 
 // Optional API keys for cloud routes live outside the repo (runtime-data/ is git-ignored).
-const keysFile = process.env.CINEFOUNDRY_KEYS_FILE ?? 'runtime-data/keys.env'
+const keysFile = env('CINEFOUNDRY_KEYS_FILE')!
 if (existsSync(keysFile)) {
   for (const line of readFileSync(keysFile, 'utf8').split('\n')) {
     const match = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line)

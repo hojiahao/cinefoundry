@@ -16,9 +16,9 @@ import { DEFAULT_RATIO, DEFAULT_RESOLUTION, checkFps, deliverySize, isRatio } fr
 import { qualityGate } from '../agent/gate.js'
 import { runHarness } from '../agent/harness.js'
 import { runPipeline } from '../engine/run.js'
-import { dramaPipeline } from '../pipelines/drama/index.js'
-import { shortPipeline } from '../pipelines/short/index.js'
-import type { NarrativeOptions } from '../crafts/narrative/context.js'
+import type { PipelineDef } from '../engine/pipeline.js'
+import { PIPELINES, type Format } from '../pipelines/index.js'
+import type { NarrativeContext, NarrativeOptions } from '../crafts/narrative/context.js'
 import { endpoints, type ModelEndpoint } from '../agent/llm.js'
 import { runAblation, writeBenchmarks } from '../agent/evals.js'
 import { startStudio } from '../studio/server.js'
@@ -305,14 +305,13 @@ function narrativeOptions(args: ParsedArgs, usage: string): NarrativeOptions {
 const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 120] [--ratio 9:16] [--fps 24] [--id id] [--cast projects/<id>/cast] [--plan-only]'
 const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 60] [--ratio 9:16] [--fps 30] [--id id] [--cast projects/<id>/cast] [--plan-only]'
 
-async function dramaCommand(args: ParsedArgs): Promise<number> {
-  print(await runPipeline(dramaPipeline, narrativeOptions(args, DRAMA_USAGE)))
-  return 0
-}
-
-async function shortCommand(args: ParsedArgs): Promise<number> {
-  print(await runPipeline(shortPipeline, narrativeOptions(args, SHORT_USAGE)))
-  return 0
+/** `cinefoundry short|drama`: the format's pipeline from the registry, run with the options the narrative formats share. */
+function narrativeCommand(format: Extract<Format, 'short' | 'drama'>, usage: string): Command {
+  return async (args) => {
+    const pipeline: PipelineDef<NarrativeOptions, NarrativeContext, unknown> = PIPELINES[format]
+    print(await runPipeline(pipeline, narrativeOptions(args, usage)))
+    return 0
+  }
 }
 
 /** Same model, same briefs, with and without the skills; scored by the director's validators. */
@@ -325,4 +324,4 @@ async function evalCommand(args: ParsedArgs): Promise<number> {
   return 0
 }
 
-export const COMMANDS: Record<string, Command> = { ad: harnessCommand, short: shortCommand, drama: dramaCommand, harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }
+export const COMMANDS: Record<string, Command> = { ad: harnessCommand, short: narrativeCommand('short', SHORT_USAGE), drama: narrativeCommand('drama', DRAMA_USAGE), harness: harnessCommand, eval: evalCommand, project, image, video, 'copy-check': copyCheck, shots, mem, qa, cut, doctor, studio }

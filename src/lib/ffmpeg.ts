@@ -30,39 +30,6 @@ export async function detectCuts(video: string, threshold: number): Promise<numb
   return [...stderr.matchAll(/pts_time:([0-9.]+)/g)].map((match) => Number(match[1]))
 }
 
-export interface CutOptions {
-  width: number
-  height: number
-  fps: number
-  audio?: string
-  audioGainDb?: number
-  subtitles?: string
-}
-
-/** Normalise every clip to one size and frame rate, join them, then lay audio and subtitles on top. */
-export async function assembleCut(clips: string[], output: string, options: CutOptions): Promise<void> {
-  const inputs = clips.flatMap((clip) => ['-i', clip])
-  const normalise = clips
-    .map((_, index) => `[${index}:v]scale=${options.width}:${options.height}:force_original_aspect_ratio=decrease,pad=${options.width}:${options.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${options.fps}[v${index}]`)
-    .join(';')
-  let chain = `${normalise};${clips.map((_, index) => `[v${index}]`).join('')}concat=n=${clips.length}:v=1:a=0[joined]`
-  let videoLabel = '[joined]'
-  if (options.subtitles) {
-    const escaped = options.subtitles.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'")
-    chain += `;[joined]subtitles='${escaped}'[subbed]`
-    videoLabel = '[subbed]'
-  }
-  const args = ['-hide_banner', '-loglevel', 'error', '-y', ...inputs]
-  if (options.audio) {
-    args.push('-i', options.audio)
-    chain += `;[${clips.length}:a]volume=${options.audioGainDb ?? -10}dB[music]`
-  }
-  args.push('-filter_complex', chain, '-map', videoLabel)
-  if (options.audio) args.push('-map', '[music]', '-shortest', '-c:a', 'aac')
-  args.push('-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', output)
-  await exec('ffmpeg', args)
-}
-
 export async function concatCopy(segments: string[], output: string): Promise<void> {
   const listing = `${output}.txt`
   await writeFile(listing, segments.map((segment) => `file '${segment}'\n`).join(''))
