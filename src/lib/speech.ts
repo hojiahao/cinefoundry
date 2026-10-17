@@ -1,5 +1,5 @@
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
-import { join, relative, resolve } from 'node:path'
+import { basename, join, relative, resolve } from 'node:path'
 import { env } from './config.js'
 import { audioWork, runContainer } from './containers.js'
 
@@ -8,8 +8,8 @@ export { audioWork }
 /**
  * The audio models: Qwen3-TTS (voice design and cloning), Whisper (pronunciation check) and MOSS-SoundEffect, each run
  * in its container (src/lib/containers.ts). Each call loads its model once for a whole batch. Files are exchanged
- * through the step-audio work folder, the only host folder the containers can write to, so every path passed in must
- * live under it.
+ * through the step-audio work folder, the only host folder the containers can write to: every output path must live
+ * under it, and an input from elsewhere is copied in.
  */
 const inside = (path: string) => {
   const rel = relative(audioWork(), resolve(path))
@@ -18,12 +18,29 @@ const inside = (path: string) => {
 }
 const outside = (path: string) => join(audioWork(), path.replace(/^\/work\//, ''))
 
-async function jobFile(name: string, jobs: unknown): Promise<string> {
+/** A fresh folder for one container call: its job file, and any input staged for it. */
+async function jobDir(): Promise<string> {
   const dir = join(audioWork(), 'jobs', `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`)
   await mkdir(dir, { recursive: true })
-  const path = join(dir, name)
+  return dir
+}
+
+async function jobFile(name: string, jobs: unknown, dir?: string): Promise<string> {
+  const path = join(dir ?? (await jobDir()), name)
   await writeFile(path, JSON.stringify(jobs, null, 2))
   return path
+}
+
+/**
+ * A file the container only reads, as the container sees it: in place when it is under the work folder, otherwise
+ * copied into the job's folder first. A character's designed voice is kept with its cast record in the project
+ * (cast/<id>/voice.wav), outside the work folder, and must still be speakable.
+ */
+async function readable(path: string, dir: string): Promise<string> {
+  if (!relative(audioWork(), resolve(path)).startsWith('..')) return inside(path)
+  const staged = join(dir, `input-${basename(path)}`)
+  await copyFile(path, staged)
+  return inside(staged)
 }
 
 const ttsImage = () => env('CINEFOUNDRY_QWEN_TTS_IMAGE')!
@@ -39,7 +56,8 @@ export async function designVoices(jobs: Array<{ id: string; design: string; tex
 
 /** Lines cloned from one reference clip; a line's seed picks its take. */
 export async function cloneLines(reference: { wav: string; text: string }, lines: Array<{ text: string; output: string; seed?: number }>, language: 'English' | 'Chinese'): Promise<void> {
-  const file = await jobFile('jobs.json', { prompt_audio: inside(reference.wav), prompt_text: reference.text, language, lines: lines.map((l) => ({ text: l.text, output: inside(l.output), seed: l.seed ?? 7 })) })
+  const dir = await jobDir()
+  const file = await jobFile('jobs.json', { prompt_audio: await readable(reference.wav, dir), prompt_text: reference.text, language, lines: lines.map((l) => ({ text: l.text, output: inside(l.output), seed: l.seed ?? 7 })) }, dir)
   await runContainer({ image: ttsImage(), mounts: [mount('CINEFOUNDRY_TTS_MODEL_DIR', '/models')], script: 'qwen-clone.py', args: ['--model', '/models/Qwen3-TTS-12Hz-1.7B-Base', '--jobs', inside(file)] })
 }
 
