@@ -4,7 +4,7 @@ import { ComfyClient } from '../../comfy/client.js'
 import { composeImagePrompt, composeProductPrompt, type Shot } from '../../agent/checks.js'
 import { enterPhase } from '../../agent/finish.js'
 import { qualityGate, type QaVerdict } from '../../agent/gate.js'
-import { generateImage, videoSize } from '../../lib/media.js'
+import { generateImage, imageWorkflow, videoSize } from '../../lib/media.js'
 import { generationResolution } from '../../lib/formats.js'
 import { addAsset } from '../../lib/project.js'
 import { MAX_QA_REGENERATIONS, repairPrompt } from '../../crafts/repair.js'
@@ -62,7 +62,7 @@ export async function framesStage(ctx: AdContext): Promise<string> {
   if (!hero!.verdict.pass) {
     throw new Error(`The product hero still failed the gate ${MAX_QA_REGENERATIONS + 1} times (${hero!.verdict.issues.join('; ')}). Every frame is anchored to it, so the film cannot continue with the wrong product.`)
   }
-  await addAsset(brief.id, { id: 'product-hero', kind: 'image', stage: 'frames', path: hero!.path.slice(dir.length + 1), execution: ctx.options.productImage ? 'user-supplied' : 'local-dgx-spark', model: ctx.options.productImage ? 'user photo' : 'qwen_image_lightning', note: `gate ${hero!.verdict.score}` })
+  await addAsset(brief.id, { id: 'product-hero', kind: 'image', stage: 'frames', path: hero!.path.slice(dir.length + 1), execution: ctx.options.productImage ? 'user-supplied' : 'local-dgx-spark', model: ctx.options.productImage ? 'user photo' : imageWorkflow(0).workflow, note: `gate ${hero!.verdict.score}` })
 
   await enterPhase(comfy, 'frames (Qwen-Image-Edit)', ctx.record)
   const frameSizeFor = frameSize(generationResolution(brief.resolution!), brief.ratio)
@@ -113,7 +113,7 @@ export async function framesStage(ctx: AdContext): Promise<string> {
     frames.set(shot.shot, best!.path)
     await addAsset(brief.id, {
       id: `frame-${shot.shot}`, kind: 'image', stage: 'frames', path: best!.path.slice(dir.length + 1), shot: shot.shot,
-      execution: 'local-dgx-spark', model: 'qwen_image_edit_lightning', note: best!.verdict.score < 0 ? 'unverified: the reviewer never concluded' : `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}`,
+      execution: 'local-dgx-spark', model: imageWorkflow(1).workflow, note: best!.verdict.score < 0 ? 'unverified: the reviewer never concluded' : `gate ${best!.verdict.score}${best!.verdict.pass ? '' : ' (kept after failed gate)'}`,
     })
   }
   const firstRender = (shot: Shot) => render(shot, composeImagePrompt(shot, storyboard, true, industry), '')

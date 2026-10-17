@@ -5,7 +5,7 @@ import { loadWorkflow } from '../comfy/workflow.js'
 import { flag, numberFlag, requireFlag, UsageError, type ParsedArgs } from '../lib/args.js'
 import { CATEGORIES, scanCopy, type Category } from '../lib/compliance.js'
 import { assembleFilm, detectCuts, extractFrame, probeDuration } from '../lib/ffmpeg.js'
-import { generateImage, generateVideo } from '../lib/media.js'
+import { generateImage, generateVideo, type EditModel, type ImageModel } from '../lib/media.js'
 import { memoryStatus, planMemory } from '../lib/memory.js'
 import { sleepService, wakeService } from '../lib/rest.js'
 import { addAsset, createProject, loadProject, projectDir, setStage, STAGES, type Stage, type StageStatus } from '../lib/project.js'
@@ -70,6 +70,8 @@ async function image(args: ParsedArgs): Promise<number> {
     output,
     references: args.flags.get('ref'),
     seed: flag(args, 'seed') ? numberFlag(args, 'seed', 0) : undefined,
+    model: flag(args, 'model') as ImageModel | undefined,
+    editModel: flag(args, 'edit-model') as EditModel | undefined,
   })
   if (id) {
     await addAsset(id, {
@@ -223,7 +225,7 @@ async function cut(args: ParsedArgs): Promise<number> {
 async function doctor(): Promise<number> {
   const info = await new ComfyClient().objectInfo()
   const problems: string[] = []
-  for (const name of ['qwen_image_lightning', 'qwen_image_edit_lightning', 'wan22_ti2v_5b_t2v', 'wan22_ti2v_5b_i2v', 'wan22_i2v_14b_4step', 'ltx25_fast_i2v', 'ace_step_instrumental']) {
+  for (const name of ['qwen_image_lightning', 'qwen_image_edit_lightning', 'qwen_image_2512', 'qwen_image_edit_2511_lightning', 'wan22_ti2v_5b_t2v', 'wan22_ti2v_5b_i2v', 'wan22_i2v_14b_4step', 'ltx25_fast_i2v', 'ace_step_instrumental']) {
     const graph = (await loadWorkflow(name)) as Record<string, { class_type: string; inputs: Record<string, unknown> }>
     for (const [nodeId, node] of Object.entries(graph)) {
       if (nodeId.startsWith('_')) continue
@@ -291,13 +293,14 @@ function narrativeOptions(args: ParsedArgs, usage: string): NarrativeOptions {
     fps: flag(args, 'fps') ? checkFps(numberFlag(args, 'fps', 24)) : undefined,
     videoModel: flag(args, 'video-model') as never,
     candidates: flag(args, 'candidates') ? numberFlag(args, 'candidates', 2) : undefined,
+    castDir: flag(args, 'cast'),
     planOnly: flag(args, 'plan-only') === 'true',
     withoutSkills: flag(args, 'without-skills') === 'true',
   }
 }
 
-const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--id id] [--plan-only]'
-const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 45] [--ratio 9:16] [--fps 30] [--id id] [--plan-only]'
+const DRAMA_USAGE = 'usage: cinefoundry drama "<story idea>" [--episodes 10] [--produce 2] [--seconds 60] [--ratio 9:16] [--fps 24] [--id id] [--cast projects/<id>/cast] [--plan-only]'
+const SHORT_USAGE = 'usage: cinefoundry short "<topic>" [--seconds 45] [--ratio 9:16] [--fps 30] [--id id] [--cast projects/<id>/cast] [--plan-only]'
 
 async function dramaCommand(args: ParsedArgs): Promise<number> {
   print(await runPipeline(dramaPipeline, narrativeOptions(args, DRAMA_USAGE)))

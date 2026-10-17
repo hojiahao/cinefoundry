@@ -38,7 +38,7 @@ A running `cli.js` line means another film is generating: stop and tell the user
 3. Run from the repository root:
 
    ```bash
-   node dist/cli.js short '<the topic, verbatim>' [--seconds 45] [--ratio 9:16] [--fps 30] [--id <project-id>]
+   node dist/cli.js short '<the topic, verbatim>' [--seconds 45] [--ratio 9:16] [--fps 30] [--id <project-id>] [--cast projects/<earlier-id>/cast]
    ```
 
    Defaults: 9:16, native 1080p, 30 fps, 45 seconds. Use `--ratio 16:9` for a Bilibili or YouTube landscape video and `--fps 60` for product or motion-heavy shorts. `--plan-only` stops after the script and shot list for approval.
