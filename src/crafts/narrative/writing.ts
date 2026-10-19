@@ -98,6 +98,14 @@ export async function fitSubtitles(ctx: NarrativeContext, play: Screenplay): Pro
   return fitted
 }
 
+/**
+ * The writers' room thinks before it writes: on the flagship, the screenplay, the script notes and both compliance
+ * reviews run in reasoning mode (without it, Super's drafts of one episode scored from 4/2/3/3 to 8/9/7/6). On the
+ * planner alone they stay direct, as before.
+ */
+const deliberate = (ctx: NarrativeContext) => ctx.author !== ctx.planner
+const budget = (ctx: NarrativeContext, direct: number) => (deliberate(ctx) ? Math.max(direct, 16000) : direct)
+
 const ACTION_IN_CHINESE = 'action must be in English (picture words)'
 
 /** The script supervisor writes every scene action that came back in Chinese as English picture words for the camera. */
@@ -137,7 +145,7 @@ export async function reviewScreenplay(ctx: NarrativeContext, play: Screenplay, 
   const page = play.scenes.map((s) => `[${s.scene}] ${s.heading}\n${s.action}\n${s.lines.map((l) => `${l.speaker}: ${l.en} [${l.zh}]${l.delivery ? ` (${l.delivery})` : ''}`).join('\n')}`).join('\n\n')
   const source = `${page}\n${plan.synopsis}\n${plan.hook}\n${plan.cliffhanger}\n${bible.world}`
   const run = await chatJson<ScriptNotes>(ctx.editor, {
-    system: await ctx.agentPrompt('script editor of a top streaming studio. You did not write this draft', 'screenwriting'), thinking: false, maxTokens: 4000, temperature: 0.2,
+    system: await ctx.agentPrompt('script editor of a top streaming studio. You did not write this draft', 'screenwriting'), thinking: deliberate(ctx), maxTokens: budget(ctx, 4000), temperature: 0.2,
     user: `World: ${bible.world}
 Characters: ${bible.characters.map((c) => `${c.id} (${c.name}, ${c.role}): ${c.arc}`).join(' | ')}
 Episode plan: ${plan.synopsis}
@@ -173,8 +181,8 @@ export async function screenplayStage(ctx: NarrativeContext): Promise<string> {
       ctx.author,
       {
         system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting']),
-        thinking: false,
-        maxTokens: 5000,
+        thinking: deliberate(ctx),
+        maxTokens: budget(ctx, 5000),
         temperature: 0.7,
         user: `Series bible:\n${json(bible)}\n\nWrite episode ${episode}: "${plan.title}" - ${plan.synopsis}
 It opens on the hook (${plan.hook}) and ends on the cliffhanger (${plan.cliffhanger}).${previous ? `\nThe previous episode ended: ${previous.scenes.at(-1)?.action ?? ''}` : ''}
@@ -196,7 +204,7 @@ Return JSON only: {"episode": ${episode}, "title": "中文", "scenes": [{"scene"
     for (let round = 1; !notes.approve && !notes.inconclusive && round <= SCRIPT_NOTE_ROUNDS; round++) {
       ctx.log(`  script notes (${Object.entries(best.notes.scores).map(([k, v]) => `${k} ${v}`).join(', ')}): ${best.notes.issues.join(' | ').slice(0, 200)}`)
       const redo = await chatJson<Screenplay>(ctx.author, {
-        system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting']), thinking: false, maxTokens: 5000, temperature: 0.7,
+        system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting']), thinking: deliberate(ctx), maxTokens: budget(ctx, 5000), temperature: 0.7,
         user: `Series bible:\n${json(bible)}\n\nEpisode ${episode} plan: "${plan.title}" - ${plan.synopsis}. Hook: ${plan.hook}. Cliffhanger: ${plan.cliffhanger}.\n\nYour draft:\n${json(best.play)}\n\nThe script editor's notes on it:\n${best.notes.issues.map((i) => `- ${i}`).join('\n')}\nRewrite the episode so every note is answered. Change only the beats and lines the notes name; keep every other scene, beat and line as it is - the story, hook and structure must not get worse while you fix the dialogue. Keep every rule of the format. Return the screenplay as JSON only, same shape.`,
       }, (value) => checkScreenplay(value, bible, screenplayWant(ctx)).filter((p) => !p.endsWith(ACTION_IN_CHINESE)), 4).catch(() => undefined)
       if (!redo) break
@@ -254,7 +262,7 @@ async function reviewPremise(ctx: NarrativeContext, bible: SeriesBible): Promise
   const source = premiseSource(bible)
   ctx.log(`▸ compliance   series premise · independent reviewer · ${ctx.editor.name}`)
   const run = await chatJson<ContentReview>(ctx.editor, {
-    system: await ctx.agentPrompt('compliance reviewer. You did not write this series', 'content-compliance'), thinking: false, maxTokens: 2500, temperature: 0.2,
+    system: await ctx.agentPrompt('compliance reviewer. You did not write this series', 'content-compliance'), thinking: deliberate(ctx), maxTokens: budget(ctx, 2500), temperature: 0.2,
     user: `Clear this micro-drama series for production (premise, characters, episode titles and plans):\n${source}\n\n${ALLOWED}\nYou clear content only: values, coercion, discrimination, minors, regulated claims. How a line is quoted, written or shot is the writers' and the director's craft, never a finding.\nEvery issue quotes the exact words it is about, in quotation marks. Return JSON only: {"approve": true|false, "issues": ["\\"quoted words\\" - why"]}`,
   }, (r) => [...checkReviewEvidence(r, source), ...premiseFindingProblems(r, ctx.request)], 3).catch((error: Error) => { throw new Error(`the series premise could not be reviewed (${error.message.slice(0, 160)}); the run stops here`) })
   await ctx.record('compliance', 'premise-reviewer', ctx.editor, { approve: run.value.approve, issues: run.value.issues, unresolved: run.unresolved })
@@ -324,7 +332,7 @@ export async function contentComplianceStage(ctx: NarrativeContext): Promise<str
       const run = await chatJson<ContentReview>(
         ctx.editor,
         {
-          system, thinking: false, maxTokens: 3000, temperature: 0.2,
+          system, thinking: deliberate(ctx), maxTokens: budget(ctx, 3000), temperature: 0.2,
           user: `Series logline: ${bible.logline} (${bible.genre}). Characters: ${bible.characters.map((c) => `${c.id}, ${c.age}, ${c.role}`).join('; ')}.
 Episode ${play.episode} (scene.line numbered from 1):
 ${play.scenes.map((s) => `Scene ${s.scene} ${s.heading}: ${s.action}\n${s.lines.map((l, n) => `  ${s.scene}.${n + 1} ${l.speaker}: ${l.en} / ${l.zh}`).join('\n')}`).join('\n')}
