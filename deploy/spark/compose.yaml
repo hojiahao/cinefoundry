@@ -75,7 +75,9 @@ services:
       - --port=8000
       - --trust-remote-code
       - --max-num-seqs=1
-      # A fixed KV cache instead of a share of the pool: one writer at a time needs little (hybrid Mamba model).
+      # A fixed KV cache instead of a share of the pool: one writer at a time needs little (hybrid Mamba model). The
+      # utilization is then only vLLM's start-up check of free memory; without it the default 0.92 refuses to start.
+      - --gpu-memory-utilization=${SUPER_GPU_MEM:-0.70}
       - --kv-cache-memory=${SUPER_KV_BYTES:-6442450944}
       - --max-model-len=${SUPER_MAX_LEN:-65536}
       - --max-num-batched-tokens=8192

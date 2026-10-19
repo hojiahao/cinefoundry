@@ -4,9 +4,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 /** The docker calls the room makes; a restart or start brings the fake writer back awake and serving. */
 const docker: string[][] = []
 let onDocker: (args: string[]) => void = () => {}
+/** The container's restart count docker reports, rising on every inspect; undefined: docker gives none. */
+let restartCount: number | undefined
 vi.mock('../src/lib/exec.js', () => ({
   exec: async (command: string, args: string[]) => {
-    if (command === 'docker') { docker.push(args); onDocker(args) }
+    // Only container starts and stops are recorded; inspect answers the restart count a test sets, logs a fixed tail.
+    if (command === 'docker' && (args[0] === 'start' || args[0] === 'stop')) { docker.push(args); onDocker(args) }
+    if (command === 'docker' && args[0] === 'inspect') return { stdout: restartCount === undefined ? '' : String(restartCount++), stderr: '' }
+    if (command === 'docker' && args[0] === 'logs') return { stdout: 'ValueError: Free memory on device cuda:0 (108.69/121.69 GiB) on startup is less than desired', stderr: '' }
     return { stdout: '', stderr: '' }
   },
 }))
@@ -32,7 +37,7 @@ async function fakeVllm(state: { asleep: boolean; up?: boolean }) {
   return { endpoint: { name: 'm', baseUrl, model: 'm', apiKey: 'local', execution: 'local-dgx-spark' as const }, state, calls, model: (container?: string) => ({ endpoint: { name: 'm', baseUrl, model: 'm', apiKey: 'local', execution: 'local-dgx-spark' as const }, container }) }
 }
 const servers: Server[] = []
-afterEach(() => { for (const server of servers.splice(0)) server.close(); docker.length = 0; onDocker = () => {} })
+afterEach(() => { for (const server of servers.splice(0)) server.close(); docker.length = 0; onDocker = () => {}; restartCount = undefined })
 
 const room = (author: unknown, others: unknown[], records: unknown[] = []) => ({
   author: author as never, others: others as never[], log: () => {}, record: async (detail: unknown) => { records.push(detail) }, freeDiffusion: async () => {},
@@ -106,4 +111,12 @@ describe("writers' room close", () => {
     await closeWritersRoom(room(author.model('super'), [vision.model('stepvl')]))
     expect(docker).toEqual([['stop', 'super'], ['start', 'stepvl']])
   })
+})
+
+describe("writers' room start-up", () => {
+  it('fails at once, with the cause from its log, when the author crashes and restarts at start-up', async () => {
+    const down = await fakeVllm({ asleep: false, up: false })
+    restartCount = 0
+    await expect(openWritersRoom(room(down.model('super'), []))).rejects.toThrow(/keeps crashing at start-up .*Free memory on device/)
+  }, 30000)
 })

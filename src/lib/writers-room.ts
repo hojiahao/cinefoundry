@@ -39,10 +39,27 @@ async function ready(baseUrl: string): Promise<boolean> {
   }
 }
 
-async function waitReady(baseUrl: string, seconds: number): Promise<boolean> {
+/** How often a container has restarted (its server crashing at start-up), or undefined when docker cannot say. */
+async function restarts(container: string): Promise<number | undefined> {
+  const out = await exec('docker', ['inspect', '--format', '{{.RestartCount}}', container]).then((r) => r.stdout.trim(), () => '')
+  return /^\d+$/.test(out) ? Number(out) : undefined
+}
+
+/**
+ * Waits for a model to serve, up to `seconds`. A container whose server crashes and restarts twice is not waited out:
+ * the run fails at once with the end of its log (a start-up memory check once looped for twenty minutes unseen).
+ */
+async function waitReady(baseUrl: string, seconds: number, container?: string): Promise<boolean> {
   const until = Date.now() + seconds * 1000
+  const first = container ? await restarts(container) : undefined
   while (Date.now() < until) {
     if (await ready(baseUrl)) return true
+    const now = container ? await restarts(container) : undefined
+    if (container && first !== undefined && now !== undefined && now - first >= 2) {
+      const log = await exec('docker', ['logs', '--tail', '40', container]).then((r) => `${r.stdout}\n${r.stderr}`, () => '')
+      const cause = log.split('\n').filter((l) => /Error|error:/.test(l)).at(-1)?.trim() ?? 'see docker logs'
+      throw new Error(`${container} keeps crashing at start-up (${now - first} restarts): ${cause.slice(0, 300)}`)
+    }
     await new Promise((resolve) => setTimeout(resolve, 5000))
   }
   return false
@@ -85,7 +102,7 @@ export async function openWritersRoom(room: WritersRoom): Promise<void> {
     room.log(`  writers' room: starting ${author.endpoint.model} (${author.container})`)
     await docker('start', author.container)
     forgetService(author.endpoint.baseUrl)
-    if (!(await waitReady(author.endpoint.baseUrl, 1200))) throw new Error(`the writers' room model (${author.endpoint.baseUrl}) did not come up within 20 minutes`)
+    if (!(await waitReady(author.endpoint.baseUrl, 1200, author.container))) throw new Error(`the writers' room model (${author.endpoint.baseUrl}) did not come up within 20 minutes`)
   }
   const seconds = (Date.now() - started) / 1000
   room.log(`  writers' room: ${author.endpoint.model} ${action}${action === 'ready' ? '' : ` in ${seconds.toFixed(0)}s`}${madeWay.length ? ` · ${madeWay.join(', ')}` : ''}`)
@@ -107,7 +124,7 @@ export async function closeWritersRoom(room: WritersRoom): Promise<void> {
   for (const other of room.others) {
     if (!other.container || (await ready(other.endpoint.baseUrl))) continue
     await docker('start', other.container)
-    if (!(await waitReady(other.endpoint.baseUrl, 1200))) throw new Error(`${other.endpoint.name} (${other.container}) did not come back within 20 minutes after the writers' room`)
+    if (!(await waitReady(other.endpoint.baseUrl, 1200, other.container))) throw new Error(`${other.endpoint.name} (${other.container}) did not come back within 20 minutes after the writers' room`)
     back.push(other.endpoint.name)
   }
   const seconds = (Date.now() - started) / 1000

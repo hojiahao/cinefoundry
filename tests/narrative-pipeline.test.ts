@@ -29,6 +29,7 @@ vi.mock('../src/lib/exec.js', async (original) => {
     ...real,
     exec: (command: string, args: string[], ...rest: unknown[]) => {
       if (command !== 'docker') return (real.exec as (...a: unknown[]) => unknown)(command, args, ...rest)
+      if (args[0] !== 'start' && args[0] !== 'stop') return Promise.resolve({ stdout: '', stderr: '' })
       dockerCalls.push(args)
       if (args[0] === 'stop') down.add(args[1]!)
       else down.delete(args[1]!)
