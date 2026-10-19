@@ -134,6 +134,11 @@ export function checkScreenplay(play: Screenplay, bible: Pick<SeriesBible, 'char
   // Spoken American English contracts: "I am buying the lane. I do not sell." reads as a translation. An uncontracted
   // form is kept for emphasis now and then, not as the voice of the episode.
   const stiff = scenes.flatMap((s) => (s.lines ?? []).map((l) => l.en ?? '')).filter((en) => UNCONTRACTED.test(en))
+  // All clipped lines read as ping-pong: Qwen's draft carried two minutes on three-to-five-word exchanges. A quarter
+  // of the lines carry a full thought of six words or more.
+  const spoken = scenes.flatMap((s) => (s.lines ?? []).map((l) => l.en ?? ''))
+  const full = spoken.filter((en) => words(en) >= 6).length
+  if (spoken.length >= 8 && full < Math.ceil(spoken.length / 4)) problems.push(`only ${full} of ${spoken.length} lines have six words or more: give at least ${Math.ceil(spoken.length / 4)} lines a full thought, so the scene is not all clipped exchanges`)
   if (stiff.length > MAX_UNCONTRACTED) problems.push(`${stiff.length} lines avoid contractions (${stiff.slice(0, 3).map((l) => `"${l}"`).join(', ')}): spoken English says "I'm", "don't", "can't", "you're"; keep the full form for at most ${MAX_UNCONTRACTED} lines of emphasis`)
   // Wall-to-wall dialogue leaves no shot for the look that lands a line, and too little leaves the story unspoken:
   // between half and three quarters of the shots carry a line.

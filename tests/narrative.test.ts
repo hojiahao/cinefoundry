@@ -201,7 +201,7 @@ describe('episode shape', () => {
   it('gives a two-minute episode three to five scenes and keeps a quarter of the shots free of dialogue', () => {
     expect(sceneRange(120)).toEqual({ min: 3, max: 5 })
     expect(sceneRange(60)).toEqual({ min: 1, max: 3 })
-    const scene = (n: number, lines: number) => ({ scene: n, heading: 'INT. SHOP - DAY', characters: ['mia', 'leo'], action: 'Mia waits.', lines: Array.from({ length: lines }, (_, i) => ({ speaker: i % 2 ? 'leo' : 'mia', en: 'Not today.', zh: '今天不行' })) })
+    const scene = (n: number, lines: number) => ({ scene: n, heading: 'INT. SHOP - DAY', characters: ['mia', 'leo'], action: 'Mia waits.', lines: Array.from({ length: lines }, (_, i) => ({ speaker: i % 2 ? 'leo' : 'mia', en: i % 3 === 0 ? 'You knew this shop was never for sale.' : 'Not today.', zh: '今天不行' })) })
     const two = { episode: 1, title: 't', scenes: [scene(1, 8), scene(2, 7)] }
     expect(checkScreenplay(two, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/write 3 to 5/)
     const crowded = { episode: 1, title: 't', scenes: [scene(1, 7), scene(2, 7), scene(3, 6)] }
@@ -216,6 +216,8 @@ describe('episode shape', () => {
     expect(mixedProblems).not.toMatch(/"AI"/)
     const stiff = { episode: 1, title: 't', scenes: [{ ...scene(1, 6), lines: ['I am buying the lane.', 'I do not sell.', 'You do not fall for me.', 'Not today.', 'Not today.', 'Not today.'].map((en, i) => ({ speaker: i % 2 ? 'leo' : 'mia', en, zh: '今天不行' })) }, { ...scene(2, 6), heading: 'EXT. LANE - DUSK' }, scene(3, 4)] }
     expect(checkScreenplay(stiff, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/3 lines avoid contractions/)
+    const clipped = { episode: 1, title: 't', scenes: [scene(1, 6), { ...scene(2, 6), heading: 'EXT. LANE - DUSK' }, scene(3, 4)].map((sc) => ({ ...sc, lines: sc.lines.map((l) => ({ ...l, en: 'Not today.' })) })) }
+    expect(checkScreenplay(clipped, bible, { seconds: 120, ratio: '9:16' }).join(' ')).toMatch(/only 0 of 16 lines have six words or more/)
     const good = { episode: 1, title: 't', scenes: [scene(1, 6), { ...scene(2, 6), heading: 'EXT. LANE - DUSK' }, scene(3, 4)] }
     expect(checkScreenplay(good, bible, { seconds: 120, ratio: '9:16' })).toEqual([])
   })

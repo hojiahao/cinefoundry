@@ -312,6 +312,12 @@ export function checkReviewEvidence(review: ContentReview, source: string): stri
  * episode is reviewed again. Compliance is a gate: a reviewer that cannot be reached, or an episode still not approved
  * after its rewrite, stops the run before any frame is generated.
  */
+/** Reviews of one episode: the first, then one after each round of rewrites; the last must approve. */
+export const COMPLIANCE_PASSES = 3
+
+/** Every word of an episode a finding can quote: scene actions, English lines and their subtitles. */
+export const pageText = (play: Screenplay) => (play.scenes ?? []).map((s) => `${s.heading}\n${s.action}\n${(s.lines ?? []).map((l) => `${l.en}\n${l.zh}`).join('\n')}`).join('\n')
+
 export async function contentComplianceStage(ctx: NarrativeContext): Promise<string> {
   const bible = ctx.bible!
   const system = await ctx.agentPrompt('compliance reviewer. You did not write this screenplay', 'content-compliance')
@@ -319,8 +325,8 @@ export async function contentComplianceStage(ctx: NarrativeContext): Promise<str
     let play = initial
     const episode = String(play.episode).padStart(2, '0')
     const reviews: ContentReview[] = []
-    for (let pass = 1; pass <= 2; pass++) {
-      ctx.log(`▸ compliance   episode ${play.episode} · ${pass === 1 ? 'scan + independent reviewer' : 'second review after rewrites'} · ${ctx.editor.name}`)
+    for (let pass = 1; pass <= COMPLIANCE_PASSES; pass++) {
+      ctx.log(`▸ compliance   episode ${play.episode} · ${pass === 1 ? 'scan + independent reviewer' : `review ${pass} after rewrites`} · ${ctx.editor.name}`)
       const lines = play.scenes.flatMap((s) => s.lines.map((l, n) => ({ s, n, l })))
       const source = `${bible.logline}\n${play.scenes.map((s) => `${s.heading} ${s.action}`).join('\n')}\n${lines.map(({ l }) => `${l.en}\n${l.zh}`).join('\n')}`
       // The same restricted-wording scan the ads get, on the Chinese subtitles, and absolute claims in English.
@@ -345,11 +351,32 @@ Return JSON only: {"approve": true|false, "issues": ["scene N line M: \\"quoted 
       const review = { ...run.value, approve: run.value.approve && scan.length === 0 && run.unresolved.length === 0 }
       reviews.push(review)
       await ctx.record('compliance', 'reviewer', ctx.editor, { episode: play.episode, pass, approve: review.approve, issues: review.issues, scan, revised: review.revised?.length ?? 0, unresolved: run.unresolved })
-      if (review.approve) break
-      if (!review.revised?.length) break
-      const next: Screenplay = { ...play, scenes: play.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const r = review.revised!.find((x) => x.scene === s.scene && x.line === n + 1); return r ? { ...l, en: r.en ?? l.en, zh: r.zh ?? l.zh } : l }) })) }
-      const problems = checkScreenplay(next, bible, screenplayWant(ctx))
-      if (problems.length) { ctx.log(`  reviewer rewrites fail the screenplay checks (${problems[0]}); not taken`); break }
+      if (review.approve || pass === COMPLIANCE_PASSES) break
+      let next = play
+      // The reviewer's own line rewrites are taken when the screenplay still passes every check.
+      if (review.revised?.length) {
+        const revised: Screenplay = { ...play, scenes: play.scenes.map((s) => ({ ...s, lines: s.lines.map((l, n) => { const r = review.revised!.find((x) => x.scene === s.scene && x.line === n + 1); return r ? { ...l, en: r.en ?? l.en, zh: r.zh ?? l.zh } : l }) })) }
+        const problems = checkScreenplay(revised, bible, screenplayWant(ctx))
+        if (problems.length) ctx.log(`  reviewer rewrites fail the screenplay checks (${problems[0]}); not taken`)
+        else next = revised
+      }
+      // What the findings quote and is still on the page - an action, or a line the reviewer did not rewrite - goes
+      // back to the screenwriter: a finding about "Gu Yan grips her hand" once stopped the run, as only lines were fixed.
+      const open = unchangedFindings(review.issues, pageText(next), ctx.request)
+      if (open.length) {
+        ctx.log(`  compliance notes to the screenwriter: ${review.issues.join(' | ').slice(0, 160)}`)
+        const redo = await chatJson<Screenplay>(ctx.author, {
+          system: await ctx.agentPrompt('screenwriter', [ctx.writer.skill === 'short-video-scripting' ? 'short-video-scripting' : 'screenwriting', 'content-compliance']), thinking: deliberate(ctx), maxTokens: budget(ctx, 5000), temperature: 0.5,
+          user: `Your screenplay:\n${json(next)}\n\nThe compliance reviewer's findings:\n${review.issues.map((i) => `- ${i}`).join('\n')}\nRewrite only the actions and lines the findings quote, so each finding is answered and the quoted words are gone; keep every other scene, action and line exactly as it is, and every rule of the format. Return the screenplay as JSON only, same shape.`,
+        }, (value) => [...checkScreenplay(value, bible, screenplayWant(ctx)).filter((p) => !p.endsWith(ACTION_IN_CHINESE)), ...unchangedFindings(review.issues, pageText(value), ctx.request)], 4).catch(() => undefined)
+        if (redo && !redo.unresolved.length) {
+          const fixed = await fitSubtitles(ctx, { ...(await englishActions(ctx, redo.value)), episode: play.episode })
+          const problems = checkScreenplay(fixed, bible, screenplayWant(ctx))
+          if (problems.length) ctx.log(`  screenwriter's compliance rewrite fails the screenplay checks (${problems[0]}); not taken`)
+          else next = fixed
+        }
+      }
+      if (next === play) break
       play = next
     }
     ctx.plays[index] = play

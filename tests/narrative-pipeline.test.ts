@@ -95,7 +95,8 @@ const pass = { pass: true, score: 90, craft: { light: 8, composition: 8, realism
 // ---- The scripted model server ---------------------------------------------------------------------------------------
 
 /** How the episode reviewer behaves in a run: approves, rejects with a quoted finding, or cannot be reached. */
-let episodeReview: 'approve' | 'reject' | 'unreachable' = 'approve'
+let episodeReview: 'approve' | 'reject' | 'unreachable' | 'action' = 'approve'
+let reviewCalls = 0
 /** Every chat call, in order: the role it was routed by (or "gate" for an image) and the user prompt. */
 const calls: Array<{ role: string; user: string; writer?: boolean }> = []
 let developmentCalls = 0
@@ -108,9 +109,14 @@ function reply(role: string, user: string): unknown {
   if (role === 'showrunner and head writer' || role === 'creator-content writer') return ++developmentCalls === 1 ? renamedBible : bible
   if (role === 'compliance reviewer. You did not write this series') return { approve: true, issues: [] }
   if (role === 'compliance reviewer. You did not write this screenplay') {
+    // A finding on an action, which only the screenwriter can rewrite; the rewrite is then approved.
+    if (episodeReview === 'action') return ++reviewCalls === 1 ? { approve: false, issues: ['scene 1 action: "Lin Xia looks up at the door" - read as fear of him in this test'] } : { approve: true, issues: [] }
     return episodeReview === 'reject' ? { approve: false, issues: ['scene 1 line 1: "some things never change" - read as mocking the lead in this test'] } : { approve: true, issues: [] }
   }
-  if (role === 'screenwriter') return screenplay
+  if (role === 'screenwriter') {
+    if (user.includes("The compliance reviewer's findings")) return { ...screenplay, scenes: screenplay.scenes.map((sc) => ({ ...sc, action: 'A glass bottle shatters on the tiled floor and Lin Xia laughs at the mess.' })) }
+    return screenplay
+  }
   // The script editor sends the first draft back with a quoted note and approves the rewrite.
   if (role.startsWith('script editor')) {
     return ++editorCalls === 1
@@ -166,7 +172,7 @@ beforeAll(async () => {
   delete process.env.STEPFUN_API_KEY
 })
 afterAll(() => { llm.close(); comfy.close() })
-beforeEach(() => { calls.length = 0; audioCalls.length = 0; logs = []; developmentCalls = 0; editorCalls = 0; episodeReview = 'approve' })
+beforeEach(() => { calls.length = 0; audioCalls.length = 0; logs = []; developmentCalls = 0; editorCalls = 0; reviewCalls = 0; episodeReview = 'approve' })
 
 const options = (brief: string, id: string, extra: Partial<NarrativeOptions> = {}): NarrativeOptions => ({ brief, id, resolution: '720p', episodeSeconds: 15, candidates: 1, log: (line) => logs.push(line), ...extra })
 let logs: string[] = []
@@ -327,6 +333,18 @@ describe('creator short end to end', () => {
     expect(qc).toMatchObject({ label: 'ep01', spec: { fps: 30, width: 720, height: 1280 } })
     expect(qc.results.filter((r: { status: string; check: string }) => r.status !== 'pass').map((r: { check: string }) => r.check).filter((c: string) => c !== 'loudness_range')).toEqual([])
     expect(Math.abs(qc.measured.loudness.integrated - (-14))).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('compliance findings on actions', () => {
+  it('sends a finding the reviewer cannot rewrite back to the screenwriter, and goes on once the rewrite is approved', async () => {
+    episodeReview = 'action'
+    await runPipeline(shortPipeline, options(SHORT_REQUEST, 'short-action', { planOnly: true }))
+    const rewrite = calls.find((c) => c.role === 'screenwriter' && c.user.includes("The compliance reviewer's findings"))
+    expect(rewrite?.user).toContain('Lin Xia looks up at the door')
+    const play = JSON.parse(readFileSync(join(projectDir('short-action'), 'story', 'ep01.screenplay.json'), 'utf8'))
+    expect(play.scenes[0].action).toContain('laughs at the mess')
+    expect(calls.filter((c) => c.role === 'compliance reviewer. You did not write this screenplay')).toHaveLength(2)
   })
 })
 

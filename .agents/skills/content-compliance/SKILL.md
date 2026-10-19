@@ -80,7 +80,7 @@ if they were in the script.
 1. **Series level** (bible): logline, genre, titles against the eight categories and the 霸总 notice; main subject against the special-subject list (classification); every character adult, invented, voice designed.
 2. **Scene level**: each `action` against soft porn, violence, flaunting, minors and readable real brands.
 3. **Line level**: each `en` and `zh` against all of the above, and against claims that contradict the AI label. A creator short with product claims also goes to `ad-compliance-review`.
-4. **Revise** every line you flag that a line change can fix. A revised line still obeys the screenplay checks: ≤12 English words, Chinese ≤16 characters with no full stop (*checked* when the screenplay is re-validated), same speaker, same story function.
+4. **Revise** every line you flag that a line change can fix. A revised line still obeys the screenplay checks: ≤12 English words, Chinese ≤16 characters with no full stop (*checked* when the screenplay is re-validated), same speaker, same story function. A finding on an action, or on a line you do not rewrite, goes back to the screenwriter with your findings; the rewrite must remove every passage you quoted (*checked*) and is reviewed again. An episode gets at most three reviews, and the last must approve (*checked*).
 5. **Approve** only when nothing remains. A premise-level problem (the whole engine is revenge, the title is 霸总) cannot be fixed by lines: report it, do not approve, and send it back to `series-development`.
 
 ## Output format
