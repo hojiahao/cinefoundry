@@ -98,3 +98,21 @@ describe('craft floor', () => {
     expect(craftFloor('high')).toBe(6)
   })
 })
+
+import { readStream } from '../src/agent/llm.js'
+
+describe('streamed model replies', () => {
+  it('assembles the answer from content deltas, skipping reasoning, and keeps the finish reason and usage', async () => {
+    const events = [
+      { choices: [{ delta: { reasoning_content: 'thinking about the scene' } }] },
+      { choices: [{ delta: { content: '{"episode": ' } }] },
+      { choices: [{ delta: { content: '1}' }, finish_reason: 'stop' }] },
+      { choices: [], usage: { completion_tokens: 812 } },
+    ]
+    // Split mid-event, as a network stream may.
+    const text = `${events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join('')}data: [DONE]\n\n`
+    const body = new ReadableStream({ start(c) { const b = new TextEncoder().encode(text); c.enqueue(b.slice(0, 37)); c.enqueue(b.slice(37)); c.close() } })
+    const reply = await readStream(new Response(body, { headers: { 'content-type': 'text/event-stream' } }))
+    expect(reply).toEqual({ content: '{"episode": 1}', completionTokens: 812, finishReason: 'stop' })
+  })
+})

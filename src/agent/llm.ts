@@ -17,7 +17,7 @@ export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; 
   const planner = plannerEndpoint()
   // The writers' room: the story is written on the flagship when one is configured, on the planner otherwise.
   const author: ModelEndpoint = env('CINEFOUNDRY_WRITER_URL')
-    ? { name: 'nemotron-super', baseUrl: env('CINEFOUNDRY_WRITER_URL')!.replace(/\/+$/, ''), model: env('CINEFOUNDRY_WRITER_MODEL')!, apiKey: env('CINEFOUNDRY_PLANNER_KEY')!, execution: 'local-dgx-spark' }
+    ? { name: env('CINEFOUNDRY_WRITER_MODEL')!, baseUrl: env('CINEFOUNDRY_WRITER_URL')!.replace(/\/+$/, ''), model: env('CINEFOUNDRY_WRITER_MODEL')!, apiKey: env('CINEFOUNDRY_PLANNER_KEY')!, execution: 'local-dgx-spark' }
     : planner
   return {
     author,
@@ -26,7 +26,7 @@ export function endpoints(): { planner: ModelEndpoint; reviewer: ModelEndpoint; 
     // so without a key a separate Nemotron agent reviews instead.
     editor: env('STEPFUN_API_KEY')
       ? { name: 'step-3.7-flash', baseUrl: 'https://api.stepfun.com/v1', model: env('CINEFOUNDRY_EDITOR_MODEL')!, apiKey: env('STEPFUN_API_KEY')!, execution: 'cloud' }
-      : { ...author, name: author === planner ? 'nemotron-reviewer' : 'nemotron-super-reviewer' },
+      : { ...author, name: author === planner ? 'nemotron-reviewer' : `${author.name}-reviewer` },
     planner,
     reviewer: {
       name: 'step3-vl',
@@ -74,6 +74,9 @@ export async function chat(endpoint: ModelEndpoint, options: ChatOptions): Promi
   }
   if (endpoint.execution !== 'cloud') await ensureAwake(endpoint.baseUrl)
   const started = Date.now()
+  // Streamed: the server sends its headers at once and tokens as they come. Unstreamed, vLLM answers only when the
+  // whole reply is written, and a reasoning reply of ten thousand tokens outlasted Node's 5-minute header timeout
+  // ("fetch failed" on the writers' room model). A server that answers plain JSON is read as before.
   const request = () =>
     fetch(`${endpoint.baseUrl}/chat/completions`, {
       method: 'POST',
@@ -83,26 +86,58 @@ export async function chat(endpoint: ModelEndpoint, options: ChatOptions): Promi
         max_tokens: options.maxTokens ?? 6000,
         temperature: options.temperature ?? 0.7,
         chat_template_kwargs: { enable_thinking: options.thinking ?? true },
+        stream: true,
+        stream_options: { include_usage: true },
         messages: [
           { role: 'system', content: options.system },
           { role: 'user', content: options.images?.length ? content : options.user },
         ],
       }),
     })
-  // A transport failure (connection reset, or a reply slower than Node's 5-minute header timeout
-  // when the GPU is contended) is retried once; an HTTP error from the model is not.
+  // A transport failure (a connection reset) is retried once; an HTTP error from the model is not.
   const response = await request().catch(async () => {
     await new Promise((resolve) => setTimeout(resolve, 5000))
     return request()
   })
   if (!response.ok) throw new Error(`${endpoint.name} returned ${response.status}: ${(await response.text()).slice(0, 400)}`)
-  const body = (await response.json()) as { choices: Array<{ message: { content: string | null }; finish_reason?: string }>; usage?: { completion_tokens?: number } }
-  return {
-    content: body.choices[0]?.message.content ?? '',
-    seconds: (Date.now() - started) / 1000,
-    completionTokens: body.usage?.completion_tokens ?? 0,
-    finishReason: body.choices[0]?.finish_reason ?? undefined,
+  const reply = (response.headers.get('content-type') ?? '').includes('text/event-stream') ? await readStream(response) : readJson(await response.json())
+  return { ...reply, seconds: (Date.now() - started) / 1000 }
+}
+
+type Reply = Omit<ChatResult, 'seconds'>
+type CompletionBody = { choices?: Array<{ message?: { content: string | null }; finish_reason?: string }>; usage?: { completion_tokens?: number } }
+
+function readJson(body: CompletionBody): Reply {
+  return { content: body.choices?.[0]?.message?.content ?? '', completionTokens: body.usage?.completion_tokens ?? 0, finishReason: body.choices?.[0]?.finish_reason ?? undefined }
+}
+
+/** Reads an OpenAI-style server-sent event stream: the answer's content deltas, the finish reason and the usage. */
+export async function readStream(response: Response): Promise<Reply> {
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let text = ''
+  let finishReason: string | undefined
+  let completionTokens = 0
+  const take = (line: string) => {
+    if (!line.startsWith('data:')) return
+    const data = line.slice(5).trim()
+    if (!data || data === '[DONE]') return
+    const event = JSON.parse(data) as { choices?: Array<{ delta?: { content?: string | null }; finish_reason?: string | null }>; usage?: { completion_tokens?: number } | null }
+    const choice = event.choices?.[0]
+    if (choice?.delta?.content) text += choice.delta.content
+    if (choice?.finish_reason) finishReason = choice.finish_reason
+    if (event.usage?.completion_tokens) completionTokens = event.usage.completion_tokens
   }
+  for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
+    buffer += decoder.decode(chunk, { stream: true })
+    let newline: number
+    while ((newline = buffer.indexOf('\n')) >= 0) {
+      take(buffer.slice(0, newline).trim())
+      buffer = buffer.slice(newline + 1)
+    }
+  }
+  take(buffer.trim())
+  return { content: text, completionTokens, finishReason }
 }
 
 export interface JsonAttempt<T> {

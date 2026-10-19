@@ -98,6 +98,71 @@ services:
     ports:
       - "127.0.0.1:8003:8000"
 
+  # Qwen3.8-Flash-Next 125B-A6B in NVIDIA's FP4-Local checkpoint (QAD NVFP4 experts, MXFP8 attention), validated by
+  # NVIDIA on DGX Spark (opt-in: --profile qwen). Its 51B-parameter n-gram embedding table is read from NVMe instead of
+  # held in memory (VLLM_PLE_TABLE_MEMORY=disk). The checkpoint's compressed scale format is not in upstream vLLM yet,
+  # so it runs in the community container NVIDIA's model card names, pinned by digest. Flags follow that card.
+  qwen:
+    <<: *gpu
+    profiles: ["qwen"]
+    image: docker.m.daocloud.io/eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595
+    entrypoint: ["vllm", "serve"]
+    shm_size: 16g
+    security_opt: ["seccomp=unconfined", "apparmor=unconfined"]
+    environment:
+      HF_HUB_OFFLINE: "1"
+      VLLM_PLE_TABLE_MEMORY: disk
+      B12X_DISK_BACKEND: io_uring
+      CUTE_DSL_ARCH: sm_121a
+      SAFETENSORS_FAST_GPU: "1"
+      VLLM_WORKER_MULTIPROC_METHOD: spawn
+      VLLM_SSM_CONV_STATE_LAYOUT: DS
+      VLLM_USE_AOT_COMPILE: "1"
+      VLLM_USE_MEGA_AOT_ARTIFACT: "1"
+      VLLM_USE_V2_MODEL_RUNNER: "1"
+      B12X_POLICY_MODE: auto
+      VLLM_MXFP8_LM_HEAD: "1"
+      VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE: w13
+      VLLM_B12X_MOE_FP4_FORCE_A16: "1"
+      B12X_W4A16_A4_PREFILL: "1"
+    volumes:
+      - ${SPARK_MODEL_DIR:-${HOME}/models}/qwen38-flash-next:/qwen:ro
+      - ${HOME}/.cache/qwen38/vllm:/root/.cache/vllm
+      - ${HOME}/.cache/qwen38/flashinfer:/root/.cache/flashinfer
+      - ${HOME}/.cache/qwen38/triton:/root/.triton
+      - ${HOME}/.cache/qwen38/b12x:/root/.cache/b12x
+    command:
+      - /qwen/Qwen3.8-Flash-Next-FP4-Local
+      - --served-model-name=qwen3.8-flash-next
+      - --host=0.0.0.0
+      - --port=8000
+      - --tensor-parallel-size=1
+      - --mamba-cache-mode=align
+      - --enable-prefix-caching
+      - --enable-chunked-prefill
+      - --dtype=bfloat16
+      - --kv-cache-dtype=fp8
+      - --quantization=modelopt_mixed
+      - --block-size=16
+      - --load-format=b12x
+      - --max-model-len=${QWEN_MAX_LEN:-65536}
+      - --max-num-seqs=1
+      - --max-num-batched-tokens=${QWEN_BATCHED_TOKENS:-2048}
+      - '--speculative-config={"method":"mtp","num_speculative_tokens":4}'
+      - --gdn-decode-kernel=b12x
+      - --linear-backend=b12x
+      - --moe-backend=b12x
+      - --no-enable-flashinfer-autotune
+      - --mm-encoder-tp-mode=data
+      - --reasoning-parser=qwen3
+      - --tool-call-parser=qwen3_xml
+      - --enable-auto-tool-choice
+      - '--compilation-config={"pass_config":{"fuse_act_quant":true}}'
+      - --gpu-memory-utilization=${QWEN_GPU_MEM:-0.70}
+      - --kv-cache-memory=${QWEN_KV_BYTES:-6442450944}
+    ports:
+      - "127.0.0.1:8004:8000"
+
   # StepFun open model: Chinese copy, reference breakdown and the shot quality gate (vision).
   stepvl:
     <<: *gpu
